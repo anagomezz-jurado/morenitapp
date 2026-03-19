@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+<!-- TREE -->
+<record id="view_calle_tree" model="ir.ui.view">
+    <field name="name">calle.tree</field>
+    <field name="model">morenitapp.calle</field>
+    <field name="arch" type="xml">
+        <tree string="Calles">
+            <field name="nombreCalle"/>
+            <field name="localidad_id"/>
+            <field name="codPostal_id"/>
+             <field name="responsable_id"/>
+        </tree>
+    </field>
+</record>
+
+<!-- FORM -->
+<record id="view_calle_form" model="ir.ui.view">
+    <field name="name">calle.form</field>
+    <field name="model">morenitapp.calle</field>
+    <field name="arch" type="xml">
+        <form string="Calle">
+            <sheet>
+                <group>
+                    <field name="nombreCalle"/>
+                    <field name="localidad_id"/>
+                    <field name="codPostal_id"/>
+                     <field name="responsable_id"/>
+                </group>
+
+                <notebook>
+
+                    <page string="Hermanos">
+                        <field name="hermanos_ids">
+                            <tree>
+                                <field name="numero_hermano"/>
+                                <field name="nombre"/>
+                                <field name="apellido1"/>
+                                <field name="telefono"/>
+                            </tree>
+                        </field>
+                    </page>
+
+                </notebook>
+
+            </sheet>
+        </form>
+    </field>
+</record>
+
+</odoo>

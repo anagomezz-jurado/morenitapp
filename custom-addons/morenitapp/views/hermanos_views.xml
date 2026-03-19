@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- ================= TREE ================= -->
+    <record id="view_hermano_tree" model="ir.ui.view">
+        <field name="name">hermano.tree</field>
+        <field name="model">morenitapp.hermano</field>
+        <field name="arch" type="xml">
+           <tree string="Hermanos">
+                <field name="codigo_hermano" string="Nº de Hermano"/>
+                <field name="nombre_completo" string="Nombre Completo"/>
+                <field name="dni"/>
+                <field name="telefono"/>
+                <field name="email"/>
+                <field name="fecha_alta"/>
+                <field name="fecha_baja"/>
+                <field name="fecha_reactivacion"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ================= FORM ================= -->
+    <record id="view_hermano_form" model="ir.ui.view">
+        <field name="name">hermano.form</field>
+        <field name="model">morenitapp.hermano</field>
+        <field name="arch" type="xml">
+            <form string="Hermano">
+
+                <!-- BOTONES -->
+                <header>
+                    <button name="action_dar_baja"
+                            string="Dar de baja"
+                            type="object"
+                            class="btn-danger"
+                            attrs="{'invisible':[('fecha_baja','!=',False)]}"/>
+                    <button name="action_reactivar"
+                            string="Reactivar hermano"
+                            type="object"
+                            class="btn-primary"
+                            attrs="{'invisible':[('fecha_baja','=',False)]}"/>
+                </header>
+
+                <sheet>
+
+                    <group string="Datos de Hermano">
+                        <field name="numero_hermano"/>
+                        <field name="sexo"/>
+                        <field name="codigo_hermano" readonly="1"/>
+                        <field name="fecha_alta"/>
+                        <field name="responsable"/>
+                        <field name="metodo_pago"/>
+                    </group>
+
+                    <group string="Datos personales">
+                        <field name="nombre"/>
+                        <field name="apellido1"/>
+                        <field name="apellido2"/>
+                        <field name="dni"/>
+                        <field name="fecha_nacimiento"/>
+                        <field name="telefono"/>
+                        <field name="email"/>
+                    </group>
+
+                    <group string="Dirección">
+                        <field name="calle_id"/>
+                        <field name="piso"/>
+                        <field name="puerta"/>
+                    </group>
+
+                    <notebook>
+                        <!-- DATOS BANCARIOS -->
+                        <page string="Datos Bancarios" attrs="{'invisible': [('metodo_pago','!=','banco')]}">
+                            <field name="datos_banco_ids">
+                                <tree editable="bottom">
+                                    <field name="iban"/>
+                                    <field name="banco"/>
+                                    <field name="sucursal"/>
+                                    <field name="cuenta"/>
+                                </tree>
+                            </field>
+                        </page>
+
+                        <!-- OBSERVACIONES -->
+                        <page string="Observaciones">
+                            <field name="observaciones"/>
+                        </page>
+
+                        <!-- BAJA -->
+                        <page string="Baja">
+                            <field name="fecha_baja"/>
+                            <field name="motivo_baja"/>
+                        </page>
+
+                    </notebook>
+
+                </sheet>
+
+            </form>
+        </field>
+    </record>
+
+</odoo>

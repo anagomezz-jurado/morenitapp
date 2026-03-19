@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+      <!-- ================= TREE ================= -->
+    <record id="view_libro_tree" model="ir.ui.view">
+        <field name="name">libro.tree</field>
+        <field name="model">morenitapp.libro</field>
+        <field name="arch" type="xml">
+            <tree string="Libros">
+                <field name="cod_libro"/>
+                <field name="nombre"/>
+                <field name="anio"/>
+                <field name="importe"/>
+                <field name="tipoevento_id"/>
+                <field name="total_anunciantes"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ================= FORM ================= -->
+    <record id="view_libro_form" model="ir.ui.view">
+        <field name="name">libro.form</field>
+        <field name="model">morenitapp.libro</field>
+        <field name="arch" type="xml">
+            <form string="Libro">
+                <sheet>
+                    <group>
+                        <field name="cod_libro"/>
+                        <field name="nombre"/>
+                        <field name="anio"/>
+                        <field name="tipoevento_id"/>
+                        <field name="importe"/>
+                        <field name="fechaRecibo"/>
+                    </group>
+
+                    <group>
+                        <field name="textoReciboEvento"/>
+                        <field name="textoAnunciante"/>
+                    </group>
+
+                    <group>
+                        <field name="descripcion"/>
+                        <field name="archivoLibro" filename="nombre"/>
+                    </group>
+
+                    <!-- ================= NOTEBOOK ================= -->
+                    <notebook>
+                        <page string="Anunciantes">
+                            <field name="anunciantes_ids">
+                                <tree editable="bottom" string="Anunciantes del Libro">
+                                    <field name="proveedor_id"/>
+                                    <field name="importe"/>
+                                    <field name="cobrado"/>
+                                    <field name="fecha_cobro"
+                                           attrs="{'invisible':[('cobrado','=',False)]}"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+
+                    <footer>
+                        <field name="total_anunciantes" readonly="1"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_morenitapp_rol_tree" model="ir.ui.view">
+        <field name="name">morenitapp.rol.tree</field>
+        <field name="model">morenitapp.rol</field>
+        <field name="arch" type="xml">
+            <tree editable="bottom">
+                <field name="codRol"/>
+                <field name="name"/> </tree>
+        </field>
+    </record>
+
+    <record id="view_morenitapp_usuario_tree" model="ir.ui.view">
+        <field name="name">morenitapp.usuario.tree</field>
+        <field name="model">morenitapp.usuario</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="nombre"/>
+                <field name="apellido1"/>
+                <field name="email"/>
+                <field name="rol_id"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_morenitapp_rol" model="ir.actions.act_window">
+        <field name="name">Roles</field>
+        <field name="res_model">morenitapp.rol</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="action_morenitapp_usuario" model="ir.actions.act_window">
+        <field name="name">Usuarios App</field>
+        <field name="res_model">morenitapp.usuario</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_morenitapp_rol_item" 
+              name="Roles de Usuario" 
+              parent="menu_configuracion" 
+              action="action_morenitapp_rol" 
+              sequence="20"/>
+
+    <menuitem id="menu_morenitapp_usuario_item" 
+              name="Usuarios de la App" 
+              parent="menu_gestion_usuarios" 
+              action="action_morenitapp_usuario" 
+              sequence="10"/>
+</odoo>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- ====================== COFRADÍAS ====================== -->
+
+    <!-- TREE -->
+    <record id="view_cofradia_tree" model="ir.ui.view">
+        <field name="name">cofradia.tree</field>
+        <field name="model">morenitapp.cofradia</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="cifCofradia"/>
+                <field name="nombreCofradia"/>
+                <field name="telefonoCofradia"/>
+                <field name="emailCofradia"/>
+                <field name="antiguedadCofradia"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- FORM -->
+    <record id="view_cofradia_form" model="ir.ui.view">
+        <field name="name">cofradia.form</field>
+        <field name="model">morenitapp.cofradia</field>
+        <field name="arch" type="xml">
+            <form string="Cofradía">
+                <sheet>
+
+                    <group>
+                        <field name="cifCofradia"/>
+                        <field name="nombreCofradia"/>
+                    </group>
+
+                    <group string="Dirección">
+                        <field name="direccionCofradia"/>
+                        <field name="puerta"/>
+                        <field name="piso"/>
+                    </group>
+
+                    <group string="Contacto">
+                        <field name="telefonoCofradia"/>
+                        <field name="emailCofradia"/>
+                        <field name="paginaWeb"/>
+                    </group>
+
+                    <group string="Información">
+                        <field name="antiguedadCofradia"/>
+                        <field name="observaciones"/>
+                    </group>
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+   
+</odoo>

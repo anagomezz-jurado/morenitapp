@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- ================= TREE ================= -->
+
+    <record id="view_organizador_tree" model="ir.ui.view">
+        <field name="name">organizador.tree</field>
+        <field name="model">morenitapp.organizador</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="cif"/>
+                <field name="nombre"/>
+                <field name="telefono"/>
+                <field name="email"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ================= FORM ================= -->
+
+    <record id="view_organizador_form" model="ir.ui.view">
+        <field name="name">organizador.form</field>
+        <field name="model">morenitapp.organizador</field>
+        <field name="arch" type="xml">
+            <form string="Organizador">
+                <sheet>
+
+                    <group>
+                        <field name="cif"/>
+                        <field name="nombre"/>
+                    </group>
+
+                    <group string="Contacto">
+                        <field name="telefono"/>
+                        <field name="email"/>
+                    </group>
+
+                    <group string="Dirección">
+                        <field name="direccion"/>
+                        <field name="piso"/>
+                        <field name="puerta"/>
+                    </group>
+
+                    <group string="Imágenes">
+                        <field name="logo" widget="image"/>
+                        <field name="firma_presidente" widget="image"/>
+                        <field name="firma_secretario" widget="image"/>
+                        <field name="firma_tesorero" widget="image"/>
+                    </group>
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>

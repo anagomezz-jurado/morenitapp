@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Vistas de Cargos -->
+    <record id="view_cargo_tree" model="ir.ui.view">
+        <field name="name">cargo.tree</field>
+        <field name="model">morenitapp.cargo</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="codCargo"/>
+                <field name="nombreCargo"/>
+                <field name="tipocargo_id"/>
+                <field name="fechaInicioCargo"/>
+                <field name="fechaFinCargo"/>
+                <field name="telefono"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_cargo_form" model="ir.ui.view">
+        <field name="name">cargo.form</field>
+        <field name="model">morenitapp.cargo</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="codCargo"/>
+                        <field name="nombreCargo"/>
+                        <field name="tipocargo_id"/>
+                        <field name="fechaInicioCargo"/>
+                        <field name="fechaFinCargo"/>
+                    </group>
+                    <group>
+                        <field name="direccion"/>
+                        <field name="puerta"/>
+                        <field name="piso"/>
+                        <field name="telefono"/>
+                    </group>
+                    <group>
+                        <field name="observaciones"/>
+                        <field name="motivo"/>
+                        <field name="textoSaludo"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vistas de Tipos de Cargos -->
+    <record id="view_tipocargo_tree" model="ir.ui.view">
+        <field name="name">tipocargo.tree</field>
+        <field name="model">morenitapp.tipocargo</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="codTipoCargo"/>
+                <field name="nombreTipoCargo"/>
+                <field name="observaciones"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_tipocargo_form" model="ir.ui.view">
+        <field name="name">tipocargo.form</field>
+        <field name="model">morenitapp.tipocargo</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="codTipoCargo"/>
+                        <field name="nombreTipoCargo"/>
+                        <field name="observaciones"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+   
+
+</odoo>

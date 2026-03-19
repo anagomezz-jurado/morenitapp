@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- ====================== ACCIONES ====================== -->
+
+    <!-- Dashboard -->
+    <record id="action_dashboard" model="ir.actions.act_window">
+        <field name="name">Dashboard</field>
+        <field name="res_model">morenitapp.hermano</field>
+        <field name="view_mode">tree</field>
+    </record>
+
+    <!-- Hermanos -->
+    <record id="action_hermanos" model="ir.actions.act_window">
+        <field name="name">Hermanos</field>
+        <field name="res_model">morenitapp.hermano</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('fecha_baja','=',False)]</field>
+    </record>
+    <record id="action_hermanos_baja" model="ir.actions.act_window">
+        <field name="name">Hermanos de Baja</field>
+        <field name="res_model">morenitapp.hermano</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('fecha_baja','!=',False)]</field>
+    </record>
+
+    <!-- Autoridades -->
+    <record id="action_autoridades" model="ir.actions.act_window">
+        <field name="name">Autoridades</field>
+        <field name="res_model">morenitapp.autoridad</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+    <record id="action_tipos_autoridades" model="ir.actions.act_window">
+        <field name="name">Tipos de Autoridades</field>
+        <field name="res_model">morenitapp.tipoautoridad</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+     <!-- Cargos -->
+    <record id="action_cargos" model="ir.actions.act_window">
+        <field name="name">Cargos</field>
+        <field name="res_model">morenitapp.cargo</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="action_tipos_cargos" model="ir.actions.act_window">
+        <field name="name">Tipos de Cargos</field>
+        <field name="res_model">morenitapp.tipocargo</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- Cofradías -->
+    <record id="action_cofradias" model="ir.actions.act_window">
+        <field name="name">Cofradías</field>
+        <field name="res_model">morenitapp.cofradia</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+
+    <!-- Eventos -->
+   <record id="action_eventos" model="ir.actions.act_window">
+        <field name="name">Eventos</field>
+        <field name="res_model">morenitapp.evento</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="action_calendario_eventos" model="ir.actions.act_window">
+        <field name="name">Calendario de Eventos</field>
+        <field name="res_model">morenitapp.evento</field>
+        <field name="view_mode">calendar,tree,form</field>
+    </record>
+    <record id="action_organizadores" model="ir.actions.act_window">
+        <field name="name">Organizadores</field>
+        <field name="res_model">morenitapp.organizador</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- Libros -->
+    <record id="action_libros" model="ir.actions.act_window">
+        <field name="name">Libros</field>
+        <field name="res_model">morenitapp.libro</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+    <record id="action_libro" model="ir.actions.act_window">
+        <field name="name">Listar Libro</field>
+        <field name="res_model">morenitapp.libro</field>
+        <field name="view_mode">form</field>
+    </record>
+
+    <!-- Proveedores -->
+    <record id="action_proveedores" model="ir.actions.act_window">
+        <field name="name">Proveedores</field>
+        <field name="res_model">morenitapp.proveedor</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+    <record id="action_anunciantes" model="ir.actions.act_window">
+        <field name="name">Anunciantes</field>
+        <field name="res_model">morenitapp.proveedor</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('anunciante','=',True)]</field>
+    </record>
+    
+    <record id="action_tipo_evento" model="ir.actions.act_window">
+        <field name="name">Tipos de Evento</field>
+        <field name="res_model">morenitapp.tipoevento</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+    <record id="action_grupo_proveedores" model="ir.actions.act_window">
+        <field name="name">Grupo de Proveedores</field>
+        <field name="res_model">morenitapp.grupoproveedor</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- Ubicaciones -->
+    <record id="action_provincias" model="ir.actions.act_window">
+        <field name="name">Provincias</field>
+        <field name="res_model">morenitapp.provincia</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+    <record id="action_localidades" model="ir.actions.act_window">
+        <field name="name">Localidades</field>
+        <field name="res_model">morenitapp.localidad</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+    <record id="action_codigos_postales" model="ir.actions.act_window">
+        <field name="name">Códigos Postales</field>
+        <field name="res_model">morenitapp.codigopostal</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+    <record id="action_calles" model="ir.actions.act_window">
+        <field name="name">Calles</field>
+        <field name="res_model">morenitapp.calle</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

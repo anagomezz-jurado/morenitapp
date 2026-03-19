@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+<!-- TREE -->
+<record id="view_codigopostal_tree" model="ir.ui.view">
+    <field name="name">codigopostal.tree</field>
+    <field name="model">morenitapp.codigopostal</field>
+    <field name="arch" type="xml">
+        <tree string="Códigos Postales">
+            <field name="name"/>
+            <field name="localidad_id"/>
+        </tree>
+    </field>
+</record>
+
+<!-- FORM -->
+<record id="view_codigopostal_form" model="ir.ui.view">
+    <field name="name">codigopostal.form</field>
+    <field name="model">morenitapp.codigopostal</field>
+    <field name="arch" type="xml">
+        <form string="Código Postal">
+            <sheet>
+                <group>
+                    <field name="name"/>
+                    <field name="localidad_id"/>
+                </group>
+            </sheet>
+        </form>
+    </field>
+</record>
+
+</odoo>

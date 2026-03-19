@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+<!-- TREE -->
+<record id="view_banco_tree" model="ir.ui.view">
+    <field name="name">banco.tree</field>
+    <field name="model">morenitapp.banco</field>
+    <field name="arch" type="xml">
+        <tree string="Datos Bancarios">
+            <field name="hermano_id"/>
+            <field name="iban"/>
+            <field name="banco"/>
+            <field name="sucursal"/>
+            <field name="cuenta"/>
+        </tree>
+    </field>
+</record>
+
+<!-- FORM -->
+<record id="view_banco_form" model="ir.ui.view">
+    <field name="name">banco.form</field>
+    <field name="model">morenitapp.banco</field>
+    <field name="arch" type="xml">
+        <form string="Datos Bancarios">
+            <sheet>
+                <group>
+                    <field name="hermano_id"/>
+                    <field name="iban"/>
+                    <field name="banco"/>
+                    <field name="sucursal"/>
+                    <field name="cuenta"/>
+                </group>
+            </sheet>
+        </form>
+    </field>
+</record>
+
+</odoo>

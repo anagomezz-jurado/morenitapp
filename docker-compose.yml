@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  web:
+    image: odoo:16.0
+    container_name: odoo16
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "8069:8069"   # Acceso a Odoo
+    environment:
+      - HOST=db
+      - USER=odoo
+      - PASSWORD=odoo
+      - PORT=5432
+    volumes:
+      - web-data-morenitapp:/var/lib/odoo
+      - ./custom-addons:/mnt/extra-addons
+
+  db:
+    image: postgres:15
+    container_name: postgres15
+    restart: always
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: odoo
+    ports:
+      - "5432:5432"
+    command: odoo --xmlrpc-interface=0.0.0.0   # Expone PostgreSQL a tu PC
+    volumes:
+      - db-data-morenitapp:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"  # pgAdmin accesible en http://localhost:5050
+    depends_on:
+      - db
+
+volumes:
+  web-data-morenitapp:
+  db-data-morenitapp:

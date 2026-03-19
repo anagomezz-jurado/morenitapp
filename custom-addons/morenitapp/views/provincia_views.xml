@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+<!-- TREE -->
+<record id="view_provincia_tree" model="ir.ui.view">
+    <field name="name">provincia.tree</field>
+    <field name="model">morenitapp.provincia</field>
+    <field name="arch" type="xml">
+        <tree string="Provincias">
+            <field name="codProvincia"/>
+            <field name="nombreProvincia"/>
+        </tree>
+    </field>
+</record>
+
+<!-- FORM -->
+<record id="view_provincia_form" model="ir.ui.view">
+    <field name="name">provincia.form</field>
+    <field name="model">morenitapp.provincia</field>
+    <field name="arch" type="xml">
+        <form string="Provincia">
+            <sheet>
+                <group>
+                    <field name="codProvincia"/>
+                    <field name="nombreProvincia"/>
+                </group>
+            </sheet>
+        </form>
+    </field>
+</record>
+
+</odoo>

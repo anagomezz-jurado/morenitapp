@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Menú principal -->
+    <menuitem id="menu_morenitapp_root" name="MorenitApp" sequence="1"/>
+
+    <!-- Dashboard -->
+    <menuitem id="menu_dashboard" name="Dashboard" parent="menu_morenitapp_root" action="action_dashboard" sequence="1"/>
+
+    <!-- Hermanos -->
+    <menuitem id="menu_hermanos" name="Hermanos" parent="menu_morenitapp_root" sequence="2"/>
+    <menuitem id="menu_hermanos_lista" name="Listado" parent="menu_hermanos" action="action_hermanos"/>
+    <menuitem id="menu_hermanos_baja" name="Hermanos de Baja" parent="menu_hermanos" action="action_hermanos_baja"/>
+
+    <!-- Secretaría -->
+    <menuitem id="menu_secretaria" name="Secretaría" parent="menu_morenitapp_root" sequence="3"/>
+
+    <!-- Autoridades -->
+    <menuitem id="menu_autoridades" name="Autoridades" parent="menu_secretaria" sequence="1"/>
+    <menuitem id="menu_autoridades_listado" name="Listado de Autoridades" parent="menu_autoridades" action="action_autoridades"/>
+    <menuitem id="menu_tipos_autoridades" name="Tipos de Autoridades" parent="menu_autoridades" action="action_tipos_autoridades"/>
+
+    <!-- Cargos -->
+    <menuitem id="menu_cargos" name="Cargos" parent="menu_secretaria" sequence="2"/>
+    <menuitem id="menu_cargos_listado" name="Listado de Cargos" parent="menu_cargos" action="action_cargos"/>
+    <menuitem id="menu_tipos_cargos" name="Tipos de Cargos" parent="menu_cargos" action="action_tipos_cargos"/>
+
+    <!-- Cofradías -->
+     <menuitem id="menu_cofradias"
+              name="Cofradías"
+              parent="menu_secretaria"
+              sequence="3"/>
+
+    <menuitem id="menu_cofradias_listado"
+              name="Listado de Cofradías"
+              parent="menu_cofradias"
+              action="action_cofradias"/>
+
+    <!-- Eventos -->
+    <menuitem id="menu_eventos" name="Eventos" parent="menu_morenitapp_root" sequence="4"/>
+    <menuitem id="menu_gestion_eventos" name="Gestión de Eventos" parent="menu_eventos" action="action_eventos"/>
+    <menuitem id="menu_calendario_evento" name="Calendario" parent="menu_gestion_eventos" action="action_calendario_eventos"/>
+    <menuitem id="menu_crear_evento" name="Listado de eventos" parent="menu_gestion_eventos" action="action_eventos"/>
+    <menuitem id="menu_gestion_organizadores" name="Organizadores" parent="menu_eventos" action="action_organizadores"/>
+
+     <!-- Libros -->
+    <menuitem id="menu_libros" name="Publicaciones y Libros" parent="menu_morenitapp_root" action="action_libros" sequence="5"/>
+    <menuitem id="menu_listar_libros" name="Listar Libros" parent="menu_libros" action="action_libros"/>
+    <menuitem id="menu_anunciantes_libros" name="Anunciantes" parent="menu_libros" action="action_anunciantes"/>
+
+
+    <!-- Proveedores -->
+    <menuitem id="menu_proveedores" name="Proveedores" parent="menu_morenitapp_root" sequence="6"/>
+    <menuitem id="menu_proveedores_lista" name="Listado" parent="menu_proveedores" action="action_proveedores"/>
+    <menuitem id="menu_anunciantes" name="Anunciantes" parent="menu_proveedores" action="action_anunciantes"/>
+
+   
+    <!-- Ubicaciones -->
+    <menuitem id="menu_ubicaciones" name="Ubicaciones" parent="menu_morenitapp_root" sequence="7"/>
+    <menuitem id="menu_provincias" name="Provincias" parent="menu_ubicaciones" action="action_provincias" sequence="1"/>
+    <menuitem id="menu_localidades" name="Localidades" parent="menu_ubicaciones" action="action_localidades" sequence="2"/>
+    <menuitem id="menu_codigos_postales" name="Códigos Postales" parent="menu_ubicaciones" action="action_codigos_postales" sequence="3"/>
+    <menuitem id="menu_calles" name="Calles" parent="menu_ubicaciones" action="action_calles" sequence="4"/>
+
+    <!-- Gestión de Panel de usuarios -->
+    <menuitem id="menu_gestion_usuarios" name="Gestión de Usuarios" parent="menu_morenitapp_root" sequence="8"/>
+
+    <!-- Configuración -->
+    <menuitem id="menu_configuracion" name="Configuración" parent="menu_morenitapp_root" sequence="9"/>
+    <menuitem id="menu_tipo_evento" name="Tipo de Evento" parent="menu_configuracion" action="action_tipo_evento"/>
+    <menuitem id="menu_grupo_proveedores" name="Grupo de Proveedores" parent="menu_configuracion" action="action_grupo_proveedores"/>
+</odoo>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="category_morenitapp" model="ir.module.category">
+        <field name="name">MorenitApp</field>
+        <field name="sequence">10</field>
+    </record>
+
+    <record id="group_administrador" model="res.groups">
+        <field name="name">Administrador</field>
+        <field name="category_id" ref="morenitapp.category_morenitapp"/>
+    </record>
+
+    <record id="group_secretaria" model="res.groups">
+        <field name="name">Secretaria</field>
+        <field name="category_id" ref="morenitapp.category_morenitapp"/>
+    </record>
+
+</odoo>

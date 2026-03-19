@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+<!-- ====================== VISTA TREE (LISTADO) ====================== -->
+    <record id="view_autoridad_tree" model="ir.ui.view">
+        <field name="name">autoridad.tree</field>
+        <field name="model">morenitapp.autoridad</field>
+        <field name="arch" type="xml">
+            <tree string="Autoridades">
+                <field name="codAutoridad"/>
+                <field name="nombreAutoridad"/>
+                <field name="tipoautoridad_id"/>
+                <field name="cargo"/>
+                <field name="telefono"/>
+                <field name="correoElectronico"/>
+                <field name="localidad_id"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ====================== VISTA FORMULARIO ====================== -->
+    <record id="view_autoridad_form" model="ir.ui.view">
+        <field name="name">autoridad.form</field>
+        <field name="model">morenitapp.autoridad</field>
+        <field name="arch" type="xml">
+            <form string="Autoridad">
+                <sheet>
+                    <group>
+                        <field name="codAutoridad"/>
+                        <field name="nombreAutoridad"/>
+                        <field name="tipoautoridad_id"/>
+                        <field name="nombreSaluda"/>
+                        <field name="cargo"/>
+                        <field name="direccion"/>
+                        <field name="codPostal_id"/>
+                        <field name="localidad_id"/>
+                        <field name="telefono"/>
+                        <field name="correoElectronico"/>
+                        <field name="observaciones"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+<!-- ====================== TIPOS DE AUTORIDADES ====================== -->
+    <record id="view_tipoautoridad_tree" model="ir.ui.view">
+        <field name="name">tipoautoridad.tree</field>
+        <field name="model">morenitapp.tipoautoridad</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="codTipoAutoridad"/>
+                <field name="nombreTipoAutoridad"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_tipoautoridad_form" model="ir.ui.view">
+        <field name="name">tipoautoridad.form</field>
+        <field name="model">morenitapp.tipoautoridad</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="codTipoAutoridad"/>
+                        <field name="nombreTipoAutoridad"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

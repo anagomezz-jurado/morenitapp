@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- ================= TREE ================= -->
+    <record id="view_proveedor_tree" model="ir.ui.view">
+        <field name="name">proveedor.tree</field>
+        <field name="model">morenitapp.proveedor</field>
+        <field name="arch" type="xml">
+            <tree string="Proveedores">
+                <field name="cod_proveedor"/>
+                <field name="nombre"/>
+                <field name="contacto"/>
+                <field name="telefono"/>
+                <field name="email"/>
+                <field name="grupo_id"/>
+                <field name="anunciante"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ================= FORM ================= -->
+    <record id="view_proveedor_form" model="ir.ui.view">
+        <field name="name">proveedor.form</field>
+        <field name="model">morenitapp.proveedor</field>
+        <field name="arch" type="xml">
+            <form string="Proveedor">
+                <sheet>
+                    <group>
+                        <field name="cod_proveedor"/>
+                        <field name="nombre"/>
+                        <field name="anunciante"/>
+                        <field name="grupo_id"/>
+                    </group>
+                    <group string="Contacto">
+                        <field name="contacto"/>
+                        <field name="telefono"/>
+                        <field name="email"/>
+                        <field name="direccion"/>
+                    </group>
+                    <group string="Observaciones">
+                        <field name="observaciones"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+</odoo>

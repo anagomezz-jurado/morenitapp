@@ -1,0 +1,33 @@
+{
+    'name': "MorenitApp",
+    'summary': "Gestión completa de la Hermandad",
+    'description': "Módulo para gestionar hermanos, eventos, libros, autoridades, usuarios y proveedores",
+    'author': "Tu Nombre",
+    'category': 'Tools',
+    'version': '1.0',
+    'depends': ['base'],
+    'data': [
+        'security/groups.xml',
+        'security/ir.model.access.csv',
+        'views/hermanos_views.xml',
+        'views/banco_views.xml',
+        'views/calle_views.xml',
+        'views/codigopostal_views.xml',
+        'views/localidad_views.xml',
+        'views/libro_views.xml',
+        'views/proveedores_views.xml',
+        'views/autoridades_views.xml',
+        'views/cargos_views.xml',
+        'views/cofradias_views.xml',
+        'views/organizadores_views.xml',
+        'views/usuario_view.xml',
+        'views/actions_morenitapp.xml',
+        'views/menus_morenitapp.xml',
+        'views/provincia_views.xml',
+        
+    ],
+    'installable': True,
+    'application': True,
+    'auto_install': False,
+    
+}

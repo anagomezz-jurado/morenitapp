@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- TREE -->
+    <record id="view_evento_tree" model="ir.ui.view">
+        <field name="name">evento.tree</field>
+        <field name="model">morenitapp.evento</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="cod_evento"/>
+                <field name="nombre"/>
+                <field name="fecha_inicio"/>
+                <field name="fecha_fin"/>
+                <field name="lugar"/>
+                <field name="organizador_id"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- FORM -->
+    <record id="view_evento_form" model="ir.ui.view">
+        <field name="name">evento.form</field>
+        <field name="model">morenitapp.evento</field>
+        <field name="arch" type="xml">
+            <form string="Evento">
+                <sheet>
+                    <group>
+                        <field name="cod_evento"/>
+                        <field name="nombre"/>
+                        <field name="tipoevento_id"/>
+                    </group>
+
+                    <group string="Fechas">
+                        <field name="fecha_inicio"/>
+                        <field name="fecha_fin"/>
+                        <field name="anio"/>
+                    </group>
+
+                    <group string="Ubicación">
+                        <field name="lugar"/>
+                        <field name="organizador_id"/>
+                    </group>
+
+                    <group string="Descripción">
+                        <field name="descripcion"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!--  CALENDAR (CORRECTO) -->
+    <record id="view_evento_calendar" model="ir.ui.view">
+        <field name="name">evento.calendar</field>
+        <field name="model">morenitapp.evento</field>
+        <field name="arch" type="xml">
+            <calendar string="Eventos"
+                      date_start="fecha_inicio"
+                      date_stop="fecha_fin"
+                      color="organizador_id">
+                
+                <field name="display_name"/>
+
+                <field name="lugar"/>
+                <field name="organizador_id"/>
+
+            </calendar>
+        </field>
+    </record>
+
+</odoo>
