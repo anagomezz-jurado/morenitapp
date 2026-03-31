@@ -28,7 +28,6 @@ services:
       POSTGRES_PASSWORD: odoo
     ports:
       - "5432:5432"
-    command: odoo --xmlrpc-interface=0.0.0.0   # Expone PostgreSQL a tu PC
     volumes:
       - db-data-morenitapp:/var/lib/postgresql/data
 
