@@ -1,7 +1,6 @@
 import json
 import logging
-import traceback
-from odoo import http, fields
+from odoo import http
 from odoo.http import request
 
 _logger = logging.getLogger(__name__)
@@ -15,17 +14,19 @@ class MorenitAppAPI(http.Controller):
             headers=[('Content-Type', 'application/json'), ('Access-Control-Allow-Origin', '*')]
         )
 
+    def _options_response(self, methods):
+        return request.make_response('', headers=[
+            ('Access-Control-Allow-Origin', '*'),
+            ('Access-Control-Allow-Methods', ', '.join(methods + ['OPTIONS'])),
+            ('Access-Control-Allow-Headers', 'Content-Type'),
+        ])
+
     @http.route('/api/hermanos', auth='public', type='http', csrf=False, methods=['GET', 'OPTIONS'])
     def get_hermanos(self, **kw):
         if request.httprequest.method == 'OPTIONS':
-            return request.make_response('', headers=[
-                ('Access-Control-Allow-Origin', '*'),
-                ('Access-Control-Allow-Methods', 'GET, OPTIONS'),
-                ('Access-Control-Allow-Headers', 'Content-Type'),
-            ])
+            return self._options_response(['GET'])
 
         try:
-            # Buscamos hermanos que NO tengan fecha de baja
             hermanos = request.env['morenitapp.hermano'].sudo().search([('fecha_baja', '=', False)])
             data = []
             for h in hermanos:
@@ -42,51 +43,83 @@ class MorenitAppAPI(http.Controller):
                     "sexo": h.sexo or 'Hombre',
                     "fecha_alta": h.fecha_alta.strftime('%Y-%m-%d') if h.fecha_alta else '',
                     "fecha_nacimiento": h.fecha_nacimiento.strftime('%Y-%m-%d') if h.fecha_nacimiento else '',
-                    # Usamos safe navigation para evitar errores si no hay calle asignada
-                    "calle_nombre": h.calle_id.nombreCalle if h.calle_id else 'Sin Calle',
+                    "calle_nombre": h.calle_id.nombreCalle if h.calle_id else '',
+                    "calle_id": h.calle_id.id if h.calle_id else False,
                     "piso": h.piso or '',
                     "puerta": h.puerta or '',
                     "metodo_pago": h.metodo_pago or 'metalico',
+                    "iban": h.iban or '',
                     "responsable": bool(h.responsable),
                 })
-            
-            return request.make_response(
-                json.dumps(data),
-                headers=[('Content-Type', 'application/json'), ('Access-Control-Allow-Origin', '*')]
-            )
+            return request.make_response(json.dumps(data), headers=[('Content-Type', 'application/json'), ('Access-Control-Allow-Origin', '*')])
         except Exception as e:
-            _logger.error("Error en GET hermanos: %s", traceback.format_exc())
             return self._error_response(str(e))
+
+    
 
     @http.route('/api/hermanos', auth='public', type='http', csrf=False, methods=['POST', 'OPTIONS'])
     def crear_hermano(self, **post):
         if request.httprequest.method == 'OPTIONS':
-            return request.make_response('', headers=[
-                ('Access-Control-Allow-Origin', '*'),
-                ('Access-Control-Allow-Methods', 'POST, OPTIONS'),
-                ('Access-Control-Allow-Headers', 'Content-Type'),
-            ])
-        
+            return self._options_response(['POST'])
+
         try:
-            body = request.httprequest.data
-            datos = json.loads(body)
-
-            # Validación de campos obligatorios antes de crear
-            campos_obligatorios = ['numero_hermano', 'nombre', 'apellido1', 'dni', 'calle_id']
-            for campo in campos_obligatorios:
-                if campo not in datos or not datos[campo]:
-                    return self._error_response(f"El campo '{campo}' es obligatorio.", status=400)
-
-            nuevo = request.env['morenitapp.hermano'].sudo().create(datos)
+            datos = json.loads(request.httprequest.data)
+            iban_valor = datos.pop('iban', '') 
             
+            # Si es pago por banco, inyectamos los datos bancarios en la creación
+            if datos.get('metodo_pago') == 'banco' and iban_valor:
+                # El formato (0, 0, {...}) crea el registro relacionado simultáneamente
+                datos['datos_banco_ids'] = [(0, 0, {
+                    'iban': iban_valor[0:4],
+                    'banco': iban_valor[4:8],
+                    'sucursal': iban_valor[8:12],
+                    'cuenta': iban_valor[12:22],
+                })]
+
+            nuevo_hermano = request.env['morenitapp.hermano'].sudo().create(datos)
             return request.make_response(
-                json.dumps({
-                    "status": "success",
-                    "id": nuevo.id,
-                    "codigo": nuevo.codigo_hermano
-                }),
+                json.dumps({"status": "success", "id": nuevo_hermano.id}),
                 headers=[('Content-Type', 'application/json'), ('Access-Control-Allow-Origin', '*')]
             )
         except Exception as e:
-            _logger.error("Error en POST crear_hermano: %s", traceback.format_exc())
+            _logger.error(f"Error en API crear_hermano: {str(e)}")
+            return self._error_response(str(e))
+
+    @http.route('/api/hermanos/<int:id>', auth='public', type='http', csrf=False, methods=['PUT', 'OPTIONS'])
+    def update_hermano(self, id, **post):
+        if request.httprequest.method == 'OPTIONS':
+            return self._options_response(['PUT'])
+        
+        try:
+            datos = json.loads(request.httprequest.data)
+            iban_valor = datos.pop('iban', None)
+            hermano = request.env['morenitapp.hermano'].sudo().browse(id)
+            
+            if not hermano.exists():
+                return self._error_response("Hermano no encontrado", status=404)
+
+            if iban_valor is not None:
+                if hermano.datos_banco_ids:
+                    # Actualizar el primer registro bancario existente
+                    hermano.datos_banco_ids[0].write({
+                        'iban': iban_valor[0:4],
+                        'banco': iban_valor[4:8],
+                        'sucursal': iban_valor[8:12],
+                        'cuenta': iban_valor[12:22],
+                    })
+                elif iban_valor:
+                    # Crear si no tenía
+                    datos['datos_banco_ids'] = [(0, 0, {
+                        'iban': iban_valor[0:4],
+                        'banco': iban_valor[4:8],
+                        'sucursal': iban_valor[8:12],
+                        'cuenta': iban_valor[12:22],
+                    })]
+
+            hermano.write(datos)
+            return request.make_response(
+                json.dumps({"status": "success"}), 
+                headers=[('Content-Type', 'application/json'), ('Access-Control-Allow-Origin', '*')]
+            )
+        except Exception as e:
             return self._error_response(str(e))

@@ -15,7 +15,6 @@ class Proveedor(models.Model):
     observaciones = fields.Text(string="Observaciones")
     anunciante = fields.Boolean(string="¿Es Anunciante?")
 
-    # 🔥 MOSTRAR CODIGO + NOMBRE
     def name_get(self):
         result = []
         for record in self:

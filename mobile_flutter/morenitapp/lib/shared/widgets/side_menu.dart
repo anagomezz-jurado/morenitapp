@@ -58,8 +58,7 @@ class SideMenuState extends ConsumerState<SideMenu> {
             _buildSubTile(
               icon: Icons.person_add_alt_sharp,
               label: 'Listado de Hermanos activos',
-              onTap: () => context.push(
-                  '/hermanos-activos'),
+              onTap: () => context.push('/hermanos-activos'),
             ),
             _buildSubTile(
               icon: Icons.person_add_disabled_sharp,
@@ -76,33 +75,27 @@ class SideMenuState extends ConsumerState<SideMenu> {
           icon: Icons.document_scanner_rounded,
           title: 'Secretaría',
           children: [
-            // BOTÓN DIRECTO A PANTALLA DE AUTORIDADES
             _buildSubTile(
               icon: Icons.gavel_rounded,
               label: 'Autoridades',
-              onTap: () => context.push(
-                  '/autoridades'), // Esta pantalla contendrá "Tipos de autoridades"
+              onTap: () => context.push('/autoridades'),
             ),
-
-            // BOTÓN DIRECTO A PANTALLA DE CARGOS
             _buildSubTile(
               icon: Icons.badge_rounded,
               label: 'Cargos',
-              onTap: () => context
-                  .push('/cargos'), // Esta pantalla contendrá "Tipos de cargos"
+              onTap: () => context.push('/cargos'), // Coincide con el Router
             ),
-
-            // BOTÓN DIRECTO A COFRADÍAS
             _buildSubTile(
               icon: Icons.account_balance_rounded,
               label: 'Cofradías',
-              onTap: () => context.push('/cofradias'),
+              onTap: () => context.push('/cofradias'), // Coincide con el Router
             ),
           ],
         ),
 
         const Divider(indent: 28, endIndent: 28),
 
+        // --- EVENTOS ---
         // --- EVENTOS ---
         CustomExpansionTile(
           icon: Icons.event_available_rounded,
@@ -115,13 +108,13 @@ class SideMenuState extends ConsumerState<SideMenu> {
                 _buildSubTile(
                   icon: Icons.calendar_month_rounded,
                   label: 'Calendario',
-                  onTap: () {},
+                  onTap: () => context.push('/calendario'), // Vinculado
                   leftPadding: 40,
                 ),
                 _buildSubTile(
-                  icon: Icons.add_circle_outline_rounded,
-                  label: 'Crear evento',
-                  onTap: () {},
+                  icon: Icons.list_alt_rounded,
+                  label: 'Listado de eventos',
+                  onTap: () => context.push('/gestion-eventos'), // Vinculado
                   leftPadding: 40,
                 ),
               ],
@@ -129,24 +122,40 @@ class SideMenuState extends ConsumerState<SideMenu> {
             _buildSubTile(
               icon: Icons.groups_rounded,
               label: 'Gestión de Organizadores',
-              onTap: () {},
+              onTap: () => context.push('/organizadores'), // Vinculado
             ),
           ],
         ),
-
         const Divider(indent: 28, endIndent: 28),
 
         // --- PUBLICACIONES ---
         CustomExpansionTile(
           icon: Icons.menu_book_rounded,
-          title: 'Publicaciones y Libro',
+          title: 'Libro y Publicidad',
           children: [
             _buildSubTile(
-                icon: Icons.book_rounded, label: 'Libro', onTap: () {}),
+                icon: Icons.book_rounded, label: 'Libro', onTap: () => context.push('/libros')),
             _buildSubTile(
                 icon: Icons.newspaper_rounded,
-                label: 'Publicaciones',
-                onTap: () {}),
+                label: 'Anunciantes',
+               onTap: () => context.push('/anunciantes')),
+          ],
+        ),
+
+        const Divider(indent: 28, endIndent: 28),
+        // --- PROVEEDORES ---
+        CustomExpansionTile(
+          icon: Icons.admin_panel_settings_rounded,
+          title: 'Proveedores',
+          children: [
+            _buildSubTile(
+                icon: Icons.alarm_on_rounded,
+                label: 'Listado',
+                onTap: () => context.push('/proveedores')),
+            _buildSubTile(
+                icon: Icons.alarm_on_rounded,
+                label: 'Anunciantes',
+                onTap: () => context.push('/anunciantes')),
           ],
         ),
 
@@ -160,14 +169,33 @@ class SideMenuState extends ConsumerState<SideMenu> {
             _buildSubTile(
                 icon: Icons.location_city_rounded,
                 label: 'Provincias',
-                onTap: () => context.push(
-                  '/provincia')),
+                onTap: () => context.push('/provincia')),
             _buildSubTile(
-                icon: Icons.rebase_edit, label: 'Localidades', onTap: () => context.push('/localidad')),
+                icon: Icons.rebase_edit,
+                label: 'Localidades',
+                onTap: () => context.push('/localidad')),
             _buildSubTile(
-                icon: Icons.mark_as_unread, label: 'C. Postales', onTap: () => context.push('/codigo-postal')),
+                icon: Icons.mark_as_unread,
+                label: 'C. Postales',
+                onTap: () => context.push('/codigo-postal')),
             _buildSubTile(
-                icon: Icons.add_road_rounded, label: 'Calles', onTap: () => context.push('/calle')),
+                icon: Icons.add_road_rounded,
+                label: 'Calles',
+                onTap: () => context.push('/calle')),
+          ],
+        ),
+
+        const Divider(indent: 28, endIndent: 28),
+
+        // --- GESTIÓN USUARIOS DE LA APP ---
+        CustomExpansionTile(
+          icon: Icons.admin_panel_settings_rounded,
+          title: 'Gestión de Usuarios',
+          children: [
+            _buildSubTile(
+                icon: Icons.alarm_on_rounded,
+                label: 'Usuarios de la App',
+                onTap: () => context.push('/usuarios')),
           ],
         ),
 
@@ -207,19 +235,24 @@ class SideMenuState extends ConsumerState<SideMenu> {
             _buildSubTile(
                 icon: Icons.category_rounded,
                 label: 'Tipo de evento',
-                onTap: () {}),
+                onTap: () => context.push('/tipo-evento')),
             _buildSubTile(
-                icon: Icons.handshake_rounded,
-                label: 'Proveedores',
-                onTap: () {}),
+                icon: Icons
+                    .inventory_2_outlined, // Icono más apropiado para grupos
+                label: 'Grupo de Proveedores',
+                onTap: () => context.push('/grupo-proveedor')),
             _buildSubTile(
-                icon: Icons.handshake_rounded,
+                icon: Icons.gavel_rounded,
                 label: 'Tipos de autoridades',
-                onTap: () {}),
+                onTap: () => context.push('/tipo-autoridades')),
             _buildSubTile(
-                icon: Icons.handshake_rounded,
+                icon: Icons.badge_rounded,
                 label: 'Tipos de cargos',
-                onTap: () {}),
+                onTap: () => context.push('/tipo-cargos')),
+            _buildSubTile(
+                icon: Icons.admin_panel_settings_rounded,
+                label: 'Gestión de Roles',
+                onTap: () => context.push('/roles')),
           ],
         ),
 

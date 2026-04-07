@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:morenitapp/features/panel-gestion/hermanos/domain/entities/hermano.dart';
 import 'package:morenitapp/features/panel-gestion/hermanos/presentation/providers/hermanos_provider.dart';
 
 class HermanoActivoListadoScreen extends ConsumerWidget {
@@ -8,6 +9,7 @@ class HermanoActivoListadoScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Mantenemos el uso de hermanosFiltradosProvider para que los filtros sigan funcionando
     final hermanosAsync = ref.watch(hermanosFiltradosProvider);
 
     return Scaffold(
@@ -108,30 +110,77 @@ class HermanoActivoListadoScreen extends ConsumerWidget {
                 data: (hermanos) => SingleChildScrollView(
                   scrollDirection: Axis.vertical,
                   child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: DataTable(
-                        headingRowColor:
-                            MaterialStateProperty.all(const Color(0xFFF8F9FA)),
-                        columns: const [
-                          DataColumn(label: Text('NOMBRE COMPLETO')),
-                          DataColumn(label: Text('DNI')),
-                          DataColumn(label: Text('TELÉFONO')),
-                          DataColumn(label: Text('EMAIL')),
-                          DataColumn(label: Text('FECHA ALTA')),
-                        ],
-                        rows: hermanos
-                            .map((h) => DataRow(cells: [
-                                  DataCell(Text('${h.nombre} ${h.apellido1}')),
-                                  DataCell(Text(h.dni)),
-                                  DataCell(Text(h.telefono)),
-                                  DataCell(Text(h.email)),
-                                  DataCell(Text(h.fechaAlta)),
-                                ]))
-                            .toList(),
-                      )),
+                    scrollDirection: Axis.horizontal,
+                    child: DataTable(
+                      headingRowColor:
+                          MaterialStateProperty.all(const Color(0xFFF8F9FA)),
+                      columns: const [
+                        DataColumn(label: Text('NOMBRE COMPLETO')),
+                        DataColumn(label: Text('DNI')),
+                        DataColumn(label: Text('TELÉFONO')),
+                        DataColumn(label: Text('EMAIL')),
+                        DataColumn(label: Text('FECHA ALTA')),
+                        DataColumn(label: Text('ACCIONES')), // Columna nueva
+                      ],
+                      rows: hermanos.map((h) => DataRow(cells: [
+                            DataCell(Text('${h.nombre} ${h.apellido1}')),
+                            DataCell(Text(h.dni)),
+                            DataCell(Text(h.telefono)),
+                            DataCell(Text(h.email)),
+                            DataCell(Text(h.fechaAlta)),
+                            DataCell(
+                              Row(
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.edit,
+                                        color: Colors.blue, size: 20),
+                                    onPressed: () => context.push(
+                                        '/nuevo-hermano',
+                                        extra: h), // Pasamos el objeto hermano
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete,
+                                        color: Colors.red, size: 20),
+                                    onPressed: () =>
+                                        _confirmarEliminar(context, ref, h),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ])).toList(),
+                    ),
+                  ),
                 ),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Ventana de confirmación para eliminar
+  void _confirmarEliminar(BuildContext context, WidgetRef ref, Hermano hermano) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar eliminación'),
+        content:
+            Text('¿Estás seguro de que deseas eliminar a ${hermano.nombre}?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('CANCELAR')),
+          TextButton(
+            onPressed: () async {
+              if (hermano.id != null) {
+                await ref
+                    .read(hermanosListadoProvider.notifier)
+                    .eliminarHermano(hermano.id?.toInt() ?? 0); // Aseguramos que sea int
+                if (context.mounted) Navigator.pop(context);
+              }
+            },
+            child: const Text('ELIMINAR', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),

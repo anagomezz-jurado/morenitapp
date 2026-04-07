@@ -15,29 +15,23 @@ class HermanosDatasourceImpl extends HermanoDatasource {
   ));
 
   @override
-Future<List<Hermano>> getHermanos({int limit = 10, int offset = 0}) async {
-  try {
-    final response = await dio.get('/hermanos');
-    print(response.data); // <-- Mira qué llega exactamente en la consola de debug
-    
-    final List<dynamic> data = response.data;
-    return data.map((hermanoJson) => Hermano.fromJson(hermanoJson)).toList();
-  } on DioException catch (e) {
-    // Esto te dará más detalles del error real del servidor
-    print("DATA ERROR: ${e.response?.data}"); 
-    throw CustomError('Error 500: ${e.response?.data['message'] ?? 'Error interno'}');
+  Future<List<Hermano>> getHermanos({int limit = 10, int offset = 0}) async {
+    try {
+      final response = await dio.get('/hermanos');
+      final List<dynamic> data = response.data;
+      return data.map((hermanoJson) => Hermano.fromJson(hermanoJson)).toList();
+    } on DioException catch (e) {
+      throw CustomError('Error: ${e.response?.data['message'] ?? 'Error interno'}');
+    }
   }
-}
 
   @override
   Future<Hermano> anadirHermano(Hermano hermano) async {
     try {
       final response = await dio.post('/hermanos', data: jsonEncode(hermano.toJson()));
-      
       final res = (response.data is String) ? jsonDecode(response.data) : response.data;
 
       if (res['status'] == 'success') {
-        // Devolvemos el hermano con los datos reales que asignó el servidor
         return Hermano.fromJson({
           ...hermano.toJson(),
           'id': res['id'],
@@ -46,13 +40,41 @@ Future<List<Hermano>> getHermanos({int limit = 10, int offset = 0}) async {
       }
       throw CustomError(res['message'] ?? 'Error del servidor');
     } on DioException catch (e) {
-      final msg = e.response?.data?['message'] ?? 'Error 500';
-      throw CustomError(msg);
+      throw CustomError(e.response?.data?['message'] ?? 'Error 500');
     }
   }
 
   @override
-  Future<bool> bajaHermano(String id) async => throw UnimplementedError();
+  Future<void> updateHermano(int id, Map<String, dynamic> datos) async {
+    try {
+      await dio.put('/hermanos/$id', data: datos);
+    } on DioException catch (e) {
+      throw CustomError('Error al actualizar: ${e.response?.data['message'] ?? 'Error'}');
+    }
+  }
+
   @override
-  Future<Hermano> getHermanoByDni(String dni) async => throw UnimplementedError();
+  Future<void> eliminarHermano(int id) async {
+    try {
+      await dio.delete('/hermanos/$id');
+    } on DioException catch (e) {
+      throw CustomError('Error al eliminar');
+    }
+  }
+
+  @override
+  Future<Hermano> getHermanoByDni(String dni) async {
+    // Implementar si es necesario
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<bool> bajaHermano(int id) async {
+    try {
+      final response = await dio.post('/hermanos/$id/baja');
+      return response.statusCode == 200;
+    } on DioException catch (e) {
+      throw CustomError('Error al dar de baja');
+    }
+  }
 }

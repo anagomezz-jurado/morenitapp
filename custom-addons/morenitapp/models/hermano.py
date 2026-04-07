@@ -62,6 +62,7 @@ class Hermano(models.Model):
     motivo_baja = fields.Text()
     fecha_reactivacion = fields.Date(string="Fecha de re-activación")
     datos_banco_ids = fields.One2many('morenitapp.banco', 'hermano_id', string="Datos Bancarios")
+    iban = fields.Char(string="IBAN Completo", compute="_compute_iban_total", store=True)
 
     @api.depends('numero_hermano', 'sexo')
     def _compute_codigo_hermano(self):
@@ -94,3 +95,31 @@ class Hermano(models.Model):
             record.fecha_baja = False
             record.motivo_baja = False
         return True
+    
+    @api.depends('datos_banco_ids.iban', 'datos_banco_ids.banco', 'datos_banco_ids.sucursal', 'datos_banco_ids.cuenta')
+    def _compute_iban_total(self):
+        for record in self:
+            if record.datos_banco_ids:
+                b = record.datos_banco_ids[0]
+                record.iban = f"{b.iban or ''}{b.banco or ''}{b.sucursal or ''}{b.cuenta or ''}"
+            else:
+                record.iban = ""
+
+    def _inverse_iban(self):
+        """ 
+        Descompone el string recibido de la API en los 3 campos.
+        Se espera que la API envíe el IBAN completo o los campos por separado.
+        """
+        for record in self:
+            if record.iban and len(record.iban) >= 18:
+                # Ejemplo asumiendo que recibes los 18 dígitos finales
+                vals = {
+                    'banco': record.iban[0:4],
+                    'sucursal': record.iban[4:8],
+                    'cuenta': record.iban[8:18],
+                    'hermano_id': record.id,
+                }
+                if record.datos_banco_ids:
+                    record.datos_banco_ids[0].write(vals)
+                else:
+                    self.env['morenitapp.banco'].sudo().create(vals)

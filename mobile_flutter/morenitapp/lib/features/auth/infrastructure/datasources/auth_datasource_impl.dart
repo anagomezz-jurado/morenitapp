@@ -81,7 +81,25 @@ class AuthDataSourceImpl extends AuthDataSource {
   }
   @override
   Future<User> checkAuthStatus(String token) async {
-    // Implementación pendiente
-    throw UnimplementedError();
+    try {
+      // Usamos el endpoint de listado filtrando por ID (que es nuestro token)
+      final response = await dio.post('/usuarios', data: {
+        "params": {
+          "domain": [["id", "=", int.parse(token)]]
+        }
+      });
+
+      final responseData = response.data['result'] ?? response.data;
+      
+      if (responseData['success'] == false || (responseData['usuarios'] as List).isEmpty) {
+        throw CustomError('Sesión no válida');
+      }
+
+      // Mapeamos el primer usuario encontrado
+      return UserMapper.userJsonToEntity(responseData['usuarios'][0]);
+
+    } catch (e) {
+      throw CustomError('No se pudo verificar la sesión');
+    }
   }
 }

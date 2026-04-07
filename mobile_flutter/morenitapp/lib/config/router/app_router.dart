@@ -5,9 +5,25 @@ import 'package:morenitapp/config/router/app_router_notifier.dart';
 // Screens
 import 'package:morenitapp/features/auth/presentation/screens/inicio_sesion_screen.dart';
 import 'package:morenitapp/features/auth/presentation/screens/registrar_screen.dart';
+import 'package:morenitapp/features/panel-gestion/configuracion/presentation/screens/grupo_proveedor_screen.dart';
+import 'package:morenitapp/features/panel-gestion/configuracion/presentation/screens/roles_screen.dart';
+import 'package:morenitapp/features/panel-gestion/configuracion/presentation/screens/tipo_autoridad_screen.dart';
+import 'package:morenitapp/features/panel-gestion/configuracion/presentation/screens/tipo_cargo_screen.dart';
+import 'package:morenitapp/features/panel-gestion/configuracion/presentation/screens/tipo_evento_screen.dart';
+import 'package:morenitapp/features/panel-gestion/configuracion/presentation/screens/usuarios_screen.dart';
+import 'package:morenitapp/features/panel-gestion/eventos-cultos/presentation/screens/calendario_eventos_screen.dart';
+import 'package:morenitapp/features/panel-gestion/eventos-cultos/presentation/screens/eventos_gestion_screen.dart';
+import 'package:morenitapp/features/panel-gestion/eventos-cultos/presentation/screens/organizadores_screen.dart';
+import 'package:morenitapp/features/panel-gestion/hermanos/domain/entities/hermano.dart';
 import 'package:morenitapp/features/panel-gestion/hermanos/presentation/screens/hermano_activo_listado_screen.dart';
 import 'package:morenitapp/features/panel-gestion/home_screen.dart';
 import 'package:morenitapp/features/panel-gestion/hermanos/presentation/screens/nuevo_hermano.dart';
+import 'package:morenitapp/features/panel-gestion/libros/presentation/screens/libros_screens.dart';
+import 'package:morenitapp/features/panel-gestion/proveedores/presentation/screens/anunciantes_screen.dart';
+import 'package:morenitapp/features/panel-gestion/proveedores/presentation/screens/proveedores_screen.dart';
+import 'package:morenitapp/features/panel-gestion/secretaria/presentation/screens/autoridad_screen.dart';
+import 'package:morenitapp/features/panel-gestion/secretaria/presentation/screens/cargos_screen.dart';
+import 'package:morenitapp/features/panel-gestion/secretaria/presentation/screens/cofradias_screen.dart';
 import 'package:morenitapp/features/panel-gestion/ubicaciones/presentation/screens/calle_screen.dart';
 import 'package:morenitapp/features/panel-gestion/ubicaciones/presentation/screens/codigo_postal_screen.dart';
 import 'package:morenitapp/features/panel-gestion/ubicaciones/presentation/screens/localidad_screen.dart';
@@ -16,44 +32,105 @@ import 'package:morenitapp/features/panel_usuario/screens/panel_usuario_screen.d
 
 // Providers
 import 'package:morenitapp/features/auth/presentation/providers/auth_provider.dart';
-// Asegúrate de tener este provider que maneja la lógica de redirección
-// import 'package:morenitapp/config/router/go_router_notifier.dart'; 
-
-final goRouterProvider = Provider((ref) {
-  
+final goRouterProvider = Provider<GoRouter>((ref) {
   final goRouterNotifier = ref.read(goRouterNotifierProvider);
 
   return GoRouter(
     initialLocation: '/login',
     refreshListenable: goRouterNotifier,
     routes: [
-     
+      
+      // =============================================================
+      // ACCESO Y AUTENTICACIÓN
+      // =============================================================
       GoRoute(
         path: '/login',
-        builder: (context, state) => const LoginScreen(), 
+        builder: (context, state) => const LoginScreen(),
       ),
       GoRoute(
         path: '/registrarse',
         builder: (context, state) => const RegisterScreen(),
       ),
-      //Panel de Gestión de la Cofradía
-       GoRoute(
+
+      // =============================================================
+      // DASHBOARD (INICIO)
+      // =============================================================
+      GoRoute(
         path: '/',
         builder: (context, state) => const HomeScreen(),
       ),
-       GoRoute(
+
+      // =============================================================
+      // GESTIÓN DE HERMANOS
+      // =============================================================
+      GoRoute(
         path: '/hermanos-activos',
         builder: (context, state) => const HermanoActivoListadoScreen(),
-      ),
-      GoRoute(
-        path: '/nuevo-hermano',
-        builder: (context, state) => const NuevoHermano(),
       ),
       GoRoute(
         path: '/hermanos-no-activos',
         builder: (context, state) => const HermanoActivoListadoScreen(),
       ),
-      //Gestión de Ubicaciones
+      GoRoute(
+        path: '/nuevo-hermano',
+        builder: (context, state) {
+          final hermano = (state.extra is Hermano) ? state.extra as Hermano : null;
+          return NuevoHermano(hermanoAEditar: hermano);
+        },
+      ),
+
+      // =============================================================
+      // SECRETARÍA
+      // =============================================================
+      GoRoute(
+        path: '/autoridades',
+        builder: (context, state) => const AutoridadesScreen(),
+      ),
+      GoRoute(
+        path: '/cargos',
+        builder: (context, state) => const CargosScreen(),
+      ),
+      GoRoute(
+        path: '/cofradias',
+        builder: (context, state) => const CofradiasScreen(),
+      ),
+
+       GoRoute(
+        path: '/libros',
+        builder: (context, state) => const LibrosScreen(),
+      ),
+
+      // =============================================================
+      // EVENTOS Y CULTOS
+      // =============================================================
+      GoRoute(
+        path: '/calendario',
+        builder: (context, state) => const CalendarioEventosScreen(),
+      ),
+      GoRoute(
+        path: '/gestion-eventos',
+        builder: (context, state) => const EventosGestionScreen(),
+      ),
+      GoRoute(
+        path: '/organizadores',
+        builder: (context, state) => const OrganizadoresScreen(),
+      ),
+
+      // =============================================================
+      // PROVEEDORES
+      // =============================================================
+      GoRoute(
+        path: '/proveedores',
+        builder: (context, state) => const ProveedoresScreen(),
+      ),
+      GoRoute(
+        path: '/anunciantes',
+        builder: (context, state) => const AnunciantesScreen(),
+      ),
+
+      // =============================================================
+      // UBICACIONES
+      // =============================================================
       GoRoute(
         path: '/provincia',
         builder: (context, state) => const ProvinciaScreen(),
@@ -70,33 +147,59 @@ final goRouterProvider = Provider((ref) {
         path: '/calle',
         builder: (context, state) => const CallesGestionScreen(),
       ),
-      //Panel de usuarios
+
+      // =============================================================
+      // GESTIÓN DE USUARIOS / PANEL
+      // =============================================================
+      GoRoute(
+        path: '/usuarios',
+        builder: (context, state) => const UsuariosScreen(),
+      ),
       GoRoute(
         path: '/panel-usuario',
         builder: (context, state) => const PanelUsuarioScreen(),
       ),
+
+      // =============================================================
+      // CONFIGURACIÓN (TIPOS Y MAESTROS)
+      // =============================================================
+      GoRoute(
+        path: '/tipo-evento',
+        builder: (context, state) => const TipoEventoScreen(),
+      ),
+      GoRoute(
+        path: '/tipo-autoridades',
+        builder: (context, state) => const TipoAutoridadScreen(),
+      ),
+      GoRoute(
+        path: '/tipo-cargos',
+        builder: (context, state) => const TipoCargoScreen(),
+      ),
+      GoRoute(
+        path: '/grupo-proveedor',
+        builder: (context, state) => const GrupoProveedorScreen(),
+      ),
+      GoRoute(
+        path: '/roles',
+        builder: (context, state) => const RolesScreen(),
+      ),
     ],
-    
+
+    // --- LÓGICA DE REDIRECCIÓN ---
     redirect: (context, state) {
       final isGoingTo = state.matchedLocation;
       final authStatus = goRouterNotifier.authStatus;
 
-      // 1. Si ya estoy autenticado y trato de ir a login/registro, mándame al Home
-      if ((isGoingTo == '/login' || isGoingTo == '/registrarse') && 
+      if ((isGoingTo == '/login' || isGoingTo == '/registrarse') &&
           authStatus == AuthStatus.authenticated) return '/';
-      
-      // 2. EXCEPCIÓN PARA EL PANEL DE USUARIO (Modo Invitado)
-      // Si el usuario va al panel, permitimos que pase aunque no esté autenticado
+
       if (isGoingTo == '/panel-usuario') return null;
 
-      // 3. Protección de rutas privadas (como el Home)
       if (authStatus == AuthStatus.notAuthenticated) {
-        // Si no está en login/registro, lo obligamos a ir a login
         if (isGoingTo != '/login' && isGoingTo != '/registrarse') return '/login';
       }
 
-      // En cualquier otro caso, no redirigir
       return null;
     },
-  ); 
+  );
 });
