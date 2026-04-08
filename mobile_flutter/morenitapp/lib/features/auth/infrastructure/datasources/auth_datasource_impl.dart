@@ -6,10 +6,8 @@ import 'package:morenitapp/features/auth/infrastructure/errors/auth_errors.dart'
 import 'package:morenitapp/features/auth/infrastructure/mappers/user_mapper.dart';
 
 class AuthDataSourceImpl extends AuthDataSource {
-  
   final dio = Dio(BaseOptions(
     baseUrl: Environment.apiUrl,
-    // Aumentamos los tiempos de espera para evitar errores de red prematuros
     connectTimeout: const Duration(seconds: 5),
     receiveTimeout: const Duration(seconds: 5),
     headers: {
@@ -19,38 +17,65 @@ class AuthDataSourceImpl extends AuthDataSource {
   ));
 
   @override
-  Future<User> register(String email, String password, String fullName) async {
+  Future<User> register({
+    required String email,
+    required String password,
+    required String nombre,
+    required String apellido1,
+    required String apellido2,
+    required String telefono,
+    required bool recibirNotiEmail,
+    required bool recibirNotiTelefono,
+  }) async {
     try {
-      // NOTA: Odoo con type='json' espera que los datos vayan dentro de un objeto "params"
       final response = await dio.post('/registrar', data: {
         "params": {
           'email': email.trim(),
           'contrasena': password,
-          'nombre': fullName.trim(),
+          'nombre': nombre,
+          'apellido1': apellido1,
+          'apellido2': apellido2,
+          'telefono': telefono,
+          'recibirNotiEmail': recibirNotiEmail,
+          'recibirNotiTelefono': recibirNotiTelefono,
           'rol_id': 2,
         }
       });
 
-      // Extraemos la data de Odoo (Odoo mete todo en 'result')
-      final responseData = response.data['result'] ?? response.data;
+      // Odoo suele devolver errores dentro de 'result' o directamente en la raíz
+      final data = response.data;
+      final result = data['result'] ?? data;
 
-      if (responseData['success'] == false) {
-        throw CustomError(responseData['error'] ?? 'Error en el registro');
+      // SI ODOO DEVUELVE SUCCESS FALSE O TIENE CAMPO ERROR
+      if (result['success'] == false || data.containsKey('error')) {
+        final String errorMsg = result['error']?.toString() ?? data['error']?['message']?.toString() ?? '';
+        final String cleanError = errorMsg.toLowerCase();
+        
+        // DETECCIÓN DE CORREO DUPLICADO
+        if (cleanError.contains('email') || cleanError.contains('correo')) {
+          throw CustomError('El correo electrónico ya está en uso');
+        }
+
+        // DETECCIÓN DE TELÉFONO DUPLICADO (Nueva lógica)
+        if (cleanError.contains('telefono') || cleanError.contains('phone') || cleanError.contains('teléfono')) {
+          throw CustomError('El número de teléfono ya está registrado');
+        }
+
+        // Detección genérica de "Ya existe"
+        if (cleanError.contains('already exists') || cleanError.contains('ya existe')) {
+          throw CustomError('Los datos ingresados ya pertenecen a otra cuenta');
+        }
+        
+        throw CustomError(errorMsg.isEmpty ? 'Error en el registro' : errorMsg);
       }
 
-      return UserMapper.userJsonToEntity(responseData);
-      
+      return UserMapper.userJsonToEntity(result);
+
     } on DioException catch (e) {
-      // Debug detallado para que veas el error en la consola
-      print('--- ERROR DE RED ---');
-      print('Status Code: ${e.response?.statusCode}');
-      print('Data: ${e.response?.data}');
-      
-      if (e.type == DioExceptionType.connectionTimeout) throw CustomError('Servidor no responde (Timeout)');
-      if (e.type == DioExceptionType.connectionError) throw CustomError('No se pudo conectar al servidor. Revisa la IP.');
-      
-      throw CustomError('Error de red: ${e.message}');
+      _handleDioError(e);
+      rethrow;
     } catch (e) {
+      if (e is CustomError) rethrow;
       throw CustomError('Error inesperado: $e');
     }
   }
@@ -59,47 +84,61 @@ class AuthDataSourceImpl extends AuthDataSource {
   Future<User> login(String email, String password) async {
     try {
       final response = await dio.post('/login', data: {
-        "params": {
-          'email': email.trim(), 
-          'contrasena': password
-        }
+        "params": {'email': email.trim(), 'contrasena': password}
       });
 
-      final responseData = response.data['result'] ?? response.data;
+      final result = response.data['result'] ?? response.data;
 
-      if (responseData['success'] == false) {
-        throw CustomError(responseData['error'] ?? 'Credenciales incorrectas');
+      if (result['success'] == false) {
+        throw CustomError(result['error'] ?? 'Credenciales incorrectas');
       }
 
-      return UserMapper.userJsonToEntity(responseData);
-
-    } on DioException {
-      throw CustomError('Error de conexión con Odoo');
+      return UserMapper.userJsonToEntity(result);
+    } on DioException catch (e) {
+       _handleDioError(e);
+       rethrow;
     } catch (e) {
+      if (e is CustomError) rethrow;
       throw CustomError('Error en el login');
     }
   }
+
   @override
   Future<User> checkAuthStatus(String token) async {
     try {
-      // Usamos el endpoint de listado filtrando por ID (que es nuestro token)
       final response = await dio.post('/usuarios', data: {
         "params": {
           "domain": [["id", "=", int.parse(token)]]
         }
       });
 
-      final responseData = response.data['result'] ?? response.data;
-      
-      if (responseData['success'] == false || (responseData['usuarios'] as List).isEmpty) {
+      final result = response.data['result'] ?? response.data;
+
+      if (result['success'] == false || (result['usuarios'] as List).isEmpty) {
         throw CustomError('Sesión no válida');
       }
 
-      // Mapeamos el primer usuario encontrado
-      return UserMapper.userJsonToEntity(responseData['usuarios'][0]);
-
+      return UserMapper.userJsonToEntity(result['usuarios'][0]);
     } catch (e) {
       throw CustomError('No se pudo verificar la sesión');
     }
+  }
+
+  void _handleDioError(DioException e) {
+    if (e.type == DioExceptionType.connectionTimeout) throw CustomError('Tiempo de espera agotado');
+    if (e.type == DioExceptionType.connectionError) throw CustomError('Sin conexión al servidor');
+    
+    // Si Odoo devuelve un error 400/500, intentamos leer el mensaje
+   final dynamic errorData = e.response?.data;
+    final String serverMessage = (errorData?['result']?['error'] ?? errorData?['error']?['message'] ?? '').toString().toLowerCase();
+
+    if (serverMessage.contains('unique constraint') || serverMessage.contains('already exists')) {
+      if (serverMessage.contains('telefono') || serverMessage.contains('phone')) {
+        throw CustomError('Este número de teléfono ya está en uso');
+      }
+      throw CustomError('Este correo electrónico ya está en uso');
+    }
+
+    throw CustomError('Error de servidor: $serverMessage');
   }
 }

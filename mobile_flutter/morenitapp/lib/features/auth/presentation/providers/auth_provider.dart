@@ -17,7 +17,7 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
       keyValueStorageService: keyValueStorageService
   );
 });
-
+// --- NOTIFIER ---
 // --- NOTIFIER ---
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository authRepository;
@@ -27,12 +27,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required this.authRepository,
     required this.keyValueStorageService,
   }) : super(AuthState()) {
-    // Al inicializar el provider, verificamos si hay sesión previa
     checkAuthStatus();
   }
 
+  // Limpiar mensajes de error manualmente si es necesario
+  void clearErrorMessage() {
+    state = state.copyWith(errorMessage: '');
+  }
+
   Future<void> loginUser(String email, String password) async {
-    state = state.copyWith(authStatus: AuthStatus.checking);
+    state = state.copyWith(authStatus: AuthStatus.checking, errorMessage: '');
     try {
       final user = await authRepository.login(email, password);
       _setLoggedUser(user);
@@ -41,49 +45,64 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> registerUser(String email, String password, String fullName) async {
-    state = state.copyWith(authStatus: AuthStatus.checking);
+  Future<void> registerUser({
+    required String email,
+    required String password,
+    required String nombre,
+    required String apellido1,
+    required String apellido2,
+    required String telefono,
+    bool recibirNotiEmail = true,
+    bool recibirNotiTelefono = false,
+  }) async {
+    // Resetear estado de error antes de intentar
+    state = state.copyWith(authStatus: AuthStatus.checking, errorMessage: '');
+    
     try {
-      final user = await authRepository.register(email, password, fullName);
+      final user = await authRepository.register(
+        email: email,
+        password: password,
+        nombre: nombre,
+        apellido1: apellido1,
+        apellido2: apellido2,
+        telefono: telefono,
+        recibirNotiEmail: recibirNotiEmail,
+        recibirNotiTelefono: recibirNotiTelefono,
+      );
+      
       _setLoggedUser(user);
+      
     } on CustomError catch (e) {
+      // Aquí es donde capturamos el error "Email already exists" del Repositorio
       state = state.copyWith(
         authStatus: AuthStatus.notAuthenticated,
-        errorMessage: e.message,
+        errorMessage: e.message, // Ejemplo: "El correo ya está en uso"
       );
     } catch (e) {
       state = state.copyWith(
         authStatus: AuthStatus.notAuthenticated,
-        errorMessage: 'Error no controlado',
+        errorMessage: 'Error no controlado durante el registro',
       );
     }
   }
 
-  /// ESTE MÉTODO ES LA CLAVE PARA QUE NO SE SALGA LA SESIÓN
   void checkAuthStatus() async {
-    // 1. Buscamos el token en el almacenamiento local (SharedPrefs)
     final token = await keyValueStorageService.getValue<String>('token');
-    
-    // 2. Si no hay token, el estado es no autenticado
     if (token == null) {
       state = state.copyWith(authStatus: AuthStatus.notAuthenticated);
       return;
     }
 
     try {
-      // 3. Si hay token, validamos con el backend si sigue siendo válido
       final user = await authRepository.checkAuthStatus(token);
       _setLoggedUser(user);
     } catch (e) {
-      // 4. Si el token expiró o falló la red, cerramos sesión
       logout();
     }
   }
 
   void _setLoggedUser(User user) async {
-    // PERSISTENCIA: Guardamos el token en el disco
     await keyValueStorageService.setKeyValue('token', user.token);
-    
     state = state.copyWith(
       user: user,
       authStatus: AuthStatus.authenticated,
@@ -92,9 +111,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> logout([String? errorMessage]) async {
-    // LIMPIEZA: Borramos el token del disco
     await keyValueStorageService.removeKey('token');
-    
     state = state.copyWith(
         authStatus: AuthStatus.notAuthenticated,
         user: null,

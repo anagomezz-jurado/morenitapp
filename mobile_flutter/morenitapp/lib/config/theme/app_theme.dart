@@ -36,33 +36,31 @@ class AppTheme {
 class MainBackground extends StatelessWidget {
   final Widget child;
   final String? title;
-  final bool centerTitle;
+  final Widget? headerIcon;
 
   const MainBackground({
     super.key,
     required this.child,
     this.title,
-    this.centerTitle = false,
+    this.headerIcon,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Obtenemos los colores del tema actual para que todo sea consistente
     final colors = Theme.of(context).colorScheme;
     final textStyle = Theme.of(context).appBarTheme.titleTextStyle;
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-      // Evita que el teclado mueva los elementos del fondo
-      resizeToAvoidBottomInset: false, 
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // 1. Fondo Superior (Usando el color primario del tema)
+          // Fondo Verde Dinámico (35% de la altura)
           Container(
             width: double.infinity,
-            height: MediaQuery.of(context).size.height * 0.28, 
+            height: size.height * 0.35,
             decoration: BoxDecoration(
-              color: colors.primary, // <--- Conectado al AppTheme
+              color: colors.primary,
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(40),
                 bottomRight: Radius.circular(40),
@@ -70,25 +68,54 @@ class MainBackground extends StatelessWidget {
             ),
           ),
 
-          // 2. Capa de Contenido (Título + Child)
+          // Contenido con Scroll para evitar el error de "Overflow"
           SafeArea(
-            child: Column(
-              children: [
-                // TÍTULO: Estilo dinámico basado en el tema
-                if (title != null)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                    child: Text(
-                      title!,
-                      textAlign: centerTitle ? TextAlign.center : TextAlign.start,
-                      style: textStyle, // <--- Conectado al AppTheme
-                    ),
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Column(
+                    children: [
+                      // Título
+                      if (title != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 15),
+                          child: Text(title!, style: textStyle, textAlign: TextAlign.center),
+                        ),
+
+                      // Icono en Círculo
+                      if (headerIcon != null)
+                        Container(
+                          margin: const EdgeInsets.only(top: 15),
+                          padding: const EdgeInsets.all(15),
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+                          ),
+                          child: headerIcon,
+                        ),
+
+                      // Espacio flexible que empuja la frase fuera del verde
+                      const SizedBox(height: 30),
+
+                      // El resto del contenido (Frase + Formulario)
+                      Expanded(
+                        child: Container(
+                          width: double.infinity,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(30),
+                              topRight: Radius.circular(30),
+                            ),
+                          ),
+                          child: child,
+                        ),
+                      ),
+                    ],
                   ),
-                
-                // EL CONTENIDO (Login, Registro, etc.)
-                Expanded(
-                  child: child, // Lo que pongas aquí aparecerá debajo del título
                 ),
               ],
             ),

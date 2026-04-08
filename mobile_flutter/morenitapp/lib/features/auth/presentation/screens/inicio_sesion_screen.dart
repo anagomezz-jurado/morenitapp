@@ -42,35 +42,28 @@ class LoginScreen extends ConsumerWidget {
         }
       }
     });
-    return GestureDetector(
-    onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-    child: Scaffold(
-      body: Stack( // Usamos Stack para superponer elementos
+    return MainBackground(
+      title: '¡Bienvenido a MorenitApp!',
+      headerIcon: Image.asset('assets/icono.png', width: 80, height: 80),
+      child: Column(
         children: [
-          // Capa 1: Fondo y Texto Fijo
-          const _FixedBackgroundHeader(),
-
-          // Capa 2: Contenido con Scroll (El formulario)
-          Positioned.fill(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                children: [
-                  // Este espacio vacío debe coincidir con la altura del header 
-                  // para que el formulario empiece debajo del icono
-                  const SizedBox(height: 250), 
-                  const _LoginFormCard(),
-                  const SizedBox(height: 20),
-                  const _LoginFooter(),
-                  const SizedBox(height: 50),
-                ],
-              ),
-            ),
+          const SizedBox(height: 20),
+          const Text(
+            'Gestiona tu cuenta de forma fácil',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+                color: Colors.black54,
+                fontSize: 15,
+                fontWeight: FontWeight.w500),
           ),
+          const SizedBox(height: 30),
+          const _LoginFormCard(),
+          const SizedBox(height: 20),
+          const _LoginFooter(),
+          const SizedBox(height: 20),
         ],
       ),
-    ),
-  );
+    );
   }
 }
 
@@ -228,48 +221,6 @@ class _LoginFooter extends StatelessWidget {
           onPressed: () => context.push('/registrarse'),
           child: const Text('Regístrate ahora',
               style: TextStyle(fontWeight: FontWeight.bold)),
-        ),
-      ],
-    );
-  }
-}
-
-
-class _FixedBackgroundHeader extends StatelessWidget {
-  const _FixedBackgroundHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Aquí envolvemos en MainBackground para mantener tu diseño verde
-        MainBackground(
-          title: '¡Bienvenido!',
-          centerTitle: true,
-          // El child del MainBackground será el icono
-          child: Container(
-            margin: const EdgeInsets.only(top: 20),
-            padding: const EdgeInsets.all(15),
-            decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)]),
-            child: const Image(
-              image: AssetImage('assets/icono.png'),
-              width: 80,
-              height: 80,
-            ),
-          ),
-        ),
-        // ESTO ES LO QUE QUERÍAS: Siempre debajo del "cuadrado verde"
-        const SizedBox(height: 15),
-        const Text(
-          'Gestiona tu cuenta de forma fácil',
-          style: TextStyle(
-            color: Colors.black54, 
-            fontSize: 15,
-            fontWeight: FontWeight.w500
-          )
         ),
       ],
     );

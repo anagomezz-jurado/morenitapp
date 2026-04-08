@@ -1,25 +1,23 @@
 // dni.dart
 import 'package:formz/formz.dart';
 
-enum DniError { empty, format }
+enum DniError { empty, length }
 
 class Dni extends FormzInput<String, DniError> {
   const Dni.pure() : super.pure('');
   const Dni.dirty(String value) : super.dirty(value);
 
-  static final RegExp dniRegExp = RegExp(r'^[0-9]{8}[A-Z]$');
-
   String? get errorMessage {
     if (isValid || isPure) return null;
     if (displayError == DniError.empty) return 'El DNI es requerido';
-    if (displayError == DniError.format) return 'Formato incorrecto (8 números y letra)';
+    if (displayError == DniError.length) return 'El DNI debe tener 9 caracteres';
     return null;
   }
 
   @override
   DniError? validator(String value) {
     if (value.isEmpty || value.trim().isEmpty) return DniError.empty;
-    if (!dniRegExp.hasMatch(value.toUpperCase())) return DniError.format;
+    if (value.length < 9) return DniError.length;
     return null;
   }
 }
