@@ -22,31 +22,18 @@ class Hermano(models.Model):
     telefono = fields.Char()
     email = fields.Char()
     
-    # Relación principal
+    # --- CAMBIO NECESARIO: Campo estado ---
+    estado = fields.Selection([
+        ('activo', 'Activo'),
+        ('baja', 'Baja')
+    ], string="Estado", default='activo', store=True)
+    # --------------------------------------
+
     calle_id = fields.Many2one('morenitapp.calle', string="Calle", required=True)
     
-    # Campos relacionados (Asegúrate de que estos nombres existan en morenitapp.calle)
-    localidad_id = fields.Many2one(
-        'morenitapp.localidad', 
-        related='calle_id.localidad_id', 
-        string="Localidad", 
-        store=True, 
-        readonly=True
-    )
-    codPostal_id = fields.Many2one(
-        'morenitapp.codigopostal', 
-        related='calle_id.codPostal_id', 
-        string="Código Postal", 
-        store=True, 
-        readonly=True
-    )
-    provincia_id = fields.Many2one(
-        'morenitapp.provincia', 
-        related='localidad_id.codProvincia_id', 
-        string="Provincia", 
-        store=True, 
-        readonly=True
-    )
+    localidad_id = fields.Many2one('morenitapp.localidad', related='calle_id.localidad_id', string="Localidad", store=True, readonly=True)
+    codPostal_id = fields.Many2one('morenitapp.codigopostal', related='calle_id.codPostal_id', string="Código Postal", store=True, readonly=True)
+    provincia_id = fields.Many2one('morenitapp.provincia', related='localidad_id.codProvincia_id', string="Provincia", store=True, readonly=True)
 
     puerta = fields.Char()
     piso = fields.Char()
@@ -85,16 +72,24 @@ class Hermano(models.Model):
             if r.metodo_pago == 'banco' and not r.datos_banco_ids:
                 raise ValidationError("Debe ingresar los datos bancarios si el pago es domiciliado")
 
+    # --- CAMBIO NECESARIO: Actualizar estado en las acciones ---
     def action_dar_baja(self):
         for record in self:
-            record.fecha_baja = fields.Date.today()
+            record.write({
+                'estado': 'baja',
+                'fecha_baja': fields.Date.today()
+            })
         return True
 
     def action_reactivar(self):
         for record in self:
-            record.fecha_baja = False
-            record.motivo_baja = False
+            record.write({
+                'estado': 'activo',
+                'fecha_baja': False,
+                'motivo_baja': False
+            })
         return True
+    # ---------------------------------------------------------
     
     @api.depends('datos_banco_ids.iban', 'datos_banco_ids.banco', 'datos_banco_ids.sucursal', 'datos_banco_ids.cuenta')
     def _compute_iban_total(self):
@@ -104,22 +99,3 @@ class Hermano(models.Model):
                 record.iban = f"{b.iban or ''}{b.banco or ''}{b.sucursal or ''}{b.cuenta or ''}"
             else:
                 record.iban = ""
-
-    def _inverse_iban(self):
-        """ 
-        Descompone el string recibido de la API en los 3 campos.
-        Se espera que la API envíe el IBAN completo o los campos por separado.
-        """
-        for record in self:
-            if record.iban and len(record.iban) >= 18:
-                # Ejemplo asumiendo que recibes los 18 dígitos finales
-                vals = {
-                    'banco': record.iban[0:4],
-                    'sucursal': record.iban[4:8],
-                    'cuenta': record.iban[8:18],
-                    'hermano_id': record.id,
-                }
-                if record.datos_banco_ids:
-                    record.datos_banco_ids[0].write(vals)
-                else:
-                    self.env['morenitapp.banco'].sudo().create(vals)

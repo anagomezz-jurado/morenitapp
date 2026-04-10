@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:morenitapp/features/panel-gestion/ubicaciones/domain/entities/provincia.dart';
 import 'package:morenitapp/features/panel-gestion/ubicaciones/presentation/providers/ubicaciones_provider.dart';
+import 'package:morenitapp/shared/widgets/plantilla_ventanas.dart';
 
 class ProvinciaScreen extends ConsumerWidget {
   const ProvinciaScreen({super.key});
@@ -10,99 +10,91 @@ class ProvinciaScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final provinciasAsync = ref.watch(provinciasProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Provincias'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => ref.read(provinciasProvider.notifier).cargarProvincias(),
-          )
-        ],
-      ),
-      body: provinciasAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
-        data: (provincias) => ListView.builder(
-          itemCount: provincias.length,
-          itemBuilder: (context, index) {
-            final provincia = provincias[index];
-            return ListTile(
-              title: Text(provincia.nombreProvincia),
-              subtitle: Text('Código: ${provincia.codProvincia}'),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit, color: Colors.orange),
-                    onPressed: () => _showForm(context, ref, provincia: provincia),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () => _confirmDelete(context, ref, provincia),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.add),
-        onPressed: () => _showForm(context, ref),
+    return PlantillaVentanas(
+      title: 'Gestión de Provincias',
+      isLoading: provinciasAsync.isLoading,
+      onRefresh: () => ref.read(provinciasProvider.notifier).cargarProvincias(),
+      columns: const [
+        DataColumn(label: Text('ID')),
+        DataColumn(label: Text('NOMBRE PROVINCIA')),
+        DataColumn(label: Text('ACCIONES')),
+      ],
+      rows: provinciasAsync.maybeWhen(
+        data: (provincias) => provincias.map((prov) => DataRow(
+          cells: [
+            DataCell(Text(prov.id.toString())),
+            DataCell(Text(prov.nombreProvincia)),
+            DataCell(Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () => _confirmarEliminacion(context, ref, prov),
+                ),
+              ],
+            )),
+          ],
+        )).toList(),
+        orElse: () => [],
       ),
     );
   }
 
-  void _showForm(BuildContext context, WidgetRef ref, {Provincia? provincia}) {
-    final isEditing = provincia != null;
-    final codeCtrl = TextEditingController(text: provincia?.codProvincia);
-    final nameCtrl = TextEditingController(text: provincia?.nombreProvincia);
-
+  void _confirmarEliminacion(BuildContext context, WidgetRef ref, dynamic prov) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(isEditing ? 'Editar Provincia' : 'Nueva Provincia'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
+        title: const Text('Confirmar'),
+        content: Text('¿Desea eliminar la provincia ${prov.nombreProvincia}?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCELAR')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              try {
+                // Intentamos borrar
+                await ref.read(provinciasProvider.notifier).borrarProvincia(prov.id);
+                if (context.mounted) Navigator.pop(context); // Cerrar diálogo de confirmación
+                
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Provincia eliminada correctamente'))
+                );
+              } catch (e) {
+                if (context.mounted) {
+                  Navigator.pop(context); // Cerrar diálogo de confirmación
+                  _mostrarAdvertenciaUso(context, prov.nombreProvincia);
+                }
+              }
+            },
+            child: const Text('ELIMINAR', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _mostrarAdvertenciaUso(BuildContext context, String nombre) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: const Row(
           children: [
-            TextField(controller: codeCtrl, decoration: const InputDecoration(labelText: 'Código')),
-            TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Nombre')),
+            Icon(Icons.warning_amber_rounded, color: Colors.red, size: 30),
+            SizedBox(width: 10),
+            Text('No se puede eliminar'),
           ],
         ),
+        content: Text(
+          'La provincia "$nombre" no puede ser eliminada porque tiene localidades vinculadas con este código postal/ID.\n\nDebe eliminar primero las localidades asociadas.',
+          style: const TextStyle(fontSize: 15),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
-          ElevatedButton(
-            onPressed: () async {
-              if (isEditing) {
-                await ref.read(provinciasProvider.notifier).editarProvincia(provincia.id, nameCtrl.text, codeCtrl.text);
-              } else {
-                await ref.read(provinciasProvider.notifier).agregarProvincia(codeCtrl.text, nameCtrl.text);
-              }
-              if (context.mounted) Navigator.pop(context);
-            },
-            child: const Text('Guardar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _confirmDelete(BuildContext context, WidgetRef ref, Provincia provincia) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('¿Eliminar ${provincia.nombreProvincia}?'),
-        content: const Text('Esto podría afectar a las localidades vinculadas.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('No')),
-          TextButton(
-            onPressed: () async {
-              await ref.read(provinciasProvider.notifier).borrarProvincia(provincia.id);
-              if (context.mounted) Navigator.pop(context);
-            },
-            child: const Text('Sí, eliminar', style: TextStyle(color: Colors.red)),
-          ),
+          Center(
+            child: ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('ENTENDIDO'),
+            ),
+          )
         ],
       ),
     );

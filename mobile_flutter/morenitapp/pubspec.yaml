@@ -23,6 +23,9 @@ dependencies:
   flutter_localizations: 
     sdk: flutter
   table_calendar: ^3.1.2
+  excel: ^4.0.6
+  path_provider: ^2.1.5
+  universal_html: ^2.3.0
 
 dev_dependencies:
   flutter_lints: ^2.0.0

@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:morenitapp/features/auth/presentation/providers/auth_provider.dart';
-import 'package:morenitapp/shared/widgets/custom_filled_button.dart';
+import 'package:morenitapp/shared/widgets/menu_diseno.dart';
 
 class SideMenu extends ConsumerStatefulWidget {
   final GlobalKey<ScaffoldState> scaffoldKey;
-
   const SideMenu({super.key, required this.scaffoldKey});
 
   @override
@@ -16,335 +15,254 @@ class SideMenu extends ConsumerStatefulWidget {
 class SideMenuState extends ConsumerState<SideMenu> {
   int navDrawerIndex = 0;
 
+  // Helper para cerrar el drawer después de navegar (se queda aquí por lógica, no por diseño)
+  void _navigate(String path) {
+    context.push(path);
+    widget.scaffoldKey.currentState?.closeDrawer();
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasNotch = MediaQuery.of(context).viewPadding.top > 35;
-    final textStyles = Theme.of(context).textTheme;
+    final colors = Theme.of(context).colorScheme;
     final user = ref.watch(authProvider).user;
 
     return NavigationDrawer(
-      elevation: 1,
-      selectedIndex: navDrawerIndex,
-      onDestinationSelected: (value) {
-        setState(() => navDrawerIndex = value);
-        widget.scaffoldKey.currentState?.closeDrawer();
-      },
+      elevation: 0,
+      backgroundColor: colors.surface,
       children: [
-        // --- CABECERA ---
-        Padding(
-          padding: EdgeInsets.fromLTRB(20, hasNotch ? 0 : 20, 16, 0),
-          child: Text('Saludos', style: textStyles.titleMedium),
+        MenuDiseno(
+            userName: user?.fullName ?? 'Usuario',
+            colors: colors,
+            hasNotch: hasNotch),
+        const SectionHeader(title: 'PRINCIPAL'),
+        MenuTile(
+          icon: Icons.dashboard_rounded,
+          label: 'Panel Principal',
+          isSelected: navDrawerIndex == 0,
+          onTap: () {
+            setState(() => navDrawerIndex = 0);
+            context.go('/');
+            widget.scaffoldKey.currentState?.closeDrawer();
+          },
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 16, 10),
-          child:
-              Text(user?.fullName ?? 'Usuario', style: textStyles.titleSmall),
-        ),
-
-        // --- DASHBOARD (DESTINO PRINCIPAL) ---
-        const NavigationDrawerDestination(
-          icon: Icon(Icons.home_outlined),
-          selectedIcon: Icon(Icons.home),
-          label: Text('Dashboard'),
-        ),
-
-        const Divider(indent: 28, endIndent: 28),
-
-        // --- GESTIÓN DE HERMANOS ---
-        CustomExpansionTile(
-          icon: Icons.person_outline_outlined,
-          title: 'Gestión de Hermanos',
-          children: [
-            _buildSubTile(
-              icon: Icons.person_add_alt_sharp,
-              label: 'Listado de Hermanos activos',
-              onTap: () => context.push('/hermanos-activos'),
-            ),
-            _buildSubTile(
-              icon: Icons.person_add_disabled_sharp,
-              label: 'Listado de Hermanos no activos',
-              onTap: () {},
-            ),
-          ],
-        ),
-
-        const Divider(indent: 28, endIndent: 28),
-
-        // --- SECRETARÍA ---
-        CustomExpansionTile(
-          icon: Icons.document_scanner_rounded,
+        const SectionHeader(title: 'GESTIÓN SECRETARÍA'),
+        MenuExpansionGroup(
+          icon: Icons.inventory_2_rounded,
           title: 'Secretaría',
           children: [
-            _buildSubTile(
-              icon: Icons.gavel_rounded,
-              label: 'Autoridades',
-              onTap: () => context.push('/autoridades'),
-            ),
-            _buildSubTile(
-              icon: Icons.badge_rounded,
-              label: 'Cargos',
-              onTap: () => context.push('/cargos'), // Coincide con el Router
-            ),
-            _buildSubTile(
-              icon: Icons.account_balance_rounded,
-              label: 'Cofradías',
-              onTap: () => context.push('/cofradias'), // Coincide con el Router
-            ),
+            MenuTile(
+                icon: Icons.gavel_rounded,
+                label: 'Autoridades',
+                isSubItem: true,
+                onTap: () => _navigate('/autoridades')),
+            MenuTile(
+                icon: Icons.badge_rounded,
+                label: 'Cargos',
+                isSubItem: true,
+                onTap: () => _navigate('/cargos')),
+            MenuTile(
+                icon: Icons.account_balance_rounded,
+                label: 'Cofradías',
+                isSubItem: true,
+                onTap: () => _navigate('/cofradias')),
           ],
         ),
-
-        const Divider(indent: 28, endIndent: 28),
-
-        // --- EVENTOS ---
-        // --- EVENTOS ---
-        CustomExpansionTile(
+        MenuExpansionGroup(
+          icon: Icons.people_alt_rounded,
+          title: 'Gestión de Hermanos',
+          children: [
+            MenuTile(
+                icon: Icons.person_add_alt_1_rounded,
+                label: 'Hermanos activos',
+                isSubItem: true,
+                onTap: () => _navigate('/hermanos-activos')),
+            MenuTile(
+                icon: Icons.person_off_rounded,
+                label: 'Hermanos no activos',
+                isSubItem: true,
+                onTap: () => _navigate('/hermanos-no-activos')),
+          ],
+        ),
+        MenuExpansionGroup(
           icon: Icons.event_available_rounded,
-          title: 'Eventos y cultos',
+          title: 'Eventos y Cultos',
           children: [
-            CustomExpansionTile(
-              icon: Icons.edit_calendar_rounded,
-              title: 'Gestión de Eventos',
-              children: [
-                _buildSubTile(
-                  icon: Icons.calendar_month_rounded,
-                  label: 'Calendario',
-                  onTap: () => context.push('/calendario'), // Vinculado
-                  leftPadding: 40,
-                ),
-                _buildSubTile(
-                  icon: Icons.list_alt_rounded,
-                  label: 'Listado de eventos',
-                  onTap: () => context.push('/gestion-eventos'), // Vinculado
-                  leftPadding: 40,
-                ),
-              ],
-            ),
-            _buildSubTile(
-              icon: Icons.groups_rounded,
-              label: 'Gestión de Organizadores',
-              onTap: () => context.push('/organizadores'), // Vinculado
-            ),
+            MenuTile(
+                icon: Icons.calendar_month_rounded,
+                label: 'Calendario',
+                isSubItem: true,
+                onTap: () => _navigate('/calendario')),
+            MenuTile(
+                icon: Icons.list_alt_rounded,
+                label: 'Listado de eventos',
+                isSubItem: true,
+                onTap: () => _navigate('/gestion-eventos')),
+            MenuTile(
+                icon: Icons.groups_rounded,
+                label: 'Organizadores',
+                isSubItem: true,
+                onTap: () => _navigate('/organizadores')),
           ],
         ),
-        const Divider(indent: 28, endIndent: 28),
-
-        // --- PUBLICACIONES ---
-        CustomExpansionTile(
-          icon: Icons.menu_book_rounded,
-          title: 'Libro y Publicidad',
-          children: [
-            _buildSubTile(
-                icon: Icons.book_rounded, label: 'Libro', onTap: () => context.push('/libros')),
-            _buildSubTile(
-                icon: Icons.newspaper_rounded,
-                label: 'Anunciantes',
-               onTap: () => context.push('/anunciantes')),
-          ],
-        ),
-
-        const Divider(indent: 28, endIndent: 28),
-        // --- PROVEEDORES ---
-        CustomExpansionTile(
-          icon: Icons.admin_panel_settings_rounded,
-          title: 'Proveedores',
-          children: [
-            _buildSubTile(
-                icon: Icons.alarm_on_rounded,
-                label: 'Listado',
-                onTap: () => context.push('/proveedores')),
-            _buildSubTile(
-                icon: Icons.alarm_on_rounded,
-                label: 'Anunciantes',
-                onTap: () => context.push('/anunciantes')),
-          ],
-        ),
-
-        const Divider(indent: 28, endIndent: 28),
-
-        // --- UBICACIONES ---
-        CustomExpansionTile(
-          icon: Icons.map_rounded,
-          title: 'Ubicaciones',
-          children: [
-            _buildSubTile(
-                icon: Icons.location_city_rounded,
-                label: 'Provincias',
-                onTap: () => context.push('/provincia')),
-            _buildSubTile(
-                icon: Icons.rebase_edit,
-                label: 'Localidades',
-                onTap: () => context.push('/localidad')),
-            _buildSubTile(
-                icon: Icons.mark_as_unread,
-                label: 'C. Postales',
-                onTap: () => context.push('/codigo-postal')),
-            _buildSubTile(
-                icon: Icons.add_road_rounded,
-                label: 'Calles',
-                onTap: () => context.push('/calle')),
-          ],
-        ),
-
-        const Divider(indent: 28, endIndent: 28),
-
-        // --- GESTIÓN USUARIOS DE LA APP ---
-        CustomExpansionTile(
-          icon: Icons.admin_panel_settings_rounded,
-          title: 'Gestión de Usuarios',
-          children: [
-            _buildSubTile(
-                icon: Icons.alarm_on_rounded,
-                label: 'Usuarios de la App',
-                onTap: () => context.push('/usuarios')),
-          ],
-        ),
-
-        const Divider(indent: 28, endIndent: 28),
-
-        // --- PANEL USUARIOS ---
-        CustomExpansionTile(
-          icon: Icons.admin_panel_settings_rounded,
-          title: 'Gestión de Panel',
-          children: [
-            _buildSubTile(
-                icon: Icons.alarm_on_rounded,
-                label: 'Recordatorios',
-                onTap: () {}),
-            _buildSubTile(
-                icon: Icons.notification_add_rounded,
-                label: 'Comunicados',
-                onTap: () {}),
-            _buildSubTile(
-                icon: Icons.folder_copy_rounded,
-                label: 'Documentos',
-                onTap: () {}),
-            _buildSubTile(
-                icon: Icons.collections_rounded,
-                label: 'Galería',
-                onTap: () {}),
-          ],
-        ),
-
-        const Divider(indent: 28, endIndent: 28),
-
-        // --- CONFIGURACIÓN ---
-        CustomExpansionTile(
+        const SectionHeader(title: 'ADMINISTRACIÓN DE TIPOS'),
+        MenuExpansionGroup(
           icon: Icons.settings_suggest_rounded,
-          title: 'Configuración',
+          title: 'Configuración de tipos',
           children: [
-            _buildSubTile(
+            MenuTile(
                 icon: Icons.category_rounded,
                 label: 'Tipo de evento',
-                onTap: () => context.push('/tipo-evento')),
-            _buildSubTile(
-                icon: Icons
-                    .inventory_2_outlined, // Icono más apropiado para grupos
-                label: 'Grupo de Proveedores',
-                onTap: () => context.push('/grupo-proveedor')),
-            _buildSubTile(
-                icon: Icons.gavel_rounded,
-                label: 'Tipos de autoridades',
-                onTap: () => context.push('/tipo-autoridades')),
-            _buildSubTile(
-                icon: Icons.badge_rounded,
-                label: 'Tipos de cargos',
-                onTap: () => context.push('/tipo-cargos')),
-            _buildSubTile(
+                isSubItem: true,
+                onTap: () => _navigate('/tipo-evento')),
+            MenuTile(
                 icon: Icons.admin_panel_settings_rounded,
                 label: 'Gestión de Roles',
-                onTap: () => context.push('/roles')),
+                isSubItem: true,
+                onTap: () => _navigate('/roles')),
+            MenuTile(
+                icon: Icons.supervised_user_circle_rounded,
+                label: 'Usuarios App',
+                isSubItem: true,
+                onTap: () => _navigate('/usuarios')),
           ],
         ),
 
-        const Padding(
-          padding: EdgeInsets.fromLTRB(28, 16, 28, 10),
-          child: Divider(),
+         const SectionHeader(title: 'Ubicaciones'),
+        MenuExpansionGroup(
+          icon: Icons.menu_book_rounded,
+          title: 'Provincias',
+          children: [
+            MenuTile(
+                icon: Icons.book_rounded,
+                label: 'Provincias',
+                isSubItem: true,
+                onTap: () => _navigate('/provincia')),
+          ],
+        ),
+         MenuExpansionGroup(
+          icon: Icons.menu_book_rounded,
+          title: 'Localidades',
+          children: [
+            MenuTile(
+                icon: Icons.book_rounded,
+                label: 'Localidades',
+                isSubItem: true,
+                onTap: () => _navigate('/localidad')),
+          ],
+        ),
+         MenuExpansionGroup(
+          icon: Icons.menu_book_rounded,
+          title: 'Códigos postales',
+          children: [
+            MenuTile(
+                icon: Icons.book_rounded,
+                label: 'Códigos postales',
+                isSubItem: true,
+                onTap: () => _navigate('/codigo-postal')),
+          ],
         ),
 
-        // --- BOTONES FINALES ---
-        const Padding(
-          padding: EdgeInsets.fromLTRB(28, 10, 16, 10),
-          child: Text('Otras opciones'),
+         MenuExpansionGroup(
+          icon: Icons.menu_book_rounded,
+          title: 'Calles',
+          children: [
+            MenuTile(
+                icon: Icons.book_rounded,
+                label: 'Calles',
+                isSubItem: true,
+                onTap: () => _navigate('/calle')),
+          ],
         ),
+
+        const SectionHeader(title: 'CONTENIDO'),
+        MenuExpansionGroup(
+          icon: Icons.menu_book_rounded,
+          title: 'Listar Libros',
+          children: [
+            MenuTile(
+                icon: Icons.book_rounded,
+                label: 'Libros',
+                isSubItem: true,
+                onTap: () => _navigate('/libros')),
+          ],
+        ),
+        MenuExpansionGroup(
+          icon: Icons.menu_book_rounded,
+          title: 'Proveedores',
+          children: [
+            MenuTile(
+                icon: Icons.book_rounded,
+                label: 'Listado de proveedores',
+                isSubItem: true,
+                onTap: () => _navigate('/libros')),
+            MenuTile(
+                icon: Icons.newspaper_rounded,
+                label: 'Anunciantes',
+                isSubItem: true,
+                onTap: () => _navigate('/anunciantes')),
+          ],
+        ),
+
+         const SectionHeader(title: 'Gestión de Usuarios'),
+        MenuExpansionGroup(
+          icon: Icons.menu_book_rounded,
+          title: 'Usuarios de la App',
+          children: [
+            MenuTile(
+                icon: Icons.book_rounded,
+                label: 'Usuarios de la App',
+                isSubItem: true,
+                onTap: () => _navigate('/usuarios')),
+          ],
+        ),
+
+        const SizedBox(height: 20),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: CustomFilledButton(
-            onPressed: () {
-              widget.scaffoldKey.currentState?.closeDrawer();
-              context.push('/panel-usuario');
-            },
-            text: 'Ir a panel de usuarios',
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            children: [
+              MenuTile(
+                  icon: Icons.account_circle_outlined,
+                  label: 'Mi Panel de Usuario',
+                  onTap: () => _navigate('/panel-usuario')),
+              const SizedBox(height: 12),
+              _LogoutButton(
+                  onTap: () => ref.read(authProvider.notifier).logout()),
+            ],
           ),
         ),
-        const SizedBox(height: 10),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: CustomFilledButton(
-              onPressed: () {
-                widget.scaffoldKey.currentState?.closeDrawer();
-                ref.read(authProvider.notifier).logout();
-              },
-              text: 'Cerrar sesión'),
-        ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 30),
       ],
-    );
-  }
-
-  // --- HELPER PARA CREAR LOS HIJOS CON DISEÑO DE NAVIGATION DRAWER ---
-  Widget _buildSubTile({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    double leftPadding = 0,
-  }) {
-    return Padding(
-      padding: EdgeInsets.only(left: leftPadding, right: 8, bottom: 2),
-      child: ListTile(
-        visualDensity: VisualDensity.compact,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        leading: Icon(icon, size: 22),
-        title: Text(label, style: const TextStyle(fontSize: 14)),
-        onTap: () {
-          onTap();
-          widget.scaffoldKey.currentState?.closeDrawer();
-        },
-      ),
     );
   }
 }
 
-// --- CLASE DEL EXPANSIBLE PERSONALIZADO ---
-class CustomExpansionTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final List<Widget> children;
-
-  const CustomExpansionTile({
-    super.key,
-    required this.icon,
-    required this.title,
-    required this.children,
-  });
+class _LogoutButton extends StatelessWidget {
+  final VoidCallback onTap;
+  const _LogoutButton({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Theme(
-      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-      child: ExpansionTile(
-        tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-        leading: Icon(icon, color: colors.onSurfaceVariant),
-        title: Text(title,
-            style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: colors.onSurfaceVariant,
-                fontSize: 15)),
-        iconColor: colors.primary,
-        collapsedIconColor: colors.onSurfaceVariant,
-        childrenPadding: const EdgeInsets.only(left: 16, bottom: 4),
-        children: children,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(15),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.redAccent.withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.logout_rounded, color: Colors.redAccent, size: 20),
+            SizedBox(width: 10),
+            Text('Cerrar Sesión',
+                style: TextStyle(
+                    color: Colors.redAccent, fontWeight: FontWeight.bold)),
+          ],
+        ),
       ),
     );
   }

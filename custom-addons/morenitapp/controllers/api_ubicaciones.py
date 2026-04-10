@@ -83,7 +83,6 @@ class UbicacionesAPI(http.Controller):
                 vals = json.loads(body) if body else {}
                 nuevo = obj.create(vals)
                 
-                # REPARACIÓN: Devolvemos los campos exactos para que Flutter los vea al instante
                 res_data = {
                     'id': nuevo.id,
                     'display_name': nuevo.display_name,
@@ -107,10 +106,13 @@ class UbicacionesAPI(http.Controller):
                     })
                 elif tipo == 'calles':
                     res_data.update({
-                        'nombreCalle': getattr(nuevo, 'nombreCalle', ''),
+                        'nombreCalle': getattr(nuevo, 'nombreCalle', nuevo.display_name),
                         'localidad_id': nuevo.localidad_id.id if nuevo.localidad_id else 0,
+                        # Asegúrate que aquí coincida con lo que pusiste en el cleanId de Flutter
                         'codPostal_id': nuevo.codPostal_id.id if nuevo.codPostal_id else 0,
                     })
+
+                return self._json_response(res_data, status=201)
                 
                 
 

@@ -13,22 +13,23 @@ class Calle {
     this.responsableId,
   });
 
-  factory Calle.fromJson(Map<String, dynamic> json) {
-    // Función para limpiar valores de Odoo (ID o false)
-    int cleanId(dynamic val) {
-      if (val == null || val == false) return 0;
-      if (val is List && val.isNotEmpty) return val[0] as int;
-      return (val is int) ? val : 0;
-    }
-
-    return Calle(
-      id: cleanId(json['id']),
-      nombreCalle: json['nombreCalle'] ?? json['display_name'] ?? 'Sin nombre',
-      localidadId: cleanId(json['localidad_id']),
-      codPostalId: cleanId(json['codPostal_id']),
-      responsableId: (json['responsable_id'] == false) ? null : cleanId(json['responsable_id']),
-    );
+ factory Calle.fromJson(Map<String, dynamic> json) {
+  int cleanId(dynamic val) {
+    if (val == null || val == false) return 0;
+    if (val is List && val.isNotEmpty) return val[0] as int;
+    return (val is int) ? val : 0;
   }
+
+  return Calle(
+    id: cleanId(json['id']),
+    // Odoo puede devolver 'nombreCalle' o 'display_name'
+    nombreCalle: json['nombreCalle'] ?? json['display_name'] ?? 'Sin nombre',
+    // IMPORTANTE: Mapear todas las variantes posibles de nombres que envía tu Python
+    localidadId: cleanId(json['localidad_id'] ?? json['localidadId']),
+    codPostalId: cleanId(json['codPostal_id'] ?? json['codPostalId'] ?? json['cod_postal_id']),
+    responsableId: (json['responsable_id'] == false) ? null : cleanId(json['responsable_id']),
+  );
+}
 
   Map<String, dynamic> toJson() => {
     'nombreCalle': nombreCalle,

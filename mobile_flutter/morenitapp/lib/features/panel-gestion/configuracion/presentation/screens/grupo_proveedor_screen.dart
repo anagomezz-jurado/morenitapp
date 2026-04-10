@@ -131,7 +131,7 @@ Widget _buildActionButtons({required VoidCallback onEdit, required VoidCallback 
   return Row(
     mainAxisSize: MainAxisSize.min,
     children: [
-      IconButton(icon: const Icon(Icons.edit, color: Colors.blue, size: 20), onPressed: onEdit),
+      IconButton(icon: const Icon(Icons.edit,  size: 20), onPressed: onEdit),
       IconButton(icon: const Icon(Icons.delete, color: Colors.red, size: 20), onPressed: onDelete),
     ],
   );

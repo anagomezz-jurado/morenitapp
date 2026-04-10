@@ -16,6 +16,7 @@ import 'package:morenitapp/features/panel-gestion/eventos-cultos/presentation/sc
 import 'package:morenitapp/features/panel-gestion/eventos-cultos/presentation/screens/organizadores_screen.dart';
 import 'package:morenitapp/features/panel-gestion/hermanos/domain/entities/hermano.dart';
 import 'package:morenitapp/features/panel-gestion/hermanos/presentation/screens/hermano_activo_listado_screen.dart';
+import 'package:morenitapp/features/panel-gestion/hermanos/presentation/screens/hermano_no_activo_screen.dart';
 import 'package:morenitapp/features/panel-gestion/home_screen.dart';
 import 'package:morenitapp/features/panel-gestion/hermanos/presentation/screens/nuevo_hermano.dart';
 import 'package:morenitapp/features/panel-gestion/libros/presentation/screens/libros_screens.dart';
@@ -50,7 +51,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 
       // GESTIÓN DE HERMANOS
       GoRoute(path: '/hermanos-activos', builder: (context, state) => const HermanoActivoListadoScreen()),
-      GoRoute(path: '/hermanos-no-activos', builder: (context, state) => const HermanoActivoListadoScreen()),
+      GoRoute(path: '/hermanos-no-activos', builder: (context, state) => const HermanoNoActivoListadoScreen()),
       GoRoute(path: '/nuevo-hermano', builder: (context, state) {
         final hermano = (state.extra is Hermano) ? state.extra as Hermano : null;
         return NuevoHermano(hermanoAEditar: hermano);
