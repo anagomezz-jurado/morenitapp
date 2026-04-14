@@ -15,31 +15,22 @@ class ProvinciaScreen extends ConsumerWidget {
       isLoading: provinciasAsync.isLoading,
       onRefresh: () => ref.read(provinciasProvider.notifier).cargarProvincias(),
       columns: const [
-        DataColumn(label: Text('ID')),
-        DataColumn(label: Text('NOMBRE PROVINCIA')),
-        DataColumn(label: Text('ACCIONES')),
+        DataColumn(label: Text('ID', style: TextStyle(fontWeight: FontWeight.bold))),
+        DataColumn(label: Text('NOMBRE PROVINCIA', style: TextStyle(fontWeight: FontWeight.bold))),
+        DataColumn(label: Text('ACCIONES', style: TextStyle(fontWeight: FontWeight.bold))),
       ],
       rows: provinciasAsync.maybeWhen(
-        data: (provincias) => provincias.map((prov) => DataRow(
-          cells: [
-            DataCell(Text(prov.id.toString())),
-            DataCell(Text(prov.nombreProvincia)),
-            DataCell(Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () => _confirmarEliminacion(context, ref, prov),
-                ),
-              ],
-            )),
-          ],
-        )).toList(),
+        data: (provincias) => provincias.map((prov) => DataRow(cells: [
+          DataCell(Text(prov.id.toString())),
+          DataCell(Text(prov.nombreProvincia, style: const TextStyle(fontWeight: FontWeight.w500))),
+          DataCell(IconButton(icon: const Icon(Icons.delete_sweep_outlined, color: Colors.red), onPressed: () => _confirmDelete(context, ref, prov))),
+        ])).toList(),
         orElse: () => [],
       ),
     );
   }
 
-  void _confirmarEliminacion(BuildContext context, WidgetRef ref, dynamic prov) {
+  void _confirmDelete(BuildContext context, WidgetRef ref, dynamic prov) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -47,25 +38,20 @@ class ProvinciaScreen extends ConsumerWidget {
         content: Text('¿Desea eliminar la provincia ${prov.nombreProvincia}?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCELAR')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
               try {
-                // Intentamos borrar
                 await ref.read(provinciasProvider.notifier).borrarProvincia(prov.id);
-                if (context.mounted) Navigator.pop(context); // Cerrar diálogo de confirmación
-                
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Provincia eliminada correctamente'))
-                );
+                if (context.mounted) Navigator.pop(context);
               } catch (e) {
                 if (context.mounted) {
-                  Navigator.pop(context); // Cerrar diálogo de confirmación
+                  Navigator.pop(context);
                   _mostrarAdvertenciaUso(context, prov.nombreProvincia);
                 }
               }
             },
-            child: const Text('ELIMINAR', style: TextStyle(color: Colors.white)),
+            child: const Text('ELIMINAR'),
           ),
         ],
       ),
@@ -76,26 +62,10 @@ class ProvinciaScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        title: const Row(
-          children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.red, size: 30),
-            SizedBox(width: 10),
-            Text('No se puede eliminar'),
-          ],
-        ),
-        content: Text(
-          'La provincia "$nombre" no puede ser eliminada porque tiene localidades vinculadas con este código postal/ID.\n\nDebe eliminar primero las localidades asociadas.',
-          style: const TextStyle(fontSize: 15),
-        ),
-        actions: [
-          Center(
-            child: ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('ENTENDIDO'),
-            ),
-          )
-        ],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 40),
+        content: Text('La provincia "$nombre" tiene datos vinculados y no puede ser borrada.', textAlign: TextAlign.center),
+        actions: [Center(child: TextButton(onPressed: () => Navigator.pop(context), child: const Text('ENTENDIDO')))],
       ),
     );
   }

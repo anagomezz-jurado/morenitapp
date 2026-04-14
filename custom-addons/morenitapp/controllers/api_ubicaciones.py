@@ -56,6 +56,7 @@ class UbicacionesAPI(http.Controller):
                 domain = [('id', '=', id)] if id else []
                 records = obj.search(domain)
                 res = []
+                # --- DENTRO DE method == 'GET' ---
                 for r in records:
                     row = {'id': r.id, 'display_name': r.display_name}
                     
@@ -74,9 +75,16 @@ class UbicacionesAPI(http.Controller):
                             'name': getattr(r, 'name', ''),
                             'localidad_id': r.localidad_id.id if r.localidad_id else 0,
                         })
+                    # --- AÑADE ESTA SECCIÓN ---
+                    elif tipo == 'calles':
+                        row.update({
+                            'nombreCalle': getattr(r, 'nombreCalle', r.display_name),
+                            'localidadId': r.localidad_id.id if r.localidad_id else 0,
+                            'codPostalId': r.codPostal_id.id if r.codPostal_id else 0,
+                        })
+                    # --------------------------
                     res.append(row)
                 return self._json_response(res)
-
             # --- POST (CREAR) ---
             if method == 'POST':
                 body = request.httprequest.data.decode('utf-8')

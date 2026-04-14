@@ -22,9 +22,15 @@ import 'package:morenitapp/features/panel-gestion/hermanos/presentation/screens/
 import 'package:morenitapp/features/panel-gestion/libros/presentation/screens/libros_screens.dart';
 import 'package:morenitapp/features/panel-gestion/proveedores/presentation/screens/anunciantes_screen.dart';
 import 'package:morenitapp/features/panel-gestion/proveedores/presentation/screens/proveedores_screen.dart';
+import 'package:morenitapp/features/panel-gestion/secretaria/domain/entities/autoridad.dart';
+import 'package:morenitapp/features/panel-gestion/secretaria/domain/entities/cargo.dart';
+import 'package:morenitapp/features/panel-gestion/secretaria/domain/entities/cofradia.dart';
 import 'package:morenitapp/features/panel-gestion/secretaria/presentation/screens/autoridad_screen.dart';
 import 'package:morenitapp/features/panel-gestion/secretaria/presentation/screens/cargos_screen.dart';
 import 'package:morenitapp/features/panel-gestion/secretaria/presentation/screens/cofradias_screen.dart';
+import 'package:morenitapp/features/panel-gestion/secretaria/presentation/screens/nueva_autoridad.dart';
+import 'package:morenitapp/features/panel-gestion/secretaria/presentation/screens/nueva_cofradia.dart';
+import 'package:morenitapp/features/panel-gestion/secretaria/presentation/screens/nuevo_cargo.dart';
 import 'package:morenitapp/features/panel-gestion/ubicaciones/presentation/screens/calle_screen.dart';
 import 'package:morenitapp/features/panel-gestion/ubicaciones/presentation/screens/codigo_postal_screen.dart';
 import 'package:morenitapp/features/panel-gestion/ubicaciones/presentation/screens/localidad_screen.dart';
@@ -44,52 +50,137 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       // ACCESO Y AUTENTICACIÓN
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-      GoRoute(path: '/registrarse', builder: (context, state) => const RegisterScreen()),
+      GoRoute(
+          path: '/registrarse',
+          builder: (context, state) => const RegisterScreen()),
 
       // DASHBOARD ADMINISTRACIÓN (Solo Admins)
       GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
 
       // GESTIÓN DE HERMANOS
-      GoRoute(path: '/hermanos-activos', builder: (context, state) => const HermanoActivoListadoScreen()),
-      GoRoute(path: '/hermanos-no-activos', builder: (context, state) => const HermanoNoActivoListadoScreen()),
-      GoRoute(path: '/nuevo-hermano', builder: (context, state) {
-        final hermano = (state.extra is Hermano) ? state.extra as Hermano : null;
-        return NuevoHermano(hermanoAEditar: hermano);
-      }),
+      GoRoute(
+          path: '/hermanos-activos',
+          builder: (context, state) => const HermanoActivoListadoScreen()),
+      GoRoute(
+          path: '/hermanos-no-activos',
+          builder: (context, state) => const HermanoNoActivoListadoScreen()),
+      GoRoute(
+          path: '/nuevo-hermano',
+          builder: (context, state) {
+            final hermano =
+                (state.extra is Hermano) ? state.extra as Hermano : null;
+            return NuevoHermano(hermanoAEditar: hermano);
+          }),
 
       // SECRETARÍA
-      GoRoute(path: '/autoridades', builder: (context, state) => const AutoridadesScreen()),
-      GoRoute(path: '/cargos', builder: (context, state) => const CargosScreen()),
-      GoRoute(path: '/cofradias', builder: (context, state) => const CofradiasScreen()),
-      GoRoute(path: '/libros', builder: (context, state) => const LibrosScreen()),
+      GoRoute(
+          path: '/autoridades',
+          builder: (context, state) => const AutoridadesScreen()),
+      // RUTA PARA NUEVA AUTORIDAD
+      GoRoute(
+          path: '/secretaria/autoridades/nueva',
+          builder: (context, state) => const AutoridadFormScreen()),
+
+// RUTA PARA EDITAR AUTORIDAD (Esta es la que faltaba)
+      GoRoute(
+          path: '/secretaria/autoridades/editar',
+          builder: (context, state) {
+            // Extraemos la autoridad del parámetro extra
+            final autoridad =
+                (state.extra is Autoridad) ? state.extra as Autoridad : null;
+            return AutoridadFormScreen(autoridadAEditar: autoridad);
+          }),
+      GoRoute(
+          path: '/cargos', builder: (context, state) => const CargosScreen()),
+      GoRoute(
+          path: '/cofradias',
+          builder: (context, state) => const CofradiasScreen()),
+
+      // CARGOS
+GoRoute(
+  path: '/secretaria/cargos/nuevo', 
+  builder: (context, state) => const CargoFormScreen()
+),
+GoRoute(
+  path: '/secretaria/cargos/editar', 
+  builder: (context, state) {
+    final cargo = (state.extra is Cargo) ? state.extra as Cargo : null;
+    return CargoFormScreen(cargoAEditar: cargo);
+  }
+),
+
+// COFRADÍAS
+GoRoute(
+  path: '/secretaria/cofradias/nueva', 
+  builder: (context, state) => const CofradiaFormScreen()
+),
+GoRoute(
+  path: '/secretaria/cofradias/editar', 
+  builder: (context, state) {
+    final cofradia = (state.extra is Cofradia) ? state.extra as Cofradia : null;
+    return CofradiaFormScreen(cofradiaAEditar: cofradia);
+  }
+),
+
+      GoRoute(
+          path: '/libros', builder: (context, state) => const LibrosScreen()),
 
       // EVENTOS Y CULTOS
-      GoRoute(path: '/calendario', builder: (context, state) => const CalendarioEventosScreen()),
-      GoRoute(path: '/gestion-eventos', builder: (context, state) => const EventosGestionScreen()),
-      GoRoute(path: '/organizadores', builder: (context, state) => const OrganizadoresScreen()),
+      GoRoute(
+          path: '/calendario',
+          builder: (context, state) => const CalendarioEventosScreen()),
+      GoRoute(
+          path: '/gestion-eventos',
+          builder: (context, state) => const EventosGestionScreen()),
+      GoRoute(
+          path: '/organizadores',
+          builder: (context, state) => const OrganizadoresScreen()),
 
       // PROVEEDORES
-      GoRoute(path: '/proveedores', builder: (context, state) => const ProveedoresScreen()),
-      GoRoute(path: '/anunciantes', builder: (context, state) => const AnunciantesScreen()),
+      GoRoute(
+          path: '/proveedores',
+          builder: (context, state) => const ProveedoresScreen()),
+      GoRoute(
+          path: '/anunciantes',
+          builder: (context, state) => const AnunciantesScreen()),
 
       // UBICACIONES
-      GoRoute(path: '/provincia', builder: (context, state) => const ProvinciaScreen()),
-      GoRoute(path: '/localidad', builder: (context, state) => const LocalidadScreen()),
-      GoRoute(path: '/codigo-postal', builder: (context, state) => const CodigoPostalScreen()),
-      GoRoute(path: '/calle', builder: (context, state) => const CallesGestionScreen()),
+      GoRoute(
+          path: '/provincia',
+          builder: (context, state) => const ProvinciaScreen()),
+      GoRoute(
+          path: '/localidad',
+          builder: (context, state) => const LocalidadScreen()),
+      GoRoute(
+          path: '/codigo-postal',
+          builder: (context, state) => const CodigoPostalScreen()),
+      GoRoute(
+          path: '/calle',
+          builder: (context, state) => const CallesGestionScreen()),
 
       // CONFIGURACIÓN Y USUARIOS
-      GoRoute(path: '/usuarios', builder: (context, state) => const UsuariosScreen()),
-      GoRoute(path: '/tipo-evento', builder: (context, state) => const TipoEventoScreen()),
-      GoRoute(path: '/tipo-autoridades', builder: (context, state) => const TipoAutoridadScreen()),
-      GoRoute(path: '/tipo-cargos', builder: (context, state) => const TipoCargoScreen()),
-      GoRoute(path: '/grupo-proveedor', builder: (context, state) => const GrupoProveedorScreen()),
+      GoRoute(
+          path: '/usuarios',
+          builder: (context, state) => const UsuariosScreen()),
+      GoRoute(
+          path: '/tipo-evento',
+          builder: (context, state) => const TipoEventoScreen()),
+      GoRoute(
+          path: '/tipo-autoridades',
+          builder: (context, state) => const TipoAutoridadScreen()),
+      GoRoute(
+          path: '/tipo-cargos',
+          builder: (context, state) => const TipoCargoScreen()),
+      GoRoute(
+          path: '/grupo-proveedor',
+          builder: (context, state) => const GrupoProveedorScreen()),
       GoRoute(path: '/roles', builder: (context, state) => const RolesScreen()),
 
       // PANEL DE USUARIO (Acceso para todos los logueados)
-      GoRoute(path: '/panel-usuario', builder: (context, state) => const PanelUsuarioScreen()),
+      GoRoute(
+          path: '/panel-usuario',
+          builder: (context, state) => const PanelUsuarioScreen()),
     ],
-
     redirect: (context, state) {
       final isGoingTo = state.matchedLocation;
       final authStatus = authState.authStatus;
@@ -97,13 +188,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 
       // 1. Si no está autenticado
       if (authStatus == AuthStatus.notAuthenticated) {
-        if (isGoingTo != '/login' && isGoingTo != '/registrarse') return '/login';
+        if (isGoingTo != '/login' && isGoingTo != '/registrarse')
+          return '/login';
         return null;
       }
 
       // 2. Si está autenticado
       if (authStatus == AuthStatus.authenticated) {
-        
         // Evitar que vuelva al login/registro
         if (isGoingTo == '/login' || isGoingTo == '/registrarse') {
           return (user?.isAdmin == true) ? '/' : '/panel-usuario';

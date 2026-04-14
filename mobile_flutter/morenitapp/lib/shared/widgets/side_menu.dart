@@ -115,16 +115,28 @@ class SideMenuState extends ConsumerState<SideMenu> {
                 label: 'Tipo de evento',
                 isSubItem: true,
                 onTap: () => _navigate('/tipo-evento')),
+             MenuTile(
+                icon: Icons.admin_panel_settings_rounded,
+                label: 'Grupo de proveedores',
+                isSubItem: true,
+                onTap: () => _navigate('/grupo-proveedor')),
+             MenuTile(
+                icon: Icons.admin_panel_settings_rounded,
+                label: 'Tipos de autoridades',
+                isSubItem: true,
+                onTap: () => _navigate('/tipo-autoridades')),
+                 MenuTile(
+                icon: Icons.admin_panel_settings_rounded,
+                label: 'Tipos de cargos',
+                isSubItem: true,
+                onTap: () => _navigate('/tipo-cargos')),
+
             MenuTile(
                 icon: Icons.admin_panel_settings_rounded,
                 label: 'Gestión de Roles',
                 isSubItem: true,
                 onTap: () => _navigate('/roles')),
-            MenuTile(
-                icon: Icons.supervised_user_circle_rounded,
-                label: 'Usuarios App',
-                isSubItem: true,
-                onTap: () => _navigate('/usuarios')),
+           
           ],
         ),
 
@@ -195,7 +207,7 @@ class SideMenuState extends ConsumerState<SideMenu> {
                 icon: Icons.book_rounded,
                 label: 'Listado de proveedores',
                 isSubItem: true,
-                onTap: () => _navigate('/libros')),
+                onTap: () => _navigate('/proveedores')),
             MenuTile(
                 icon: Icons.newspaper_rounded,
                 label: 'Anunciantes',

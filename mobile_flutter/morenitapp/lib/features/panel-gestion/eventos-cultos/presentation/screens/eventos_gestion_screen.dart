@@ -8,13 +8,12 @@ class EventosGestionScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Escuchamos el estado asíncrono del provider
     final eventosAsync = ref.watch(eventosProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF0F2F5),
       appBar: AppBar(
-        title: const Text('Gestión de Eventos', style: TextStyle(color: Colors.black87)),
+        title: const Text('Gestión de Eventos', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
       ),
@@ -24,21 +23,21 @@ class EventosGestionScreen extends ConsumerWidget {
           Expanded(
             child: eventosAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, stack) => Center(child: Text('Error: $err')),
+              error: (err, _) => Center(child: Text('Error: $err')),
               data: (eventos) => _buildTableContainer(
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
                     headingRowColor: WidgetStateProperty.all(const Color(0xFFF8F9FA)),
                     columns: const [
-                      DataColumn(label: Text('CÓDIGO')),
-                      DataColumn(label: Text('NOMBRE')),
-                      DataColumn(label: Text('LUGAR')),
-                      DataColumn(label: Text('ACCIONES')),
+                      DataColumn(label: Text('CÓDIGO', style: TextStyle(fontWeight: FontWeight.bold))),
+                      DataColumn(label: Text('NOMBRE', style: TextStyle(fontWeight: FontWeight.bold))),
+                      DataColumn(label: Text('LUGAR', style: TextStyle(fontWeight: FontWeight.bold))),
+                      DataColumn(label: Text('ACCIONES', style: TextStyle(fontWeight: FontWeight.bold))),
                     ],
                     rows: eventos.map((e) => DataRow(cells: [
                       DataCell(Text(e.codEvento)),
-                      DataCell(Text(e.nombre)),
+                      DataCell(Text(e.nombre, style: const TextStyle(fontWeight: FontWeight.w500))),
                       DataCell(Text(e.lugar ?? '-')),
                       DataCell(_buildActionButtons(
                         onEdit: () => _showEventoForm(context, ref, evento: e),
@@ -88,8 +87,6 @@ class EventosGestionScreen extends ConsumerWidget {
   }
 }
 
-// --- WIDGETS AUXILIARES REUTILIZABLES ---
-
 Widget _buildHeader(BuildContext context, WidgetRef ref, String hint, VoidCallback onNew) {
   return Container(
     color: Colors.white,
@@ -100,17 +97,21 @@ Widget _buildHeader(BuildContext context, WidgetRef ref, String hint, VoidCallba
           onPressed: onNew,
           icon: const Icon(Icons.add, color: Colors.white, size: 18),
           label: const Text('NUEVO', style: TextStyle(color: Colors.white)),
-          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF714B67)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF714B67),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))
+          ),
         ),
         const Spacer(),
         SizedBox(
-          width: 200, height: 35,
+          width: 200, height: 38,
           child: TextField(
             decoration: InputDecoration(
               hintText: hint,
-              suffixIcon: const Icon(Icons.search, size: 20),
+              prefixIcon: const Icon(Icons.search, size: 18),
               filled: true, fillColor: const Color(0xFFF8F9FA),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(4), borderSide: BorderSide.none),
+              contentPadding: EdgeInsets.zero,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
             ),
           ),
         ),
@@ -125,10 +126,10 @@ Widget _buildTableContainer(Widget child) {
     margin: const EdgeInsets.all(16),
     decoration: BoxDecoration(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(8),
-      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5)],
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
     ),
-    child: child,
+    child: ClipRRect(borderRadius: BorderRadius.circular(12), child: child),
   );
 }
 
@@ -136,8 +137,8 @@ Widget _buildActionButtons({required VoidCallback onEdit, required VoidCallback 
   return Row(
     mainAxisSize: MainAxisSize.min,
     children: [
-      IconButton(icon: const Icon(Icons.edit, color: Colors.blue, size: 20), onPressed: onEdit),
-      IconButton(icon: const Icon(Icons.delete, color: Colors.red, size: 20), onPressed: onDelete),
+      IconButton(icon: const Icon(Icons.edit_outlined, color: Colors.blue, size: 20), onPressed: onEdit),
+      IconButton(icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20), onPressed: onDelete),
     ],
   );
 }
@@ -146,10 +147,11 @@ void _showStyledDialog(BuildContext context, {required String title, required Li
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-      content: Column(mainAxisSize: MainAxisSize.min, children: content),
+      content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: content)),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCELAR')),
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCELAR', style: TextStyle(color: Colors.grey))),
         FilledButton(
           style: FilledButton.styleFrom(backgroundColor: const Color(0xFF714B67)),
           onPressed: () { onSave(); Navigator.pop(context); },
@@ -161,9 +163,13 @@ void _showStyledDialog(BuildContext context, {required String title, required Li
 }
 
 Widget _buildTextField(TextEditingController ctrl, String label, {bool isNumeric = false}) {
-  return TextField(
+  return TextFormField(
     controller: ctrl,
     keyboardType: isNumeric ? TextInputType.number : TextInputType.text,
-    decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
+    decoration: InputDecoration(
+      labelText: label,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+    ),
   );
 }

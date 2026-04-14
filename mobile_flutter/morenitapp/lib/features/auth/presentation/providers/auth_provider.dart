@@ -17,7 +17,9 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
       keyValueStorageService: keyValueStorageService
   );
 });
-// --- NOTIFIER ---
+final authRepositoryProvider = Provider<AuthRepository>((ref) {
+  return AuthRepositoryImpl();
+});
 // --- NOTIFIER ---
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository authRepository;

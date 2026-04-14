@@ -1,107 +1,105 @@
+import 'dart:developer' as dev;
 import 'package:dio/dio.dart';
 import 'package:morenitapp/config/constants/environment.dart';
-import '../../domain/datasources/secretaria_datasource.dart';
+import 'package:morenitapp/features/auth/infrastructure/errors/auth_errors.dart';
 import '../../domain/entities/autoridad.dart';
 import '../../domain/entities/cargo.dart';
 import '../../domain/entities/cofradia.dart';
 
-class SecretariaDatasourceImpl extends SecretariaDatasource {
-  
-  // Configuración de Dio mejorada
+class SecretariaDatasourceImpl {
   final dio = Dio(BaseOptions(
-    baseUrl: Environment.apiUrl, 
-    connectTimeout: const Duration(seconds: 10),
-    receiveTimeout: const Duration(seconds: 10),
+    baseUrl: Environment.apiUrl,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
       'Accept': 'application/json',
     },
   ));
 
-  // MÉTODO PRIVADO REFORMADO PARA EVITAR 404
-  Future<dynamic> _handleRequest(String method, String path, {Map<String, dynamic>? data}) async {
-  try {
-    // Aseguramos que el path empiece con / y no tenga espacios
-    final cleanPath = path.startsWith('/') ? path.trim() : '/${path.trim()}';
-    
-    final response = await dio.request(
-      cleanPath,
-      data: data,
-      options: Options(method: method.toUpperCase()),
-    );
-    return response.data;
-  } on DioException catch (e) {
-    // Esto te dirá en la consola de VS Code exactamente a qué URL intentó ir
-    print("DEBUG: Falló conexión a -> ${dio.options.baseUrl}${e.requestOptions.path}");
-    rethrow;
+  Future<dynamic> _handleRequest(String method, String path,
+      {Map<String, dynamic>? data}) async {
+    try {
+      final response = await dio.request(
+        path,
+        data: (method == 'GET' || method == 'DELETE')
+            ? null
+            : {"params": data ?? {}},
+        options: Options(method: method),
+      );
+      return _processResponse(response);
+    } on DioException catch (e) {
+      // Si es un error de conexión (como el de XMLHttpRequest)
+      if (e.type == DioExceptionType.connectionError) {
+        throw CustomError(
+            'No se pudo conectar al servidor. Revisa tu conexión o el CORS.');
+      }
+      throw CustomError('Error en el servidor: ${e.response?.statusCode}');
+    }
   }
+
+  dynamic _processResponse(Response response) {
+    if (response.data == null) throw CustomError('Sin respuesta del servidor');
+    final data = response.data;
+    if (data is Map && data.containsKey('result')) return data['result'];
+    return data;
+  }
+
+  // --- GETTERS ---
+  Future<List<Autoridad>> getAutoridades() async {
+    final data = await _handleRequest('GET', '/autoridades');
+    return (data as List).map((json) => Autoridad.fromJson(json)).toList();
+  }
+
+  Future<List<Cargo>> getCargos() async {
+    final data = await _handleRequest('GET', '/cargos');
+    return (data as List).map((json) => Cargo.fromJson(json)).toList();
+  }
+
+  Future<List<Cofradia>> getCofradias() async {
+    final data = await _handleRequest('GET', '/cofradias');
+    return (data as List).map((json) => Cofradia.fromJson(json)).toList();
+  }
+
+  // --- UPSERTS (POST/PUT) ---
+  Future<Map<String, dynamic>> upsertAutoridad(
+      Map<String, dynamic> data) async {
+    final id = data['id'];
+    final path = (id != null && id != 0) ? '/autoridades/$id' : '/autoridades';
+    return await _handleRequest((id != null && id != 0) ? 'PUT' : 'POST', path,
+        data: data);
+  }
+
+  Future<Map<String, dynamic>> upsertCargo(Map<String, dynamic> data) async {
+    final id = data['id'];
+    final path = (id != null && id != 0) ? '/cargos/$id' : '/cargos';
+    return await _handleRequest((id != null && id != 0) ? 'PUT' : 'POST', path,
+        data: data);
+  }
+
+  Future<Map<String, dynamic>> upsertCofradia(Map<String, dynamic> data) async {
+    final id = data['id'];
+    final path = (id != null && id != 0) ? '/cofradias/$id' : '/cofradias';
+    return await _handleRequest((id != null && id != 0) ? 'PUT' : 'POST', path,
+        data: data);
+  }
+
+  // --- AUXILIARES ---
+  Future<List<Map<String, dynamic>>> getTiposCargos() async {
+  final data = await _handleRequest('GET', '/configuracion/tipocargo');
+  dev.log('DATOS RECIBIDOS: $data', name: 'API_DEBUG');
+  return List<Map<String, dynamic>>.from(data as List);
 }
 
-  // --- IMPLEMENTACIÓN ---
-
-  @override
-  Future<List<Autoridad>> getAutoridades() async {
-    // Usamos el path exacto definido en Odoo
-    final dynamic data = await _handleRequest('GET', '/autoridades');
-    if (data is! List) return [];
-    return data.map((json) => Autoridad.fromJson(json)).toList();
+  Future<List<Map<String, dynamic>>> getCalles() async {
+    final data = await _handleRequest('GET', '/calles');
+    return List<Map<String, dynamic>>.from(data as List);
   }
 
-  @override
-  Future<List<Cargo>> getCargos() async {
-    final dynamic data = await _handleRequest('GET', '/cargos');
-    if (data is! List) return [];
-    return data.map((json) => Cargo.fromJson(json)).toList();
-  }
-
-  @override
-  Future<List<Cofradia>> getCofradias() async {
-    final dynamic data = await _handleRequest('GET', '/cofradias');
-    if (data is! List) return [];
-    return data.map((json) => Cofradia.fromJson(json)).toList();
-  }
-
-  // --- UPSERTS ---
-
-  @override
-  Future<Map<String, dynamic>> upsertAutoridad(Map<String, dynamic> data) async {
-    final String id = data['id']?.toString() ?? '';
-    if (id.isNotEmpty && id != '0') {
-      return await _handleRequest('PUT', '/autoridades/$id', data: data);
-    } else {
-      // Quitamos el ID si es nuevo para evitar conflictos en Odoo
-      final cleanData = Map<String, dynamic>.from(data)..remove('id');
-      return await _handleRequest('POST', '/autoridades', data: cleanData);
-    }
-  }
-
-  // --- DELETE ---
-
-  @override
   Future<Map<String, dynamic>> deleteRegistro(String modelo, int id) async {
-    String path = '';
-    switch (modelo) {
-      case 'morenitapp.autoridad': path = '/autoridades'; break;
-      case 'morenitapp.cargo':     path = '/cargos'; break;
-      case 'morenitapp.cofradia':  path = '/cofradias'; break;
-      default: throw Exception('Modelo no soportado');
-    }
-    // IMPORTANTE: path/$id sin carácteres extraños
+    String path = modelo.contains('cargo')
+        ? '/cargos'
+        : modelo.contains('autoridad')
+            ? '/autoridades'
+            : '/cofradias';
     return await _handleRequest('DELETE', '$path/$id');
-  }
-
-  // Implementaciones faltantes
-  @override
-  Future<Map<String, dynamic>> upsertCargo(Map<String, dynamic> data) async {
-    final String id = data['id']?.toString() ?? '';
-    if (id.isNotEmpty) return await _handleRequest('PUT', '/cargos/$id', data: data);
-    return await _handleRequest('POST', '/cargos', data: data);
-  }
-
-  @override
-  Future<Map<String, dynamic>> upsertCofradia(Map<String, dynamic> data) async {
-    final String id = data['id']?.toString() ?? '';
-    if (id.isNotEmpty) return await _handleRequest('PUT', '/cofradias/$id', data: data);
-    return await _handleRequest('POST', '/cofradias', data: data);
   }
 }

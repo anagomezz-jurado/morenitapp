@@ -1,40 +1,45 @@
 import json
 import logging
-from odoo import http
+from odoo import http, fields
 from odoo.http import request
 
 _logger = logging.getLogger(__name__)
 
 class LibroController(http.Controller):
 
+    def _get_cors_headers(self):
+        return [
+            ('Access-Control-Allow-Origin', '*'),
+            ('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'),
+            ('Access-Control-Allow-Headers', 'Content-Type, Authorization'),
+        ]
+
     def _json_response(self, data, status=200):
-        """Headers necesarios para evitar errores de CORS en Flutter Web"""
-        return request.make_response(
-            json.dumps(data),
-            headers=[
-                ('Content-Type', 'application/json'),
-                ('Access-Control-Allow-Origin', '*'),
-                ('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'),
-                ('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With'),
-            ],
-            status=status
-        )
+        headers = [('Content-Type', 'application/json')] + self._get_cors_headers()
+        return request.make_response(json.dumps(data), headers=headers, status=status)
+
+    def _get_params(self):
+        if request.httprequest.data:
+            try:
+                data = json.loads(request.httprequest.data.decode('utf-8'))
+                return data.get('params', data)
+            except Exception:
+                return {}
+        return request.params.copy()
 
     @http.route(['/api/libros', '/api/libros/<int:id>'], 
-                type='http', auth='public', methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], csrf=False, cors='*')
+                type='http', auth='public', methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], csrf=False)
     def api_libros(self, id=None, **kw):
-        # Manejo de pre-flight CORS
         if request.httprequest.method == 'OPTIONS':
-            return self._json_response({})
+            return self._json_response({}, status=200)
 
-        model = request.env['morenitapp.libro'].sudo()
+        sudo_model = request.env['morenitapp.libro'].sudo()
         method = request.httprequest.method
         
         try:
-            # --- GET: Listar o Consultar ---
             if method == 'GET':
                 domain = [('id', '=', id)] if id else []
-                records = model.search(domain)
+                records = sudo_model.search(domain)
                 data = []
                 for r in records:
                     data.append({
@@ -44,69 +49,62 @@ class LibroController(http.Controller):
                         "anio": r.anio or 0,
                         "descripcion": r.descripcion or "",
                         "importe": r.importe or 0.0,
-                        "fechaRecibo": r.fechaRecibo.strftime('%Y-%m-%d %H:%M:%S') if r.fechaRecibo else None,
-                        "textoReciboEvento": r.textoReciboEvento or "",
-                        "textoAnunciante": r.textoAnunciante or "",
-                        "total_anunciantes": r.total_anunciantes or 0.0,
-                        "tipoevento_id": [r.tipoevento_id.id, r.tipoevento_id.nombre_tipo_evento] if r.tipoevento_id else None,
+                        "fechaRecibo": fields.Datetime.to_string(r.fechaRecibo) if r.fechaRecibo else None,
+                        "tipoevento_id": r.tipoevento_id.id if r.tipoevento_id else None,
                         "archivoLibro": r.archivoLibro.decode('utf-8') if r.archivoLibro else None,
+                        "total_anunciantes": r.total_anunciantes,
                         "anunciantes": [{
                             "id": a.id,
-                            "proveedor_nombre": a.proveedor_id.nombre if a.proveedor_id else "",
-                            "importe": a.importe or 0.0,
-                            "cobrado": a.cobrado or False,
-                            "fecha_cobro": str(a.fecha_cobro) if a.fecha_cobro else None
+                            "proveedor_id": a.proveedor_id.id,
+                            "proveedor_nombre": a.proveedor_id.nombre if a.proveedor_id else "Sin nombre",
+                            "importe": a.importe,
+                            "cobrado": a.cobrado,
+                            "fecha_cobro": fields.Date.to_string(a.fecha_cobro) if a.fecha_cobro else None
                         } for a in r.anunciantes_ids]
                     })
                 return self._json_response(data)
 
-            # Extraer el Body para métodos de escritura
-            body = {}
-            if request.httprequest.data:
-                body = json.loads(request.httprequest.data)
+            if method in ['POST', 'PUT']:
+                params = self._get_params()
+                anunciantes_data = params.pop('anunciantes', [])
+                id_record = id or params.pop('id', None)
+                
+                # Limpiar vals para que solo entren campos reales del modelo Libro
+                final_vals = {k: v for k, v in params.items() if k in sudo_model._fields}
 
-            # --- POST: Crear ---
-            if method == 'POST':
-                nuevo = model.create(body)
-                return self._json_response({"id": nuevo.id, "success": True}, status=201)
+                # Gestión de One2many para Anunciantes
+                if anunciantes_data:
+                    commands = []
+                    for anc in anunciantes_data:
+                        anc_vals = {
+                            'importe': float(anc.get('importe', 0.0)),
+                            'cobrado': anc.get('cobrado', False),
+                            'fecha_cobro': anc.get('fecha_cobro') or False,
+                            'proveedor_id': anc.get('proveedor_id'),
+                        }
+                        if anc.get('id'):
+                            commands.append((1, int(anc['id']), anc_vals))
+                        else:
+                            commands.append((0, 0, anc_vals))
+                    final_vals['anunciantes_ids'] = commands
 
-            # --- PUT: Editar ---
-            if method == 'PUT' and id:
-                record = model.browse(id)
-                if record.exists():
-                    record.write(body)
-                    return self._json_response({"success": True})
-                return self._json_response({"error": "Registro no encontrado"}, status=404)
+                if id_record:
+                    record = sudo_model.browse(int(id_record))
+                    if not record.exists():
+                        return self._json_response({"success": False, "error": "No encontrado"}, status=404)
+                    record.write(final_vals)
+                    return self._json_response({"success": True, "id": record.id})
+                else:
+                    nuevo = sudo_model.create(final_vals)
+                    return self._json_response({"success": True, "id": nuevo.id}, status=201)
 
-            # --- DELETE: Eliminar ---
-            if method == 'DELETE' and id:
-                record = model.browse(id)
-                if record.exists():
-                    record.unlink()
-                    return self._json_response({"success": True})
-                return self._json_response({"error": "Registro no encontrado"}, status=404)
-
-        except Exception as e:
-            _logger.error(f"API Libros Error: {str(e)}")
-            return self._json_response({"error": str(e), "success": False}, status=500)
-
-    @http.route(['/api/libro-anunciantes', '/api/libro-anunciantes/<int:id>'], 
-                type='http', auth='public', methods=['POST', 'DELETE', 'OPTIONS'], csrf=False, cors='*')
-    def api_libro_anunciantes(self, id=None, **kw):
-        if request.httprequest.method == 'OPTIONS': return self._json_response({})
-        
-        model = request.env['morenitapp.libroanunciante'].sudo()
-        try:
-            if request.httprequest.method == 'POST':
-                body = json.loads(request.httprequest.data)
-                nuevo = model.create(body)
-                return self._json_response({"id": nuevo.id, "success": True})
-
-            if request.httprequest.method == 'DELETE' and id:
-                record = model.browse(id)
+            if method == 'DELETE':
+                record = sudo_model.browse(id)
                 if record.exists():
                     record.unlink()
                     return self._json_response({"success": True})
-                return self._json_response({"error": "No encontrado"}, status=404)
+                return self._json_response({"success": False, "error": "No encontrado"}, status=404)
+
         except Exception as e:
+            _logger.error(f"Error API: {str(e)}")
             return self._json_response({"error": str(e)}, status=500)

@@ -12,10 +12,7 @@ class Calle(models.Model):
 
     hermanos_ids = fields.One2many('morenitapp.hermano', 'calle_id', string="Hermanos")
 
-    responsable_id = fields.Many2one(
-        'morenitapp.hermano',
-        string="Responsable de Calle"
-    )
+    responsable_id = fields.Many2one('morenitapp.hermano', string="Cobrador Responsable")
 
     @api.onchange('responsable_id')
     def _onchange_responsable(self):

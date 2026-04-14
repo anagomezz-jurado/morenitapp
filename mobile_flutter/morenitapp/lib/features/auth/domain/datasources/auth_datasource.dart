@@ -15,4 +15,7 @@ abstract class AuthDataSource {
   });
 
   Future<User> checkAuthStatus(String token);
+  
+  // AÑADIR ESTA LÍNEA
+  Future<List<User>> getUsuarios(); 
 }

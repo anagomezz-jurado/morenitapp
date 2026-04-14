@@ -123,7 +123,30 @@ class AuthDataSourceImpl extends AuthDataSource {
       throw CustomError('No se pudo verificar la sesión');
     }
   }
+@override
+  Future<List<User>> getUsuarios() async {
+    try {
+      // Importante: usar la ruta exacta de tu controlador Odoo
+      final response = await dio.post('/usuarios', data: {
+        "params": {} // Odoo espera params aunque esté vacío
+      });
 
+      final result = response.data['result'] ?? response.data;
+
+      if (result['success'] == false) {
+        throw CustomError(result['error'] ?? 'Error al obtener usuarios');
+      }
+
+      final List usuariosList = result['usuarios'] ?? [];
+      return usuariosList.map((u) => UserMapper.userJsonToEntity(u)).toList();
+      
+    } on DioException catch (e) {
+      _handleDioError(e);
+      rethrow;
+    } catch (e) {
+      throw CustomError('Error al listar usuarios: $e');
+    }
+  }
   void _handleDioError(DioException e) {
     if (e.type == DioExceptionType.connectionTimeout) throw CustomError('Tiempo de espera agotado');
     if (e.type == DioExceptionType.connectionError) throw CustomError('Sin conexión al servidor');

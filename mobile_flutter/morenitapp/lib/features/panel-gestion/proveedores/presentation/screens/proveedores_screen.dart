@@ -2,97 +2,78 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:morenitapp/features/panel-gestion/proveedores/domain/entities/proveedor.dart';
 import 'package:morenitapp/features/panel-gestion/proveedores/presentation/providers/proveedor_providers.dart';
-
+import 'package:morenitapp/shared/widgets/plantilla_ventanas.dart';
 
 class ProveedoresScreen extends ConsumerWidget {
   const ProveedoresScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final listaTodos = ref.watch(listaTodosLosProveedores); // Aquí cargamos todos
-    final asyncState = ref.watch(proveedoresProvider);
+    final proveedoresAsync = ref.watch(proveedoresProvider);
+    final listaTodos = ref.watch(listaTodosLosProveedores);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF0F2F5),
-      appBar: AppBar(
-        title: const Text('Gestión de Proveedores', style: TextStyle(color: Colors.black87, fontSize: 18)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
-      ),
-      body: Column(
-        children: [
-          _buildHeader(context, ref, 'Buscar proveedor...', () => _abrirFormulario(context, ref)),
-          Expanded(
-            child: _buildTableContainer(
-              asyncState.when(
-                loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF714B67))),
-                error: (err, stack) => Center(child: Text('Error: $err')),
-                data: (_) => SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: DataTable(
-                    headingRowColor: WidgetStateProperty.all(const Color(0xFFF8F9FA)),
-                    columns: const [
-                      DataColumn(label: Text('CÓDIGO')),
-                      DataColumn(label: Text('NOMBRE')),
-                      DataColumn(label: Text('TELÉFONO')),
-                      DataColumn(label: Text('EMAIL')),
-                      DataColumn(label: Text('ACCIONES')),
-                    ],
-                    rows: listaTodos.map((p) => DataRow(cells: [
-                      DataCell(Text(p.codProveedor)),
-                      DataCell(Text(p.nombre)),
-                      DataCell(Text(p.telefono ?? '')),
-                      DataCell(Text(p.email ?? '')),
-                      DataCell(_buildActionButtons(
-                        onEdit: () => _abrirFormulario(context, ref, proveedor: p),
-                        onDelete: () => _confirmarEliminar(context, ref, p),
-                      )),
-                    ])).toList(),
-                  ),
-                ),
-              ),
+    return PlantillaVentanas(
+      title: 'Gestión de Proveedores',
+      isLoading: proveedoresAsync.isLoading,
+      onRefresh: () => ref.refresh(proveedoresProvider),
+      onNuevo: () => _showSideForm(context, ref),
+      onSearch: (val) {
+        // Implementar lógica de filtrado si existe en el provider
+      },
+      columns: const [
+        DataColumn(label: Text('CÓDIGO', style: TextStyle(fontWeight: FontWeight.bold))),
+        DataColumn(label: Text('NOMBRE', style: TextStyle(fontWeight: FontWeight.bold))),
+        DataColumn(label: Text('TELÉFONO', style: TextStyle(fontWeight: FontWeight.bold))),
+        DataColumn(label: Text('EMAIL', style: TextStyle(fontWeight: FontWeight.bold))),
+        DataColumn(label: Text('ACCIONES', style: TextStyle(fontWeight: FontWeight.bold))),
+      ],
+      rows: listaTodos.map((p) => DataRow(cells: [
+        DataCell(Text(p.codProveedor)),
+        DataCell(Text(p.nombre, style: const TextStyle(fontWeight: FontWeight.w500))),
+        DataCell(Text(p.telefono ?? '-')),
+        DataCell(Text(p.email ?? '-')),
+        DataCell(Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.edit_note, color: Colors.blue), 
+              onPressed: () => _showSideForm(context, ref, proveedor: p)
             ),
-          ),
-        ],
-      ),
+            IconButton(
+              icon: const Icon(Icons.delete_sweep_outlined, color: Colors.red), 
+              onPressed: () => _confirmarEliminar(context, ref, p)
+            ),
+          ],
+        )),
+      ])).toList(),
     );
   }
 
-  void _abrirFormulario(BuildContext context, WidgetRef ref, {Proveedor? proveedor}) {
-    final isEdit = proveedor != null;
-    final codCtrl = TextEditingController(text: proveedor?.codProveedor ?? '');
-    final nomCtrl = TextEditingController(text: proveedor?.nombre ?? '');
-    final telCtrl = TextEditingController(text: proveedor?.telefono ?? '');
-    final emaCtrl = TextEditingController(text: proveedor?.email ?? '');
-    bool esAnunciante = proveedor?.anunciante ?? false;
-
-    _showStyledDialog(
-      context,
-      title: isEdit ? 'Editar Proveedor' : 'Nuevo Proveedor',
-      content: [
-        _buildTextField(codCtrl, 'Código'),
-        const SizedBox(height: 10),
-        _buildTextField(nomCtrl, 'Nombre'),
-        const SizedBox(height: 10),
-        _buildTextField(telCtrl, 'Teléfono', isNumeric: true),
-        const SizedBox(height: 10),
-        _buildTextField(emaCtrl, 'Email'),
-        StatefulBuilder(
-          builder: (context, setState) => CheckboxListTile(
-            title: const Text("¿Es Anunciante?"),
-            value: esAnunciante,
-            onChanged: (val) => setState(() => esAnunciante = val!),
+  void _showSideForm(BuildContext context, WidgetRef ref, {Proveedor? proveedor}) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.black45,
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, anim1, anim2) {
+        return Align(
+          alignment: Alignment.centerRight,
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.35,
+            height: double.infinity,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(topLeft: Radius.circular(30), bottomLeft: Radius.circular(30)),
+            ),
+            child: Material(child: _ProveedorFormContent(proveedor: proveedor)),
           ),
-        ),
-      ],
-      onSave: () {
-        final notifier = ref.read(proveedoresProvider.notifier);
-        if (isEdit) {
-          notifier.editar(id: proveedor.id, codigo: codCtrl.text, nombre: nomCtrl.text, esAnunciante: esAnunciante, telefono: telCtrl.text, email: emaCtrl.text);
-        } else {
-          notifier.crear(codigo: codCtrl.text, nombre: nomCtrl.text, esAnunciante: esAnunciante, telefono: telCtrl.text, email: emaCtrl.text);
-        }
+        );
+      },
+      transitionBuilder: (context, anim1, anim2, child) {
+        return SlideTransition(
+          position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero).animate(anim1),
+          child: child,
+        );
       },
     );
   }
@@ -101,16 +82,17 @@ class ProveedoresScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Eliminar'),
-        content: Text('¿Eliminar a ${p.nombre}?'),
+        title: const Text('¿Eliminar registro?'),
+        content: Text('¿Desea eliminar al proveedor "${p.nombre}"?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCELAR')),
-          TextButton(
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () {
               ref.read(proveedoresProvider.notifier).eliminar(int.parse(p.id));
               Navigator.pop(context);
             },
-            child: const Text('ELIMINAR', style: TextStyle(color: Colors.red)),
+            child: const Text('ELIMINAR'),
           ),
         ],
       ),
@@ -118,87 +100,107 @@ class ProveedoresScreen extends ConsumerWidget {
   }
 }
 
-// --- COMPONENTES UI REUTILIZABLES (Colócalos al final o en un archivo común) ---
+class _ProveedorFormContent extends ConsumerStatefulWidget {
+  final Proveedor? proveedor;
+  const _ProveedorFormContent({this.proveedor});
 
-Widget _buildHeader(BuildContext context, WidgetRef ref, String hint, VoidCallback onNew) {
-  return Container(
-    color: Colors.white,
-    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
-    child: Row(
+  @override
+  ConsumerState<_ProveedorFormContent> createState() => _ProveedorFormContentState();
+}
+
+class _ProveedorFormContentState extends ConsumerState<_ProveedorFormContent> {
+  late TextEditingController codCtrl, nomCtrl, telCtrl, emaCtrl;
+  bool esAnunciante = false;
+
+  @override
+  void initState() {
+    super.initState();
+    codCtrl = TextEditingController(text: widget.proveedor?.codProveedor ?? '');
+    nomCtrl = TextEditingController(text: widget.proveedor?.nombre ?? '');
+    telCtrl = TextEditingController(text: widget.proveedor?.telefono ?? '');
+    emaCtrl = TextEditingController(text: widget.proveedor?.email ?? '');
+    esAnunciante = widget.proveedor?.anunciante ?? false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Column(
       children: [
-        ElevatedButton.icon(
-          onPressed: onNew,
-          icon: const Icon(Icons.add, color: Colors.white, size: 18),
-          label: const Text('NUEVO', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF714B67),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-          ),
-        ),
-        const Spacer(),
-        SizedBox(
-          width: 250, height: 35,
-          child: TextField(
-            decoration: InputDecoration(
-              hintText: hint,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 10),
-              suffixIcon: const Icon(Icons.search, size: 20),
-              filled: true, fillColor: const Color(0xFFF8F9FA),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(4), borderSide: const BorderSide(color: Color(0xFFDEE2E6))),
+        _buildHeader(context, colors, widget.proveedor == null),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _label("CÓDIGO"),
+                _buildField(codCtrl, Icons.badge_outlined),
+                const SizedBox(height: 20),
+                _label("NOMBRE COMERCIAL"),
+                _buildField(nomCtrl, Icons.storefront),
+                const SizedBox(height: 20),
+                _label("TELÉFONO"),
+                _buildField(telCtrl, Icons.phone, isNumeric: true),
+                const SizedBox(height: 20),
+                _label("CORREO ELECTRÓNICO"),
+                _buildField(emaCtrl, Icons.email_outlined),
+                const SizedBox(height: 25),
+                SwitchListTile(
+                  title: const Text("¿ES ANUNCIANTE?", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  subtitle: const Text("Aparecerá en el panel de anunciantes"),
+                  value: esAnunciante,
+                  onChanged: (val) => setState(() => esAnunciante = val),
+                ),
+                const SizedBox(height: 40),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: FilledButton(
+                    onPressed: _save,
+                    child: Text(widget.proveedor == null ? "GUARDAR" : "ACTUALIZAR"),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
       ],
-    ),
-  );
-}
+    );
+  }
 
-Widget _buildTableContainer(Widget child) {
-  return Container(
-    width: double.infinity,
-    margin: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(8),
-      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5)],
-    ),
-    child: child,
-  );
-}
+  void _save() {
+    final notifier = ref.read(proveedoresProvider.notifier);
+    if (widget.proveedor != null) {
+      notifier.editar(id: widget.proveedor!.id, codigo: codCtrl.text, nombre: nomCtrl.text, esAnunciante: esAnunciante, telefono: telCtrl.text, email: emaCtrl.text);
+    } else {
+      notifier.crear(codigo: codCtrl.text, nombre: nomCtrl.text, esAnunciante: esAnunciante, telefono: telCtrl.text, email: emaCtrl.text);
+    }
+    Navigator.pop(context);
+  }
 
-Widget _buildActionButtons({required VoidCallback onEdit, required VoidCallback onDelete}) {
-  return Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      IconButton(icon: const Icon(Icons.edit, color: Colors.blue, size: 20), onPressed: onEdit),
-      IconButton(icon: const Icon(Icons.delete, color: Colors.red, size: 20), onPressed: onDelete),
-    ],
+  Widget _buildHeader(BuildContext context, ColorScheme colors, bool isNew) => Container(
+    padding: const EdgeInsets.fromLTRB(24, 40, 16, 20),
+    color: colors.primary.withOpacity(0.08),
+    child: Row(children: [
+      Icon(isNew ? Icons.add_business : Icons.edit_note, color: colors.primary),
+      const SizedBox(width: 12),
+      Text(isNew ? 'Nuevo Registro' : 'Editar Registro', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      const Spacer(),
+      IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+    ]),
   );
-}
 
-void _showStyledDialog(BuildContext context, {required String title, required List<Widget> content, required VoidCallback onSave}) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-      content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: content)),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCELAR')),
-        FilledButton(
-          style: FilledButton.styleFrom(backgroundColor: const Color(0xFF714B67)),
-          onPressed: () { onSave(); Navigator.pop(context); },
-          child: const Text('GUARDAR'),
-        ),
-      ],
-    ),
-  );
-}
+  Widget _label(String t) => Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(t, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)));
 
-Widget _buildTextField(TextEditingController ctrl, String label, {bool isNumeric = false}) {
-  return TextField(
-    controller: ctrl,
+  Widget _buildField(TextEditingController c, IconData i, {bool isNumeric = false}) => TextField(
+    controller: c,
     keyboardType: isNumeric ? TextInputType.number : TextInputType.text,
-    decoration: InputDecoration(labelText: label, border: const OutlineInputBorder(), isDense: true),
+    decoration: InputDecoration(
+      prefixIcon: Icon(i, size: 20),
+      filled: true,
+      fillColor: Colors.grey.shade50,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade200))
+    ),
   );
 }

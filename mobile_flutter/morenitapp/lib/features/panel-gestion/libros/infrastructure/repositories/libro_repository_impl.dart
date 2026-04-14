@@ -1,10 +1,10 @@
 import 'package:morenitapp/features/panel-gestion/libros/domain/repositories/libro_repository.dart';
-
 import '../../domain/datasources/libro_datasource.dart';
 import '../../domain/entities/libro.dart';
 
 class LibroRepositoryImpl extends LibroRepository {
   final LibroDatasource datasource;
+
   LibroRepositoryImpl(this.datasource);
 
   @override
@@ -15,4 +15,7 @@ class LibroRepositoryImpl extends LibroRepository {
 
   @override
   Future<bool> eliminarLibro(int id) => datasource.eliminarLibro(id);
+  
+  @override
+  Future<bool> editarLibro(int id, Map<String, dynamic> datos) => datasource.editarLibro(id, datos);
 }

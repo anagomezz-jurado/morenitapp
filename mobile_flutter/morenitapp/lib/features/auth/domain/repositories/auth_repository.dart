@@ -15,4 +15,5 @@ abstract class AuthRepository {
   });
 
   Future<User> checkAuthStatus(String token);
+  Future<List<User>> getUsuarios();
 }

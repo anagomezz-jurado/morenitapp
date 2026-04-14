@@ -8,7 +8,7 @@ class SecretariaRepositoryImpl implements SecretariaRepository {
   final SecretariaDatasourceImpl datasource;
   SecretariaRepositoryImpl(this.datasource);
 
- @override
+  @override
   Future<List<Autoridad>> getAutoridades() => datasource.getAutoridades();
 
   @override
@@ -19,25 +19,27 @@ class SecretariaRepositoryImpl implements SecretariaRepository {
 
   @override
   Future<void> upsertAutoridad(Map<String, dynamic> data) async {
-    final Map<String, dynamic> res = await datasource.upsertAutoridad(data);
-    if (res['success'] != true) throw Exception(res['error'] ?? 'Error');
+    await datasource.upsertAutoridad(data);
   }
 
   @override
   Future<void> upsertCargo(Map<String, dynamic> data) async {
-    final Map<String, dynamic> res = await datasource.upsertCargo(data);
-    if (res['success'] != true) throw Exception(res['error'] ?? 'Error');
+    await datasource.upsertCargo(data);
   }
 
   @override
   Future<void> upsertCofradia(Map<String, dynamic> data) async {
-    final Map<String, dynamic> res = await datasource.upsertCofradia(data);
-    if (res['success'] != true) throw Exception(res['error'] ?? 'Error');
+    await datasource.upsertCofradia(data);
   }
 
   @override
   Future<void> deleteRegistro(String modelo, int id) async {
-    final Map<String, dynamic> res = await datasource.deleteRegistro(modelo, id);
-    if (res['success'] != true) throw Exception(res['error'] ?? 'Error');
+    await datasource.deleteRegistro(modelo, id);
   }
+
+  @override
+  Future<List<Map<String, dynamic>>> getTiposCargos() => datasource.getTiposCargos();
+
+  @override
+  Future<List<Map<String, dynamic>>> getCalles() => datasource.getCalles();
 }

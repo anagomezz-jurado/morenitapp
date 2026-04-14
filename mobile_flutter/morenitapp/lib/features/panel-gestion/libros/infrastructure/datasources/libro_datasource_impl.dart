@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:morenitapp/config/constants/environment.dart';
-import 'package:morenitapp/features/panel-gestion/libros/domain/datasources/libro_datasource.dart';
+import '../../domain/datasources/libro_datasource.dart';
 import '../../domain/entities/libro.dart';
 
 class LibroDatasourceImpl extends LibroDatasource {
@@ -24,6 +24,16 @@ class LibroDatasourceImpl extends LibroDatasource {
   Future<bool> crearLibro(Map<String, dynamic> datos) async {
     try {
       final response = await dio.post('/libros', data: datos);
+      return response.statusCode == 201 || response.data['success'] == true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> editarLibro(int id, Map<String, dynamic> datos) async {
+    try {
+      final response = await dio.put('/libros/$id', data: datos);
       return response.data['success'] == true;
     } catch (e) {
       return false;
@@ -38,5 +48,5 @@ class LibroDatasourceImpl extends LibroDatasource {
     } catch (e) {
       return false;
     }
-  }
+  } 
 }

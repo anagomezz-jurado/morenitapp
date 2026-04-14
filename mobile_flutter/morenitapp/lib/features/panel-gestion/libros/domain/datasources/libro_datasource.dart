@@ -1,7 +1,8 @@
-import 'package:morenitapp/features/panel-gestion/libros/domain/entities/libro.dart';
+import '../entities/libro.dart';
 
 abstract class LibroDatasource {
   Future<List<Libro>> getLibros();
   Future<bool> crearLibro(Map<String, dynamic> datos);
+  Future<bool> editarLibro(int id, Map<String, dynamic> datos); // <-- AÑADIR ESTA LÍNEA
   Future<bool> eliminarLibro(int id);
 }

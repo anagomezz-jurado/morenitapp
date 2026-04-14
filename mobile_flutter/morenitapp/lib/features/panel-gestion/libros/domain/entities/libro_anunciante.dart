@@ -1,23 +1,28 @@
 class LibroAnunciante {
-  final int id;
+  final int? id;
+  final int proveedorId;
   final String proveedorNombre;
   final double importe;
   final bool cobrado;
-  final DateTime? fechaCobro;
+  final String? fechaCobro; // Usamos String para simplificar el transporte con Odoo
 
   LibroAnunciante({
-    required this.id,
+    this.id,
+    required this.proveedorId,
     required this.proveedorNombre,
     required this.importe,
-    required this.cobrado,
+    this.cobrado = false,
     this.fechaCobro,
   });
 
-  factory LibroAnunciante.fromJson(Map<String, dynamic> json) => LibroAnunciante(
-    id: json["id"],
-    proveedorNombre: json["proveedor_nombre"] ?? '',
-    importe: (json["importe"] as num).toDouble(),
-    cobrado: json["cobrado"] ?? false,
-    fechaCobro: json["fecha_cobro"] != null ? DateTime.parse(json["fecha_cobro"]) : null,
-  );
+  factory LibroAnunciante.fromJson(Map<String, dynamic> json) {
+    return LibroAnunciante(
+      id: json['id'],
+      proveedorId: json['proveedor_id'] ?? 0,
+      proveedorNombre: json['proveedor_nombre'] ?? '',
+      importe: (json['importe'] ?? 0.0).toDouble(),
+      cobrado: json['cobrado'] ?? false,
+      fechaCobro: json['fecha_cobro'],
+    );
+  }
 }

@@ -3,28 +3,56 @@ from odoo.exceptions import ValidationError
 
 class LibroAnunciante(models.Model):
     _name = 'morenitapp.libroanunciante'
-    _description = 'Relaciona Libro y Anunciante'
+    _description = 'Relación de Anunciantes por Libro'
+    _order = 'fecha_cobro desc, id desc'
 
+    # Relación con el modelo principal (Libro)
+    # El nombre 'libro_id' debe coincidir exactamente con el inverse_name del One2many en libro.py
     libro_id = fields.Many2one(
-        'morenitapp.libro',
-        string="Libro",
-        required=True,
-        ondelete='cascade'
+        'morenitapp.libro', 
+        string="Libro", 
+        ondelete='cascade', 
+        required=True
     )
 
+    # Relación con el Proveedor
     proveedor_id = fields.Many2one(
-        'morenitapp.proveedor',
-        string="Anunciante",
+        'morenitapp.proveedor', 
+        string="Anunciante", 
         required=True,
-        domain="[('anunciante','=',True)]"
+        # Opcional: Filtrar para que solo salgan proveedores marcados como anunciantes
+        domain=[('es_anunciante', '=', True)] 
     )
 
-    importe = fields.Float(string="Importe", required=True)
-    cobrado = fields.Boolean(string="¿Cobrado?", default=False)
-    fecha_cobro = fields.Date(string="Fecha de Cobro")
+    # Datos económicos
+    importe = fields.Float(
+        string="Importe del Anuncio", 
+        required=True, 
+        digits=(16, 2),
+        default=0.0
+    )
 
-    @api.constrains('cobrado', 'fecha_cobro')
-    def _check_cobro(self):
-        for record in self:
-            if record.cobrado and not record.fecha_cobro:
-                raise ValidationError("Debes indicar la fecha de cobro si está cobrado.")
+    # Estado del pago
+    cobrado = fields.Boolean(
+        string="¿Cobrado?", 
+        default=False
+    )
+
+    fecha_cobro = fields.Date(
+        string="Fecha de Cobro"
+    )
+
+    # --- Validaciones ---
+    @api.constrains('importe')
+    def _check_importe_positivo(self):
+        for record in record:
+            if record.importe < 0:
+                raise ValidationError("El importe del anunciante no puede ser negativo.")
+
+    @api.onchange('cobrado')
+    def _onchange_cobrado(self):
+        """Asigna la fecha de hoy automáticamente al marcar como cobrado"""
+        if self.cobrado and not self.fecha_cobro:
+            self.fecha_cobro = fields.Date.today()
+        elif not self.cobrado:
+            self.fecha_cobro = False

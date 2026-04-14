@@ -22,15 +22,24 @@ class Hermano(models.Model):
     telefono = fields.Char()
     email = fields.Char()
     
-    # --- CAMBIO NECESARIO: Campo estado ---
     estado = fields.Selection([
         ('activo', 'Activo'),
         ('baja', 'Baja')
     ], string="Estado", default='activo', store=True)
+
+    calle_id = fields.Many2one('morenitapp.calle', string="Calle de Residencia", required=True)
+    
+    # --- NUEVOS CAMPOS PARA RESPONSABLE ---
+    responsable = fields.Boolean(string="Es Cobrador/Responsable", default=False)
+    # Relación inversa: Un hermano puede ser responsable de muchas calles
+    # Requiere que en 'morenitapp.calle' exista el campo 'responsable_id'
+    calles_responsable_ids = fields.One2many(
+        'morenitapp.calle', 
+        'responsable_id', 
+        string="Calles bajo su responsabilidad"
+    )
     # --------------------------------------
 
-    calle_id = fields.Many2one('morenitapp.calle', string="Calle", required=True)
-    
     localidad_id = fields.Many2one('morenitapp.localidad', related='calle_id.localidad_id', string="Localidad", store=True, readonly=True)
     codPostal_id = fields.Many2one('morenitapp.codigopostal', related='calle_id.codPostal_id', string="Código Postal", store=True, readonly=True)
     provincia_id = fields.Many2one('morenitapp.provincia', related='localidad_id.codProvincia_id', string="Provincia", store=True, readonly=True)
@@ -43,7 +52,6 @@ class Hermano(models.Model):
         ('banco','Domiciliación bancaria')
     ], default='metalico')
     
-    responsable = fields.Boolean(default=True)
     observaciones = fields.Char()
     fecha_baja = fields.Date()
     motivo_baja = fields.Text()
@@ -72,7 +80,6 @@ class Hermano(models.Model):
             if r.metodo_pago == 'banco' and not r.datos_banco_ids:
                 raise ValidationError("Debe ingresar los datos bancarios si el pago es domiciliado")
 
-    # --- CAMBIO NECESARIO: Actualizar estado en las acciones ---
     def action_dar_baja(self):
         for record in self:
             record.write({
@@ -89,7 +96,6 @@ class Hermano(models.Model):
                 'motivo_baja': False
             })
         return True
-    # ---------------------------------------------------------
     
     @api.depends('datos_banco_ids.iban', 'datos_banco_ids.banco', 'datos_banco_ids.sucursal', 'datos_banco_ids.cuenta')
     def _compute_iban_total(self):
