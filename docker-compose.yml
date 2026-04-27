@@ -8,12 +8,13 @@ services:
     depends_on:
       - db
     ports:
-      - "8069:8069"   # Acceso a Odoo
+      - "8069:8069"
     environment:
       - HOST=db
       - USER=odoo
       - PASSWORD=odoo
-      - PORT=5432
+    # Este comando fuerza a Odoo a buscar la DB en el contenedor 'db'
+    command: odoo --db_host=db --db_user=odoo --db_password=odoo -d MorenitApp
     volumes:
       - web-data-morenitapp:/var/lib/odoo
       - ./custom-addons:/mnt/extra-addons
@@ -23,9 +24,9 @@ services:
     container_name: postgres15
     restart: always
     environment:
-      POSTGRES_DB: postgres
-      POSTGRES_USER: odoo
-      POSTGRES_PASSWORD: odoo
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=odoo
+      - POSTGRES_PASSWORD=odoo
     ports:
       - "5432:5432"
     volumes:
@@ -39,7 +40,7 @@ services:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: admin
     ports:
-      - "5050:80"  # pgAdmin accesible en http://localhost:5050
+      - "5050:80"
     depends_on:
       - db
 

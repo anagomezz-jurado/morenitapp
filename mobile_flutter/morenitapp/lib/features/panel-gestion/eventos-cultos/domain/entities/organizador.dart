@@ -4,10 +4,14 @@ class Organizador {
   final String nombre;
   final String? telefono;
   final String? email;
-  final int direccionId; // Many2one id
+  final int? direccionId;
+  final String? direccionName; // Añadido para el autocompletado
   final String? piso;
   final String? puerta;
-  final String? logo; // Base64 string
+  final String? logo; 
+  final String? firmaPresidente;
+  final String? firmaSecretario;
+  final String? firmaTesorero;
 
   Organizador({
     required this.id,
@@ -15,21 +19,29 @@ class Organizador {
     required this.nombre,
     this.telefono,
     this.email,
-    required this.direccionId,
+    this.direccionId,
+    this.direccionName,
     this.piso,
     this.puerta,
     this.logo,
+    this.firmaPresidente,
+    this.firmaSecretario,
+    this.firmaTesorero,
   });
 
   factory Organizador.fromJson(Map<String, dynamic> json) => Organizador(
-   id: json["id"] is int ? json["id"] : int.parse(json["id"].toString()),
-    cif: json['cif'] ?? '',
-    nombre: json['nombre'] ?? '',
-    telefono: json['telefono'],
-    email: json['email'],
-    direccionId: json['direccion']?[0] ?? 0, // Odoo suele devolver [id, "nombre"]
-    piso: json['piso'],
-    puerta: json['puerta'],
-    logo: json['logo'] is String ? json['logo'] : null,
+    id: json["id"],
+    cif: json["cif"] ?? '',
+    nombre: json["nombre"] ?? '',
+    telefono: json["telefono"]?.toString(),
+    email: json["email"]?.toString(),
+    direccionId: json["direccion_id"] is List ? json["direccion_id"][0] : json["direccion_id"],
+    direccionName: json["direccion_id"] is List ? json["direccion_id"][1] : null,
+    piso: json["piso"]?.toString(),
+    puerta: json["puerta"]?.toString(),
+    logo: json["logo"] is String ? json["logo"] : null,
+    firmaPresidente: json["firma_presidente"] is String ? json["firma_presidente"] : null,
+    firmaSecretario: json["firma_secretario"] is String ? json["firma_secretario"] : null,
+    firmaTesorero: json["firma_tesorero"] is String ? json["firma_tesorero"] : null,
   );
 }

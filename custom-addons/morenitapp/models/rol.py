@@ -1,9 +1,12 @@
-from odoo import models, fields, api
-from odoo.exceptions import ValidationError
+from odoo import models, fields
 
 class Rol(models.Model):
     _name = 'morenitapp.rol'
-    _description = 'Rol de la Hermandad'
+    _description = 'Rol de Usuario'
 
-    codRol = fields.Integer(string="Código de Rol", required=True)
-    name = fields.Char(string="Nombre del Rol", required=True) # <--- Cambiado de nombreRol a name
+    name = fields.Char(string="Nombre", required=True)
+    codRol = fields.Integer(string="Código del Rol", required=True)
+
+    _sql_constraints = [
+        ('codRol_unique', 'unique(codRol)', 'El código de rol ya existe')
+    ]

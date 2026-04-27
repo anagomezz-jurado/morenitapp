@@ -1,69 +1,61 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-
-      <!-- ================= TREE ================= -->
     <record id="view_libro_tree" model="ir.ui.view">
-        <field name="name">libro.tree</field>
+        <field name="name">morenitapp.libro.tree</field>
         <field name="model">morenitapp.libro</field>
         <field name="arch" type="xml">
             <tree string="Libros">
                 <field name="cod_libro"/>
                 <field name="nombre"/>
                 <field name="anio"/>
-                <field name="importe"/>
-                <field name="tipoevento_id"/>
-                <field name="total_anunciantes"/>
+                <field name="total_anunciantes" sum="Total"/>
             </tree>
         </field>
     </record>
 
-    <!-- ================= FORM ================= -->
     <record id="view_libro_form" model="ir.ui.view">
-        <field name="name">libro.form</field>
+        <field name="name">morenitapp.libro.form</field>
         <field name="model">morenitapp.libro</field>
         <field name="arch" type="xml">
             <form string="Libro">
                 <sheet>
                     <group>
-                        <field name="cod_libro"/>
-                        <field name="nombre"/>
-                        <field name="anio"/>
-                        <field name="tipoevento_id"/>
-                        <field name="importe"/>
-                        <field name="fechaRecibo"/>
+                        <group>
+                            <field name="cod_libro"/>
+                            <field name="nombre"/>
+                            <field name="anio"/>
+                        </group>
+                        <group>
+                            <field name="tipoevento_id"/>
+                            <field name="importe"/>
+                            <field name="fecha_recibo"/> </group>
                     </group>
-
-                    <group>
-                        <field name="textoReciboEvento"/>
-                        <field name="textoAnunciante"/>
-                    </group>
-
-                    <group>
-                        <field name="descripcion"/>
-                        <field name="archivoLibro" filename="nombre"/>
-                    </group>
-
-                    <!-- ================= NOTEBOOK ================= -->
                     <notebook>
                         <page string="Anunciantes">
                             <field name="anunciantes_ids">
-                                <tree editable="bottom" string="Anunciantes del Libro">
+                                <tree editable="bottom">
                                     <field name="proveedor_id"/>
-                                    <field name="importe"/>
+                                    <field name="importe" sum="Total"/>
                                     <field name="cobrado"/>
-                                    <field name="fecha_cobro"
-                                           attrs="{'invisible':[('cobrado','=',False)]}"/>
+                                    <field name="fecha_cobro"/>
                                 </tree>
                             </field>
+                            <group class="oe_subtotal_footer oe_right">
+                                <field name="total_anunciantes" readonly="1"/>
+                            </group>
+                        </page>
+                        <page string="Textos">
+                            <group>
+                                <field name="texto_recibo_evento"/>
+                                <field name="texto_anunciante"/>
+                            </group>
+                        </page>
+                        <page string="Adjuntos">
+                            <field name="adjuntos_ids" widget="many2many_binary"/>
                         </page>
                     </notebook>
-
-                    <footer>
-                        <field name="total_anunciantes" readonly="1"/>
-                    </footer>
                 </sheet>
             </form>
         </field>
     </record>
-
 </odoo>

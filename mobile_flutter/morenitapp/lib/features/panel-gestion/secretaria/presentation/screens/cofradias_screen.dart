@@ -1,12 +1,28 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:morenitapp/shared/excel/excel_Service.dart';
+import 'package:morenitapp/shared/widgets/disenio_informes.dart';
 import 'package:morenitapp/shared/widgets/plantilla_ventanas.dart';
 import '../../domain/entities/cofradia.dart';
 import '../providers/secretaria_provider.dart';
 
 class CofradiasScreen extends ConsumerWidget {
   const CofradiasScreen({super.key});
+
+  List<List<String>> prepararDatos(List<Cofradia> lista) {
+      return lista
+          .map((h) => [
+                (h.cif ?? 'S/N').toString(),
+                h.nombre,
+                h.observaciones ?? '-',
+              ])
+          .toList();
+    }
+
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -15,6 +31,38 @@ class CofradiasScreen extends ConsumerWidget {
     return PlantillaVentanas(
       title: 'Gestión de Cofradías',
       isLoading: cofradiasAsync.isLoading,
+      onDownloadExcel: () async {
+        final lista = cofradiasAsync.value ?? [];
+        if (lista.isEmpty) return;
+        ExcelService.descargarExcel(
+          nombreArchivo: 'Cofradias',
+          cabeceras: [
+            'CIF',
+            'Nombre',
+            'OBSERVACIONES'
+          ],
+          filas: prepararDatos(lista),
+        );
+      },
+      onDownloadPDF: () async {
+        final lista = cofradiasAsync.value ?? [];
+        if (lista.isEmpty) return;
+
+        Uint8List? logoBytes;
+        try {
+          final byteData = await rootBundle.load('assets/icono.png');
+          logoBytes = byteData.buffer.asUint8List();
+        } catch (e) {
+          debugPrint('Aviso: No se pudo cargar el logo: $e');
+        }
+
+        await ReporteGenerator.generarPDFInformativo(
+          titulo: "LISTADO DE TIPOS DE CARGO",
+          headers: ['Código', 'Nombre', 'OBSERVACIONES'],
+          data: prepararDatos(lista),
+          logoBytes: logoBytes,
+        );
+      },
       onRefresh: () => ref.read(cofradiasProvider.notifier).refresh(),
       onNuevo: () => context.push('/secretaria/cofradias/nueva'),
       columns: const [

@@ -65,7 +65,8 @@ class ConfiguracionController(http.Controller):
                     if tipo == 'tipoevento':
                         row.update({
                             'codigo': getattr(r, 'cod_tipo_evento', ''),
-                            'nombre': getattr(r, 'nombre_tipo_evento', '')
+                            'nombre': getattr(r, 'nombre_tipo_evento', ''),
+                            'color': getattr(r, 'color', '#3498db'),  # ← añadir esta línea
                         })
                     elif tipo == 'tipocargo':
                         row.update({
@@ -91,37 +92,27 @@ class ConfiguracionController(http.Controller):
                     res.append(row)
                 return self._json_response(res)
 
-            # --- POST (CREAR) ---
-            # --- CREAR O EDITAR (POST/PUT) ---
             if method in ['POST', 'PUT']:
-                params = self._get_params()
-                
-                # 1. Extraer ID y limpiar campos técnicos de Odoo que no deben escribirse
-                record_id = record_id or params.pop('id', None)
-                
-                # 2. Filtrar campos: Odoo fallará si envías campos que no existen o son de solo lectura
-                # Eliminamos los que terminan en _name o _display que usamos para la UI en Flutter
-                params = {k: v for k, v in params.items() if not k.endswith('_name') and not k.endswith('_display')}
+                # Obtener parámetros del body JSON
+                try:
+                    params = json.loads(request.httprequest.data)
+                except:
+                    params = kw # Fallback a form-data si no es JSON
 
-                # 3. Conversión explícita de campos Many2one (deben ser IDs enteros)
-                # Añadimos 'direccion' que es como lo llama tu modelo según el mapper
-                relational_fields = ['tipocargo_id', 'tipoautoridad_id', 'localidad_id', 'direccion', 'codPostal_id']
-                for field in relational_fields:
-                    if field in params:
-                        try:
-                            params[field] = int(params[field]) if params[field] else False
-                        except:
-                            params[field] = False
+                # record_id viene del parámetro 'id' de la ruta o del body
+                target_id = id or params.pop('id', None)
 
-                if method == 'PUT' or record_id:
-                    rec = sudo_env.browse(int(record_id))
+                if method == 'PUT' or target_id:
+                    rec = obj.browse(int(target_id))
                     if not rec.exists():
                         return self._error_response("Registro no encontrado", 404)
                     rec.write(params)
-                    return self._json_response({"success": True, "id": rec.id})
+                    # IMPORTANTE: Devolvemos 'status': 'updated' para que Flutter lo reconozca
+                    return self._json_response({"status": "updated", "id": rec.id})
                 else:
                     # POST: Crear
-                    nuevo = sudo_env.create(params)
+                    nuevo = obj.create(params)
+                    # IMPORTANTE: Devolvemos 'id' para que la validación result['id'] != null pase
                     return self._json_response({"success": True, "id": nuevo.id}, status=201)
 
             # --- DELETE (ELIMINAR) ---

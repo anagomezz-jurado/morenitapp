@@ -13,7 +13,7 @@ class Hermano {
   final String fechaNacimiento;
   final String metodoPago;
   final bool responsable;
-  final List<Map<String, dynamic>> callesAsignadas; // Lista de {id, nombre}
+  final List<Map<String, dynamic>> callesAsignadas; 
   final int? calleId;
   final String calleNombre;
   final String? piso;
@@ -22,6 +22,7 @@ class Hermano {
   final String estado;
   final String? fechaBaja;
   final String? motivoBaja;
+  final String? fechaReactivacion;
 
   Hermano({
     this.id,
@@ -47,6 +48,7 @@ class Hermano {
     this.estado = 'activo',
     this.fechaBaja,
     this.motivoBaja,
+    this.fechaReactivacion,
   });
 
   factory Hermano.fromJson(Map<String, dynamic> json) {
@@ -69,7 +71,7 @@ class Hermano {
       fechaAlta: clean(json['fecha_alta']),
       fechaNacimiento: clean(json['fecha_nacimiento']),
       estado: clean(json['estado']).isEmpty ? 'activo' : clean(json['estado']),
-      fechaBaja: clean(json['fecha_baja']).isEmpty ? null : clean(json['fecha_baja']),
+      fechaBaja: (json['fecha_baja'] == null || json['fecha_baja'] == false) ? null : json['fecha_baja'].toString(),
       motivoBaja: clean(json['motivo_baja']),
       calleId: json['calle_id'] is int ? json['calle_id'] : null,
       calleNombre: clean(json['calle_nombre']),
@@ -78,6 +80,9 @@ class Hermano {
       metodoPago: clean(json['metodo_pago']),
       iban: clean(json['iban']),
       responsable: json['responsable'] == true,
+      fechaReactivacion: (json['fecha_reactivacion'] == null || json['fecha_reactivacion'] == false) 
+        ? null 
+        : json['fecha_reactivacion'].toString(),
       callesAsignadas: List<Map<String, dynamic>>.from(json['calles_asignadas'] ?? []),
     );
   }
@@ -101,7 +106,8 @@ class Hermano {
         "iban": iban,
         "estado": estado,
         "fecha_baja": (fechaBaja == null || fechaBaja!.isEmpty) ? false : fechaBaja,
-        "motivo_baja": motivoBaja,
+        "motivo_baja": (motivoBaja == null || motivoBaja!.isEmpty) ? false : motivoBaja,
+        "fecha_reactivacion": (fechaReactivacion == null || fechaReactivacion!.isEmpty) ? false : fechaReactivacion, // <--- AÑADIDO
       };
 
   Hermano copyWith({
@@ -111,6 +117,7 @@ class Hermano {
     String? motivoBaja,
     bool? responsable,
     List<Map<String, dynamic>>? callesAsignadas,
+    String? fechaReactivacion,
   }) {
     return Hermano(
       id: id ?? this.id,
@@ -136,6 +143,7 @@ class Hermano {
       estado: estado ?? this.estado,
       fechaBaja: fechaBaja ?? this.fechaBaja,
       motivoBaja: motivoBaja ?? this.motivoBaja,
+      fechaReactivacion: fechaReactivacion ?? this.fechaReactivacion,
     );
   }
 }

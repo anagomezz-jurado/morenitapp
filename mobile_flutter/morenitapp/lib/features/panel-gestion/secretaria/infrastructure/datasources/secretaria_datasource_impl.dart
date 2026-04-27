@@ -27,18 +27,17 @@ class SecretariaDatasourceImpl {
       );
       return _processResponse(response);
     } on DioException catch (e) {
-      // Si es un error de conexión (como el de XMLHttpRequest)
       if (e.type == DioExceptionType.connectionError) {
-        throw CustomError(
-            'No se pudo conectar al servidor. Revisa tu conexión o el CORS.');
+        throw CustomError('No se pudo conectar al servidor. Revisa tu conexión o el CORS.');
       }
-      throw CustomError('Error en el servidor: ${e.response?.statusCode}');
+      throw CustomError('Error en el servidor: ${e.response?.statusCode ?? 'Desconocido'}');
     }
   }
 
   dynamic _processResponse(Response response) {
     if (response.data == null) throw CustomError('Sin respuesta del servidor');
     final data = response.data;
+    // Odoo suele envolver la respuesta en un objeto 'result'
     if (data is Map && data.containsKey('result')) return data['result'];
     return data;
   }
@@ -59,35 +58,27 @@ class SecretariaDatasourceImpl {
     return (data as List).map((json) => Cofradia.fromJson(json)).toList();
   }
 
-  // --- UPSERTS (POST/PUT) ---
-  Future<Map<String, dynamic>> upsertAutoridad(
-      Map<String, dynamic> data) async {
+  // --- UPSERTS GENÉRICOS ---
+  Future<Map<String, dynamic>> _upsert(String endpoint, Map<String, dynamic> data) async {
     final id = data['id'];
-    final path = (id != null && id != 0) ? '/autoridades/$id' : '/autoridades';
-    return await _handleRequest((id != null && id != 0) ? 'PUT' : 'POST', path,
-        data: data);
+    // Validar si es nuevo o edición (id != 0 y no nulo)
+    final bool isEdit = (id != null && id != 0 && id.toString() != "0");
+    final path = isEdit ? '/$endpoint/$id' : '/$endpoint';
+    final method = isEdit ? 'PUT' : 'POST';
+
+    final result = await _handleRequest(method, path, data: data);
+    return Map<String, dynamic>.from(result);
   }
 
-  Future<Map<String, dynamic>> upsertCargo(Map<String, dynamic> data) async {
-    final id = data['id'];
-    final path = (id != null && id != 0) ? '/cargos/$id' : '/cargos';
-    return await _handleRequest((id != null && id != 0) ? 'PUT' : 'POST', path,
-        data: data);
-  }
-
-  Future<Map<String, dynamic>> upsertCofradia(Map<String, dynamic> data) async {
-    final id = data['id'];
-    final path = (id != null && id != 0) ? '/cofradias/$id' : '/cofradias';
-    return await _handleRequest((id != null && id != 0) ? 'PUT' : 'POST', path,
-        data: data);
-  }
+  Future<Map<String, dynamic>> upsertAutoridad(Map<String, dynamic> data) => _upsert('autoridades', data);
+  Future<Map<String, dynamic>> upsertCargo(Map<String, dynamic> data) => _upsert('cargos', data);
+  Future<Map<String, dynamic>> upsertCofradia(Map<String, dynamic> data) => _upsert('cofradias', data);
 
   // --- AUXILIARES ---
   Future<List<Map<String, dynamic>>> getTiposCargos() async {
-  final data = await _handleRequest('GET', '/configuracion/tipocargo');
-  dev.log('DATOS RECIBIDOS: $data', name: 'API_DEBUG');
-  return List<Map<String, dynamic>>.from(data as List);
-}
+    final data = await _handleRequest('GET', '/configuracion/tipocargo');
+    return List<Map<String, dynamic>>.from(data as List);
+  }
 
   Future<List<Map<String, dynamic>>> getCalles() async {
     final data = await _handleRequest('GET', '/calles');
@@ -95,11 +86,10 @@ class SecretariaDatasourceImpl {
   }
 
   Future<Map<String, dynamic>> deleteRegistro(String modelo, int id) async {
-    String path = modelo.contains('cargo')
-        ? '/cargos'
-        : modelo.contains('autoridad')
-            ? '/autoridades'
-            : '/cofradias';
-    return await _handleRequest('DELETE', '$path/$id');
+    String endpoint = modelo.contains('cargo') ? 'cargos' 
+                    : modelo.contains('autoridad') ? 'autoridades' 
+                    : 'cofradias';
+    final result = await _handleRequest('DELETE', '/$endpoint/$id');
+    return Map<String, dynamic>.from(result);
   }
 }

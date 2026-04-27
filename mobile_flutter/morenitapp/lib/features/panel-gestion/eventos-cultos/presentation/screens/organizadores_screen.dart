@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:morenitapp/features/panel-gestion/eventos-cultos/domain/entities/organizador.dart';
+import 'package:go_router/go_router.dart'; // Asegúrate de tener go_router para la navegación
 import 'package:morenitapp/features/panel-gestion/eventos-cultos/presentation/providers/evento_culto_provider.dart';
+import 'package:morenitapp/shared/excel/excel_Service.dart';
+import 'package:morenitapp/shared/widgets/plantilla_ventanas.dart';
+import 'package:morenitapp/shared/widgets/disenio_informes.dart';
+import '../../domain/entities/organizador.dart';
+// Importa tu nueva pantalla de formulario aquí
+// import 'package:morenitapp/features/panel-gestion/eventos-cultos/presentation/screens/nuevo_organizador_screen.dart';
 
 class OrganizadoresScreen extends ConsumerWidget {
   const OrganizadoresScreen({super.key});
@@ -10,105 +17,129 @@ class OrganizadoresScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final organizadoresAsync = ref.watch(organizadoresProvider);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF0F2F5),
-      appBar: AppBar(
-        title: const Text('Directorio de Organizadores', 
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          _buildHeader(
-            context, 
-            ref, 
-            'Buscar organizador...', 
-            () => _showOrganizadorForm(context, ref)
-          ),
-          
-          Expanded(
-            child: organizadoresAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF714B67))),
-              error: (err, _) => Center(child: Text('Error: $err')),
-              data: (organizadores) => _buildTableContainer(
-                organizadores.isEmpty 
-                ? const Center(child: Text('No hay organizadores registrados'))
-                : SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: DataTable(
-                      headingRowColor: WidgetStateProperty.all(const Color(0xFFF8F9FA)),
-                      columns: const [
-                        DataColumn(label: Text('CIF', style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text('NOMBRE', style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text('TELÉFONO', style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text('ACCIONES', style: TextStyle(fontWeight: FontWeight.bold))),
-                      ],
-                      rows: organizadores.map((o) => DataRow(cells: [
-                        DataCell(Text(o.cif)),
-                        DataCell(Text(o.nombre, style: const TextStyle(fontWeight: FontWeight.w500))),
-                        DataCell(Text(o.telefono ?? '-')),
-                        DataCell(_buildActionButtons(
-                          onEdit: () => _showOrganizadorForm(context, ref, organizador: o),
-                          onDelete: () => _confirmDelete(context, ref, o),
-                        )),
-                      ])).toList(),
-                    ),
-                  ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+    // Función para exportación
+    List<List<String>> prepararDatos(List<Organizador> lista) {
+      return lista.map((o) => [
+        o.cif,
+        o.nombre,
+        o.telefono ?? '-',
+        o.email ?? '-',
+        '${o.piso ?? ''} ${o.puerta ?? ''}'.trim()
+      ]).toList();
+    }
 
-  // --- LÓGICA DE FORMULARIO ---
-  void _showOrganizadorForm(BuildContext context, WidgetRef ref, {Organizador? organizador}) {
-    final cifCtrl = TextEditingController(text: organizador?.cif ?? '');
-    final nomCtrl = TextEditingController(text: organizador?.nombre ?? '');
-    final telCtrl = TextEditingController(text: organizador?.telefono ?? '');
+    return PlantillaVentanas(
+      title: 'Directorio de Organizadores',
 
-    _showStyledDialog(
-      context,
-      title: organizador == null ? 'Nuevo Organizador' : 'Actualizar Datos',
-      content: [
-        _buildTextField(cifCtrl, 'CIF / Identificación'),
-        const SizedBox(height: 15),
-        _buildTextField(nomCtrl, 'Nombre o Razón Social'),
-        const SizedBox(height: 15),
-        _buildTextField(telCtrl, 'Teléfono de Contacto', isNumeric: true),
-      ],
-      onSave: () {
-        final datos = {
-          'cif': cifCtrl.text,
-          'nombre': nomCtrl.text,
-          'telefono': telCtrl.text,
-          'direccion': 1, 
-        };
-        if (organizador == null) {
-          ref.read(organizadoresProvider.notifier).crear(datos);
-        } else {
-          ref.read(organizadoresProvider.notifier).editar(organizador.id, datos);
-        }
+      // --- EXPORTACIÓN EXCEL ---
+      onDownloadExcel: () async {
+        final lista = organizadoresAsync.value ?? [];
+        if (lista.isEmpty) return;
+        ExcelService.descargarExcel(
+          nombreArchivo: 'Organizadores_MorenitApp',
+          cabeceras: ['CIF', 'Nombre', 'Teléfono', 'Email', 'Dirección'],
+          filas: prepararDatos(lista),
+        );
       },
+
+      // --- EXPORTACIÓN PDF ---
+      onDownloadPDF: () async {
+        final lista = organizadoresAsync.value ?? [];
+        if (lista.isEmpty) return;
+
+        Uint8List? logoBytes;
+        try {
+          final byteData = await rootBundle.load('assets/icono.png');
+          logoBytes = byteData.buffer.asUint8List();
+        } catch (e) {
+          debugPrint('Aviso: No se pudo cargar el logo: $e');
+        }
+
+        await ReporteGenerator.generarPDFInformativo(
+          titulo: "DIRECTORIO DE ORGANIZADORES\nY ENTIDADES 2026",
+          headers: ['CIF', 'Nombre', 'Teléfono', 'Email', 'Dirección'],
+          data: prepararDatos(lista),
+          logoBytes: logoBytes,
+        );
+      },
+
+      isLoading: organizadoresAsync.isLoading,
+      onRefresh: () => ref.refresh(organizadoresProvider),
+      
+      // CAMBIO: Ahora navega a la pantalla de formulario completo
+      onNuevo: () => context.push('/panel-gestion/eventos-cultos/organizadores/nuevo'),
+
+      onSearch: (val) {
+        // Implementar lógica de filtrado si el notifier lo permite
+      },
+
+      paginationText: organizadoresAsync.when(
+        data: (lista) => 'Total registros: ${lista.length}',
+        error: (_, __) => 'Error al cargar datos',
+        loading: () => 'Cargando...',
+      ),
+
+      columns: const [
+        DataColumn(label: Text('CIF')),
+        DataColumn(label: Text('NOMBRE / ENTIDAD')),
+        DataColumn(label: Text('CONTACTO')),
+        DataColumn(label: Text('UBICACIÓN')),
+        DataColumn(label: Text('ACCIONES')),
+      ],
+
+      rows: organizadoresAsync.when(
+        data: (organizadores) => organizadores.map((o) => DataRow(cells: [
+          DataCell(Text(o.cif)),
+          DataCell(Text(o.nombre, style: const TextStyle(fontWeight: FontWeight.bold))),
+          DataCell(Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(o.telefono ?? '-', style: const TextStyle(fontSize: 12)),
+              Text(o.email ?? '-', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+            ],
+          )),
+          // Mejorado el display de la dirección
+          DataCell(Text(
+            '${o.piso ?? ''} ${o.puerta ?? ''}'.trim().isEmpty ? 'Pral.' : '${o.piso} ${o.puerta}',
+            style: const TextStyle(fontSize: 12),
+          )),
+          DataCell(Row(
+            children: [
+              IconButton(
+                tooltip: 'Editar',
+                icon: const Icon(Icons.edit, color: Colors.blue, size: 20),
+                // CAMBIO: Navega pasando el objeto organizador
+                onPressed: () => context.push('/panel-gestion/eventos-cultos/organizadores/editar', extra: o),
+              ),
+              IconButton(
+                tooltip: 'Eliminar',
+                icon: const Icon(Icons.delete_forever, color: Colors.red, size: 20),
+                onPressed: () => _confirmarEliminacion(context, ref, o),
+              ),
+            ],
+          )),
+        ])).toList(),
+        error: (err, _) => [],
+        loading: () => [],
+      ),
     );
   }
 
-  void _confirmDelete(BuildContext context, WidgetRef ref, Organizador o) {
+  void _confirmarEliminacion(BuildContext context, WidgetRef ref, Organizador o) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('¿Eliminar organizador?'),
-        content: Text('Esta acción eliminará a ${o.nombre}.'),
+      builder: (ctx) => AlertDialog(
+        title: const Text('¿Eliminar registro?'),
+        content: Text('Esta acción borrará a "${o.nombre}" permanentemente.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCELAR')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('CANCELAR')),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () {
-              ref.read(organizadoresProvider.notifier).eliminar(o.id);
-              Navigator.pop(context);
+            onPressed: () async {
+              await ref.read(organizadoresProvider.notifier).eliminar(o.id);
+              if (context.mounted) Navigator.pop(ctx);
+              // Opcional: mostrar snackbar de éxito
             }, 
             child: const Text('ELIMINAR')
           ),
@@ -116,91 +147,4 @@ class OrganizadoresScreen extends ConsumerWidget {
       ),
     );
   }
-}
-
-Widget _buildHeader(BuildContext context, WidgetRef ref, String hint, VoidCallback onNew) {
-  return Container(
-    color: Colors.white,
-    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
-    child: Row(
-      children: [
-        ElevatedButton.icon(
-          onPressed: onNew,
-          icon: const Icon(Icons.add, color: Colors.white, size: 18),
-          label: const Text('NUEVO', style: TextStyle(color: Colors.white)),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF714B67),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))
-          ),
-        ),
-        const Spacer(),
-        SizedBox(
-          width: 200, height: 38,
-          child: TextField(
-            decoration: InputDecoration(
-              hintText: hint,
-              prefixIcon: const Icon(Icons.search, size: 18),
-              filled: true, fillColor: const Color(0xFFF8F9FA),
-              contentPadding: EdgeInsets.zero,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-Widget _buildTableContainer(Widget child) {
-  return Container(
-    width: double.infinity,
-    margin: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(12),
-      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
-    ),
-    child: ClipRRect(borderRadius: BorderRadius.circular(12), child: child),
-  );
-}
-
-Widget _buildActionButtons({required VoidCallback onEdit, required VoidCallback onDelete}) {
-  return Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      IconButton(icon: const Icon(Icons.edit_outlined, color: Colors.blue, size: 20), onPressed: onEdit),
-      IconButton(icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20), onPressed: onDelete),
-    ],
-  );
-}
-
-void _showStyledDialog(BuildContext context, {required String title, required List<Widget> content, required VoidCallback onSave}) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-      content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: content)),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCELAR', style: TextStyle(color: Colors.grey))),
-        FilledButton(
-          style: FilledButton.styleFrom(backgroundColor: const Color(0xFF714B67)),
-          onPressed: () { onSave(); Navigator.pop(context); },
-          child: const Text('GUARDAR'),
-        ),
-      ],
-    ),
-  );
-}
-
-Widget _buildTextField(TextEditingController ctrl, String label, {bool isNumeric = false}) {
-  return TextFormField(
-    controller: ctrl,
-    keyboardType: isNumeric ? TextInputType.number : TextInputType.text,
-    decoration: InputDecoration(
-      labelText: label,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-    ),
-  );
 }

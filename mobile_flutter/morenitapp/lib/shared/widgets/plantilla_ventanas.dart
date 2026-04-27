@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:morenitapp/shared/widgets/filtro_avanzado_model.dart';
 
+// --- COMPONENTE PRINCIPAL: PLANTILLA VENTANAS ---
 class PlantillaVentanas extends StatelessWidget {
   final String title;
   final VoidCallback? onRefresh;
   final VoidCallback? onNuevo;
   final Function(String)? onSearch;
   final List<Widget> toolButtons;
-  final Widget? filtrosAdicionales; // <--- NUEVO: Para inyectar Dropdowns de Provincia/Localidad
-  final VoidCallback? onDownload;
-  final List<DataColumn> columns;
-  final List<DataRow> rows;
+  final Widget? filtrosAdicionales;
+  final VoidCallback? onDownloadExcel;
+  final VoidCallback? onDownloadPDF;
+  final List<DataColumn>? columns;
+  final List<DataRow>? rows;
   final String paginationText;
   final bool isLoading;
+  final Widget? customBody;
 
   const PlantillaVentanas({
     super.key,
@@ -19,13 +23,15 @@ class PlantillaVentanas extends StatelessWidget {
     this.onRefresh,
     this.onNuevo,
     this.onSearch,
-    this.onDownload,
-    this.filtrosAdicionales, // Parámetro opcional
+    this.onDownloadExcel,
+    this.onDownloadPDF,
+    this.filtrosAdicionales,
     this.toolButtons = const [],
-    required this.columns,
-    required this.rows,
+    this.columns,
+    this.rows,
     this.paginationText = '',
     this.isLoading = false,
+    this.customBody,
   });
 
   @override
@@ -37,9 +43,7 @@ class PlantillaVentanas extends StatelessWidget {
       appBar: AppBar(
         title: Text(title,
             style: TextStyle(
-                color: primaryColor,
-                fontSize: 20,
-                fontWeight: FontWeight.bold)),
+                color: primaryColor, fontSize: 20, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
@@ -56,127 +60,293 @@ class PlantillaVentanas extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // Barra de acciones principal
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-            child: Row(
-              children: [
-                if (onNuevo != null)
-                  ElevatedButton.icon(
-                    onPressed: onNuevo,
-                    icon: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
-                    label: const Text('NUEVO'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
-                
-                if (onNuevo != null) const SizedBox(width: 15),
-
-                if (onDownload != null)
-                  _CircularIconButton(
-                    icon: Icons.file_download_outlined,
-                    onTap: onDownload!,
-                    tooltip: 'Descargar Excel',
-                  ),
-
-                const SizedBox(width: 15),
-                
-                // Espacio para filtros dinámicos (Dropdowns de Provincia, etc)
-                if (filtrosAdicionales != null) 
-                  Expanded(child: filtrosAdicionales!),
-
-                if (filtrosAdicionales == null) const Spacer(),
-                
-                if (onSearch != null)
-                  _SearchBar(onSearch: onSearch!, primaryColor: primaryColor),
-              ],
-            ),
-          ),
-          
-          // Barra de herramientas secundaria (Filtros, Agrupar, Paginación)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: Row(
-              children: [
-                const _ToolButton(icon: Icons.filter_list_rounded, label: 'Filtros'),
-                const SizedBox(width: 8),
-                const _ToolButton(icon: Icons.account_tree_outlined, label: 'Agrupar'),
-                ...toolButtons,
-                const Spacer(),
-                _PaginationControl(paginationText: paginationText, primaryColor: primaryColor),
-              ],
-            ),
-          ),
-
-          // Contenedor de la Tabla
-          Expanded(
-            child: Container(
-              margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          // --- BARRA DE ACCIONES (ESTILO ODOO) ---
+          if (onNuevo != null || onDownloadExcel != null || onSearch != null || filtrosAdicionales != null)
+            Container(
+              width: double.infinity,
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 15,
-                    offset: const Offset(0, 4),
-                  )
-                ],
+                border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
               ),
-              clipBehavior: Clip.antiAlias,
-              child: isLoading
-                  ? Center(child: CircularProgressIndicator(color: primaryColor))
-                  : Theme(
-                      data: Theme.of(context).copyWith(
-                        dividerColor: const Color(0xFFF1F3F5),
-                      ),
-                      child: SizedBox.expand(
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.vertical,
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: ConstrainedBox(
-                              constraints: BoxConstraints(
-                                minWidth: MediaQuery.of(context).size.width - 32,
-                              ),
-                              child: DataTable(
-                                columnSpacing: 24,
-                                horizontalMargin: 20,
-                                headingRowHeight: 50,
-                                dataRowHeight: 55,
-                                headingRowColor: WidgetStateProperty.all(const Color(0xFFF8F9FA)),
-                                headingTextStyle: TextStyle(
-                                  fontWeight: FontWeight.bold, 
-                                  color: primaryColor,
-                                  letterSpacing: 0.5
-                                ),
-                                columns: columns,
-                                rows: rows,
-                              ),
-                            ),
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      if (onNuevo != null)
+                        ElevatedButton.icon(
+                          onPressed: onNuevo,
+                          icon: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
+                          label: const Text('NUEVO'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryColor,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
                         ),
-                      ),
-                    ),
+                      const SizedBox(width: 15),
+                      if (onDownloadExcel != null)
+                        _CircularIconButton(
+                          icon: Icons.table_chart_outlined,
+                          onTap: onDownloadExcel!,
+                          tooltip: 'Descargar Excel',
+                        ),
+                      const SizedBox(width: 10),
+                      if (onDownloadPDF != null)
+                        _CircularIconButton(
+                          icon: Icons.picture_as_pdf_outlined,
+                          onTap: onDownloadPDF!,
+                          tooltip: 'Descargar Informe PDF',
+                        ),
+                      const Spacer(),
+                      if (onSearch != null)
+                        _SearchBar(onSearch: onSearch!, primaryColor: primaryColor),
+                    ],
+                  ),
+                  // Fila inferior para los filtros avanzados (ancho completo)
+                  if (filtrosAdicionales != null) ...[
+                    const SizedBox(height: 12),
+                    Divider(height: 1, color: Colors.grey.shade100),
+                    const SizedBox(height: 12),
+                    SizedBox(width: double.infinity, child: filtrosAdicionales!),
+                  ],
+                ],
+              ),
             ),
+
+         
+
+          // --- CONTENIDO ---
+          Expanded(
+            child: isLoading
+                ? Center(child: CircularProgressIndicator(color: primaryColor))
+                : (customBody ?? _buildDataTable(context, primaryColor)),
           ),
         ],
       ),
     );
   }
+
+  Widget _buildDataTable(BuildContext context, Color primaryColor) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: const Color(0xFFF1F3F5)),
+        child: SizedBox.expand(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.vertical,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minWidth: MediaQuery.of(context).size.width - 32,
+                ),
+                child: DataTable(
+                  columnSpacing: 24,
+                  horizontalMargin: 20,
+                  headingRowHeight: 50,
+                  dataRowHeight: 55,
+                  headingRowColor: WidgetStateProperty.all(const Color(0xFFF8F9FA)),
+                  headingTextStyle: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: primaryColor,
+                      letterSpacing: 0.5),
+                  columns: columns ?? [],
+                  rows: rows ?? [],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+// --- COMPONENTE DE FILTRADO AVANZADO (ESTILO ODOO) ---
+class AdvancedFilterBar extends StatefulWidget {
+  final List<Map<String, String>> fields;
+  final Function(List<FilterCriterion>) onFiltersChanged;
+
+  const AdvancedFilterBar({super.key, required this.fields, required this.onFiltersChanged});
+
+  @override
+  State<AdvancedFilterBar> createState() => _AdvancedFilterBarState();
 }
 
-// --- Componentes Privados Auxiliares ---
+class _AdvancedFilterBarState extends State<AdvancedFilterBar> {
+  List<FilterCriterion> activeFilters = [];
 
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        // Botón principal "Añadir Filtro"
+        PopupMenuButton(
+          offset: const Offset(0, 45),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Icon(Icons.filter_alt_outlined, size: 18, color: Colors.blueGrey),
+                SizedBox(width: 8),
+                Text("Filtros", style: TextStyle(color: Colors.blueGrey, fontWeight: FontWeight.bold)),
+                Icon(Icons.arrow_drop_down, color: Colors.blueGrey),
+              ],
+            ),
+          ),
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              onTap: () => Future.delayed(Duration.zero, () => _showFilterDialog(context)),
+              child: const Text("Añadir filtro personalizado"),
+            ),
+          ],
+        ),
+        // Chips de filtros activos
+        ...activeFilters.asMap().entries.map((entry) {
+          int idx = entry.key;
+          FilterCriterion filter = entry.value;
+          return Chip(
+            backgroundColor: Colors.blue.shade50,
+            side: BorderSide(color: Colors.blue.shade100),
+            label: Text("${filter.label} ${_opLabel(filter.operator)} '${filter.value}'",
+                style: TextStyle(color: Colors.blue.shade900, fontSize: 13)),
+            onDeleted: () {
+              setState(() => activeFilters.removeAt(idx));
+              widget.onFiltersChanged(activeFilters);
+            },
+            deleteIcon: const Icon(Icons.close, size: 16),
+          );
+        }),
+      ],
+    );
+  }
+
+  void _showFilterDialog(BuildContext context) {
+    // Inicialización segura para evitar el error visual
+    String selectedFieldId = widget.fields.first['id']!;
+    FilterOperator selectedOp = _getOperatorsForType(widget.fields.first['type']!).first;
+    final valueController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final currentField = widget.fields.firstWhere((f) => f['id'] == selectedFieldId);
+          final isDate = currentField['type'] == 'date';
+
+          return AlertDialog(
+            title: const Text("Filtro personalizado"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<String>(
+                  value: selectedFieldId,
+                  decoration: const InputDecoration(labelText: 'Campo'),
+                  items: widget.fields.map((f) => DropdownMenuItem(value: f['id'], child: Text(f['name']!))).toList(),
+                  onChanged: (val) {
+                    setDialogState(() {
+                      selectedFieldId = val!;
+                      // Forzamos un operador válido para el nuevo tipo de campo
+                      selectedOp = _getOperatorsForType(widget.fields.firstWhere((f)=>f['id']==val)['type']!).first;
+                    });
+                  },
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<FilterOperator>(
+                  value: selectedOp,
+                  decoration: const InputDecoration(labelText: 'Operación'),
+                  items: _getOperatorsForType(currentField['type']!).map((op) => 
+                    DropdownMenuItem(value: op, child: Text(_opLabel(op)))).toList(),
+                  onChanged: (val) => setDialogState(() => selectedOp = val!),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: valueController,
+                  decoration: InputDecoration(
+                    labelText: 'Valor',
+                    suffixIcon: isDate ? IconButton(
+                      icon: const Icon(Icons.calendar_today),
+                      onPressed: () async {
+                        final date = await showDatePicker(
+                          context: context, 
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime(1900), 
+                          lastDate: DateTime(2100)
+                        );
+                        if (date != null) valueController.text = date.toString().split(' ')[0];
+                      },
+                    ) : null,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("CANCELAR")),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF714B67)), // Color Odoo
+                onPressed: () {
+                  final newFilter = FilterCriterion(
+                    field: selectedFieldId,
+                    label: currentField['name']!,
+                    operator: selectedOp,
+                    value: valueController.text,
+                    type: currentField['type']!,
+                  );
+                  setState(() => activeFilters.add(newFilter));
+                  widget.onFiltersChanged(activeFilters);
+                  Navigator.pop(ctx);
+                },
+                child: const Text("APLICAR", style: TextStyle(color: Colors.white)),
+              )
+            ],
+          );
+        }
+      ),
+    );
+  }
+
+  List<FilterOperator> _getOperatorsForType(String type) {
+    if (type == 'date' || type == 'number') {
+      return [FilterOperator.equals, FilterOperator.greaterThan, FilterOperator.lessThan];
+    }
+    return [FilterOperator.contains, FilterOperator.equals];
+  }
+
+  String _opLabel(FilterOperator op) {
+    switch (op) {
+      case FilterOperator.contains: return "contiene";
+      case FilterOperator.equals: return "es igual a";
+      case FilterOperator.greaterThan: return "es mayor que";
+      case FilterOperator.lessThan: return "es menor que";
+    }
+  }
+}
+
+// --- COMPONENTE: BOTÓN CIRCULAR ---
 class _CircularIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
@@ -188,25 +358,23 @@ class _CircularIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Tooltip(
       message: tooltip,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(50),
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xFFDEE2E6)),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: Colors.blueGrey, size: 22),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(50),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            border: Border.all(color: const Color(0xFFDEE2E6)),
+            shape: BoxShape.circle,
           ),
+          child: Icon(icon, color: Colors.blueGrey, size: 22),
         ),
       ),
     );
   }
 }
 
+// --- COMPONENTE: BARRA DE BÚSQUEDA ---
 class _SearchBar extends StatelessWidget {
   final Function(String) onSearch;
   final Color primaryColor;
@@ -216,7 +384,7 @@ class _SearchBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 300,
+      width: 250,
       height: 40,
       child: TextField(
         onChanged: onSearch,
@@ -227,46 +395,28 @@ class _SearchBar extends StatelessWidget {
           filled: true,
           fillColor: const Color(0xFFF1F3F5),
           contentPadding: EdgeInsets.zero,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(25),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(25),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(25),
-            borderSide: BorderSide(color: primaryColor.withOpacity(0.3)),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(25), borderSide: BorderSide.none),
         ),
       ),
     );
   }
 }
 
+// --- COMPONENTES MENORES ---
 class _PaginationControl extends StatelessWidget {
   final String paginationText;
   final Color primaryColor;
-
   const _PaginationControl({required this.paginationText, required this.primaryColor});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          Text(paginationText, style: const TextStyle(color: Colors.blueGrey, fontSize: 12, fontWeight: FontWeight.w500)),
-          const SizedBox(width: 8),
-          Icon(Icons.chevron_left_rounded, color: primaryColor.withOpacity(0.5), size: 22),
-          Icon(Icons.chevron_right_rounded, color: primaryColor, size: 22),
-        ],
-      ),
+    return Row(
+      children: [
+        Text(paginationText, style: const TextStyle(color: Colors.blueGrey, fontSize: 12)),
+        const SizedBox(width: 8),
+        Icon(Icons.chevron_left_rounded, color: primaryColor.withOpacity(0.5)),
+        Icon(Icons.chevron_right_rounded, color: primaryColor),
+      ],
     );
   }
 }
@@ -281,12 +431,7 @@ class _ToolButton extends StatelessWidget {
     return TextButton.icon(
       onPressed: () {},
       icon: Icon(icon, size: 18, color: Colors.blueGrey),
-      label: Text(label,
-          style: const TextStyle(color: Colors.blueGrey, fontSize: 13, fontWeight: FontWeight.w500)),
-      style: TextButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
+      label: Text(label, style: const TextStyle(color: Colors.blueGrey, fontSize: 13)),
     );
   }
 }

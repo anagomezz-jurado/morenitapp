@@ -32,9 +32,5 @@ abstract class ConfiguracionDatasource {
 Future<bool> crearGrupoProveedor(Map<String, dynamic> datos);
 Future<bool> editarGrupoProveedor(int id, Map<String, dynamic> datos);
 Future<bool> eliminarGrupoProveedor(int id);
-// AÑADE ESTO:
-  Future<List<User>> getUsers();
-  Future<bool> crearUsuario(Map<String, dynamic> datos);
-  Future<bool> editarUsuario(int id, Map<String, dynamic> datos);
-  Future<bool> eliminarUsuario(int id);
+
 }

@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 
 class MenuDiseno extends StatelessWidget {
   final String userName;
+  final String subTitulo;
   final ColorScheme colors;
   final bool hasNotch;
 
-  const MenuDiseno({
-    super.key, 
-    required this.userName, 
-    required this.colors, 
-    this.hasNotch = false
-  });
+  const MenuDiseno(
+      {super.key,
+      required this.userName,
+      required this.subTitulo,
+      required this.colors,
+      this.hasNotch = false});
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +43,8 @@ class MenuDiseno extends StatelessWidget {
             child: const CircleAvatar(
               radius: 24,
               backgroundColor: Colors.white,
-              child: Icon(Icons.person_2_rounded, size: 28, color: Colors.black87),
+              child:
+                  Icon(Icons.person_2_rounded, size: 28, color: Colors.black87),
             ),
           ),
           const SizedBox(width: 15),
@@ -51,8 +53,19 @@ class MenuDiseno extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(userName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18, letterSpacing: -0.5)),
-                Text('Gestión Administrativa', style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 11, fontWeight: FontWeight.w500)),
+                Text(userName,
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 18,
+                        letterSpacing: -0.5)),
+                Text(
+                  subTitulo, // <--- Aquí usamos el texto que pases
+                  style: TextStyle(
+                      fontSize: 14,
+                      color: colors.primary,
+                      fontWeight: FontWeight.w500),
+                ),
               ],
             ),
           ),
@@ -110,7 +123,10 @@ class MenuExpansionGroup extends StatelessWidget {
           ),
           title: Text(
             title,
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.onSurface),
+            style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: colors.onSurface),
           ),
           iconColor: colors.primary,
           childrenPadding: const EdgeInsets.only(bottom: 8),
@@ -143,20 +159,24 @@ class MenuTile extends StatelessWidget {
 
     return Padding(
       padding: EdgeInsets.only(
-        left: isSubItem ? 12 : 16,
-        right: isSubItem ? 12 : 16,
-        top: 4,
-        bottom: 4
-      ),
+          left: isSubItem ? 12 : 16,
+          right: isSubItem ? 12 : 16,
+          top: 4,
+          bottom: 4),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeInOut,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(18),
           color: isSelected ? colors.primary : Colors.transparent,
-          boxShadow: isSelected ? [
-            BoxShadow(color: colors.primary.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))
-          ] : [],
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                      color: colors.primary.withOpacity(0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4))
+                ]
+              : [],
         ),
         child: Material(
           color: Colors.transparent,
@@ -167,20 +187,26 @@ class MenuTile extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 children: [
-                  Icon(icon, size: isSubItem ? 18 : 22, color: isSelected ? colors.onPrimary : colors.onSurfaceVariant),
+                  Icon(icon,
+                      size: isSubItem ? 18 : 22,
+                      color: isSelected
+                          ? colors.onPrimary
+                          : colors.onSurfaceVariant),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       label,
                       style: TextStyle(
                         fontSize: isSubItem ? 13 : 14,
-                        fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+                        fontWeight:
+                            isSelected ? FontWeight.w800 : FontWeight.w500,
                         color: isSelected ? colors.onPrimary : colors.onSurface,
                       ),
                     ),
                   ),
                   if (isSelected && !isSubItem)
-                    Icon(Icons.arrow_forward_ios_rounded, size: 10, color: colors.onPrimary),
+                    Icon(Icons.arrow_forward_ios_rounded,
+                        size: 10, color: colors.onPrimary),
                 ],
               ),
             ),
@@ -201,9 +227,19 @@ class SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(28, 20, 20, 10),
       child: Row(
         children: [
-          Text(title, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.outline, letterSpacing: 1.5)),
+          Text(title,
+              style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: Theme.of(context).colorScheme.outline,
+                  letterSpacing: 1.5)),
           const SizedBox(width: 10),
-          Expanded(child: Divider(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.4))),
+          Expanded(
+              child: Divider(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .outlineVariant
+                      .withOpacity(0.4))),
         ],
       ),
     );

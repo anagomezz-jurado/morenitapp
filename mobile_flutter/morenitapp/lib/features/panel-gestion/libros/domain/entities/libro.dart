@@ -1,4 +1,5 @@
-import 'package:morenitapp/features/panel-gestion/libros/domain/entities/libro_anunciante.dart';
+import 'libro_anunciante.dart';
+import 'libro_adjunto.dart';
 
 class Libro {
   final int id;
@@ -7,13 +8,13 @@ class Libro {
   final int anio;
   final String descripcion;
   final double importe;
-  final String? fechaRecibo; // Cambiado para coincidir con el JSON de Odoo
+  final String? fechaRecibo;
+  final int? tipoeventoId;
+  final double totalAnunciantes;
+  final List<LibroAnunciante> anunciantes;
+  final List<LibroAdjunto> archivos; 
   final String? textoReciboEvento;
   final String? textoAnunciante;
-  final int? tipoeventoId;
-  final String? tipoeventoName;
-  final String? archivoLibro; 
-  final List<LibroAnunciante> anunciantes;
 
   Libro({
     required this.id,
@@ -23,12 +24,12 @@ class Libro {
     required this.descripcion,
     required this.importe,
     this.fechaRecibo,
-    this.textoReciboEvento,
-    this.textoAnunciante,
     this.tipoeventoId,
-    this.tipoeventoName,
-    this.archivoLibro,
+    this.totalAnunciantes = 0.0,
     this.anunciantes = const [],
+    this.archivos = const [],
+    this.textoAnunciante,
+    this.textoReciboEvento,
   });
 
   factory Libro.fromJson(Map<String, dynamic> json) {
@@ -39,14 +40,18 @@ class Libro {
       anio: json['anio'] ?? 0,
       descripcion: json['descripcion'] ?? '',
       importe: (json['importe'] ?? 0.0).toDouble(),
-      fechaRecibo: json['fechaRecibo'],
-      textoReciboEvento: json['textoReciboEvento'],
-      textoAnunciante: json['textoAnunciante'],
+      // Sincronizado con los nombres de Odoo (snake_case)
+      fechaRecibo: json['fecha_recibo'], 
+      textoReciboEvento: json['texto_recibo_evento'],
+      textoAnunciante: json['texto_anunciante'],
       tipoeventoId: json['tipoevento_id'],
-      tipoeventoName: json['tipoevento_name'],
-      archivoLibro: json['archivoLibro'],
+      totalAnunciantes: (json['total_anunciantes'] ?? 0.0).toDouble(),
+      // Mapeo de sub-listas
       anunciantes: (json['anunciantes'] as List? ?? [])
           .map((a) => LibroAnunciante.fromJson(a))
+          .toList(),
+      archivos: (json['archivos'] as List? ?? [])
+          .map((f) => LibroAdjunto.fromJson(f))
           .toList(),
     );
   }

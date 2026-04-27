@@ -1,24 +1,24 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-// Borramos el import de legacy si no es estrictamente necesario para otras partes
 import '../../domain/entities/evento.dart';
 import '../../domain/entities/organizador.dart';
 import '../../infrastructure/datasources/evento_culto_datasource_impl.dart';
 import '../../infrastructure/repositories/evento_culto_repository_impl.dart';
 
 // --- 1. REPOSITORIO PROVIDER ---
+// Centralizamos la instancia del repositorio para que todos los notifiers la usen.
 final eventoCultoRepositoryProvider = Provider((ref) {
   return EventoCultoRepositoryImpl(EventoCultoDatasourceImpl());
 });
 
 // --- 2. NOTIFIERS PRINCIPALES ---
 
-// Correcto: AsyncNotifierProvider para clases AsyncNotifier
+// Provider para la lista de Eventos
 final eventosProvider = AsyncNotifierProvider<EventosNotifier, List<Evento>>(EventosNotifier.new);
 
+// Provider para la lista de Organizadores
 final organizadoresProvider = AsyncNotifierProvider<OrganizadoresNotifier, List<Organizador>>(OrganizadoresNotifier.new);
 
-// NOTA: 'eventoCultoProvider' sobraba porque duplicaba a 'eventosProvider' de forma incorrecta.
-// Si necesitas mantener el nombre por compatibilidad, úsalo como un alias:
+// Alias para mantener compatibilidad con código antiguo si es necesario
 final eventoCultoProvider = eventosProvider; 
 
 
@@ -27,7 +27,7 @@ class EventosNotifier extends AsyncNotifier<List<Evento>> {
   
   @override
   Future<List<Evento>> build() async {
-    // Usamos watch para que si el repositorio cambia (raro), se reconstruya
+    // Escuchamos el repositorio. Si por alguna razón cambia, se refresca la lista.
     return ref.watch(eventoCultoRepositoryProvider).getEventos();
   }
 
@@ -35,6 +35,7 @@ class EventosNotifier extends AsyncNotifier<List<Evento>> {
     state = const AsyncValue.loading();
     try {
       final success = await ref.read(eventoCultoRepositoryProvider).crearEvento(datos);
+      // Si la creación en Odoo fue exitosa, invalidamos el estado para forzar un re-fetch automático
       if (success) ref.invalidateSelf();
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
@@ -52,8 +53,6 @@ class EventosNotifier extends AsyncNotifier<List<Evento>> {
   }
 
   Future<void> eliminar(int id) async {
-    // No ponemos loading aquí para no congelar la UI si es un borrado rápido, 
-    // pero invalidamos al terminar.
     try {
       final success = await ref.read(eventoCultoRepositoryProvider).eliminarEvento(id);
       if (success) ref.invalidateSelf();
@@ -101,8 +100,9 @@ class OrganizadoresNotifier extends AsyncNotifier<List<Organizador>> {
   }
 }
 
-// --- 5. PROVIDERS DE APOYO ---
+// --- 5. PROVIDERS DE APOYO (SÍNCRONOS) ---
 
+// Este provider es útil para obtener la lista actual de eventos sin manejar estados de carga/error
 final listaEventosRecientes = Provider<List<Evento>>((ref) {
   final estado = ref.watch(eventosProvider);
   return estado.maybeWhen(

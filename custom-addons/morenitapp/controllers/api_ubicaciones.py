@@ -122,9 +122,6 @@ class UbicacionesAPI(http.Controller):
 
                 return self._json_response(res_data, status=201)
                 
-                
-
-                return self._json_response(res_data, status=201)
 
             # --- PUT ---
             if method == 'PUT' and id:

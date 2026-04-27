@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart'; // Opcional, pero recomendado según tus pantallas anteriores
 import 'package:morenitapp/features/panel-gestion/libros/presentation/providers/libro_provider.dart';
+import 'package:morenitapp/features/panel-gestion/libros/domain/entities/libro.dart'; // Importa la entidad
 import 'package:morenitapp/features/panel-gestion/libros/presentation/screens/libro_anunciante.dart';
 import 'package:morenitapp/shared/widgets/plantilla_ventanas.dart';
 
@@ -14,21 +16,21 @@ class LibrosScreen extends ConsumerWidget {
     return PlantillaVentanas(
       title: 'Gestión de Libros y Revistas',
       isLoading: librosAsync.isLoading,
-      onRefresh: () => ref.refresh(librosProvider),
+      onRefresh: () async => await ref.refresh(librosProvider),
       onNuevo: () => _openForm(context),
       onSearch: (val) {
-        // Lógica de búsqueda si tienes un provider de filtros
+        // Implementar lógica de filtrado si es necesario
       },
       paginationText: librosAsync.when(
         data: (lista) => 'Total: ${lista.length} registros',
-        error: (_, __) => 'Error',
-        loading: () => 'Cargando...',
+        error: (_, __) => 'Error al cargar datos',
+        loading: () => 'Cargando registros...',
       ),
       columns: const [
         DataColumn(label: Text('CÓDIGO')),
         DataColumn(label: Text('NOMBRE')),
         DataColumn(label: Text('AÑO')),
-        DataColumn(label: Text('IMPORTES')),
+        DataColumn(label: Text('IMP. ANUNC.')), // Cambiado para mayor claridad
         DataColumn(label: Text('ACCIONES')),
       ],
       rows: librosAsync.when(
@@ -39,11 +41,12 @@ class LibrosScreen extends ConsumerWidget {
             DataCell(Text(libro.anio.toString())),
             DataCell(
               Text(
-                '${libro.anunciantes.fold(0.0, (prev, element) => prev + element.importe).toStringAsFixed(2)} €',
+                '${libro.totalAnunciantes.toStringAsFixed(2)} €', // Usamos el campo calculado del modelo
                 style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
               )
             ),
             DataCell(Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
                   icon: const Icon(Icons.edit, color: Colors.blue, size: 20),
@@ -58,35 +61,52 @@ class LibrosScreen extends ConsumerWidget {
           ],
         )).toList(),
         error: (err, _) => [
-          DataRow(cells: [DataCell(Text('Error: $err')), const DataCell(Text('')), const DataCell(Text('')), const DataCell(Text('')), const DataCell(Text(''))])
+          DataRow(cells: [
+            DataCell(Text('Error: $err')),
+            const DataCell(Text('')),
+            const DataCell(Text('')),
+            const DataCell(Text('')),
+            const DataCell(Text('')),
+          ])
         ],
         loading: () => [],
       ),
     );
   }
 
-  void _openForm(BuildContext context, {dynamic libro}) {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => LibroFormScreen(libroAEditar: libro),
-    ),
-  );
-}
+  void _openForm(BuildContext context, {Libro? libro}) {
+    // Si usas MaterialPageRoute:
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LibroFormScreen(libroAEditar: libro),
+      ),
+    );
+  }
 
-  void _confirmarEliminar(BuildContext context, WidgetRef ref, dynamic libro) {
+  void _confirmarEliminar(BuildContext context, WidgetRef ref, Libro libro) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Confirmar borrado'),
-        content: Text('¿Deseas eliminar "${libro.nombre}"?'),
+        content: Text('¿Deseas eliminar "${libro.nombre}"?\nEsta acción no se puede deshacer.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('CANCELAR')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx), 
+            child: const Text('CANCELAR')
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () {
-              ref.read(librosProvider.notifier).borrarLibro(libro.id);
-              Navigator.pop(ctx);
+            onPressed: () async {
+              final success = await ref.read(librosProvider.notifier).borrarLibro(libro.id);
+              if (ctx.mounted) {
+                Navigator.pop(ctx);
+                if (!success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Error al eliminar el libro'))
+                  );
+                }
+              }
             },
             child: const Text('BORRAR', style: TextStyle(color: Colors.white)),
           )

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    
+    <record id="view_morenitapp_rol_tree" model="ir.ui.view">
+        <field name="name">morenitapp.rol.tree</field>
+        <field name="model">morenitapp.rol</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="codRol"/>
+                <field name="name"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_morenitapp_rol_form" model="ir.ui.view">
+        <field name="name">morenitapp.rol.form</field>
+        <field name="model">morenitapp.rol</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="codRol"/>
+                        <field name="name"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <record id="action_morenitapp_rol" model="ir.actions.act_window">
+        <field name="name">Roles</field>
+        <field name="res_model">morenitapp.rol</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="rol_admin" model="morenitapp.rol">
+    <field name="name">Administrador</field>
+    <field name="codRol">1</field>
+</record>
+
+<record id="rol_user" model="morenitapp.rol">
+    <field name="name">Usuario</field>
+    <field name="codRol">2</field>
+</record>
+
+<record id="rol_guest" model="morenitapp.rol">
+    <field name="name">Invitado</field>
+    <field name="codRol">3</field>
+</record>
+
+</odoo>

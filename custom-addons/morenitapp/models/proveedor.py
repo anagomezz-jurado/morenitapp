@@ -20,4 +20,4 @@ class Proveedor(models.Model):
         for record in self:
             name = f"{record.cod_proveedor or ''} - {record.nombre or ''}"
             result.append((record.id, name))
-        return result
+        return result 

@@ -22,24 +22,28 @@ final tiposCargoProvider = AsyncNotifierProvider<TiposCargoNotifier, List<TipoCa
 final tiposAutoridadProvider = AsyncNotifierProvider<TiposAutoridadNotifier, List<TipoAutoridad>>(TiposAutoridadNotifier.new);
 final rolesProvider = AsyncNotifierProvider<RolesNotifier, List<Rol>>(RolesNotifier.new);
 final gruposProveedorProvider = AsyncNotifierProvider<GruposProveedorNotifier, List<GrupoProveedor>>(GruposProveedorNotifier.new);
-final usuariosProvider = AsyncNotifierProvider<UsuariosNotifier, List<User>>(UsuariosNotifier.new);
 
 // --- NOTIFIER PARA EVENTOS ---
 class TiposEventoNotifier extends AsyncNotifier<List<TipoEvento>> {
-  @override
+ @override
   Future<List<TipoEvento>> build() async {
-    return ref.watch(configuracionRepositoryProvider).getTiposEvento();
+    // IMPORTANTE: Asegúrate de que este método devuelva la lista de Odoo
+    return await ref.read(configuracionRepositoryProvider).getTiposEvento();
   }
 
-  Future<void> crear(String codigo, String nombre) async {
+  Future<void> crear(String codigo, String nombre, String color) async {
     state = const AsyncValue.loading();
-    await ref.read(configuracionRepositoryProvider).crearTipoEvento(codigo, nombre);
-    ref.invalidateSelf();
+    try {
+      await ref.read(configuracionRepositoryProvider).crearTipoEvento(codigo, nombre, color);
+      ref.invalidateSelf(); 
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
   }
-
-  Future<void> editar(int id, String codigo, String nombre) async {
+  // Añadimos el parámetro String color
+  Future<void> editar(int id, String codigo, String nombre, String color) async {
     state = const AsyncValue.loading();
-    await ref.read(configuracionRepositoryProvider).editarTipoEvento(id, codigo, nombre);
+    await ref.read(configuracionRepositoryProvider).editarTipoEvento(id, codigo, nombre, color);
     ref.invalidateSelf();
   }
 
@@ -154,28 +158,4 @@ class GruposProveedorNotifier extends AsyncNotifier<List<GrupoProveedor>> {
   }
 }
 
-// --- NOTIFIER PARA USUARIOS ---
-class UsuariosNotifier extends AsyncNotifier<List<User>> {
-  @override
-  Future<List<User>> build() async {
-    return ref.watch(configuracionRepositoryProvider).getUsers();
-  }
 
-  Future<void> crear(Map<String, dynamic> datos) async {
-    state = const AsyncValue.loading();
-    await ref.read(configuracionRepositoryProvider).crearUsuario(datos);
-    ref.invalidateSelf();
-  }
-
-  Future<void> editar(int id, Map<String, dynamic> datos) async {
-    state = const AsyncValue.loading();
-    await ref.read(configuracionRepositoryProvider).editarUsuario(id, datos);
-    ref.invalidateSelf();
-  }
-
-  Future<void> eliminar(int id) async {
-    state = const AsyncValue.loading();
-    await ref.read(configuracionRepositoryProvider).eliminarUsuario(id);
-    ref.invalidateSelf();
-  }
-}

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:morenitapp/features/panel-gestion/hermanos/presentation/screens/calle_search_delegate.dart';
+import 'package:morenitapp/shared/widgets/calle_search_delegate.dart';
 import 'package:morenitapp/features/panel-gestion/ubicaciones/domain/entities/calle.dart';
 import 'package:morenitapp/features/panel-gestion/ubicaciones/presentation/providers/ubicaciones_provider.dart';
 import 'package:morenitapp/shared/widgets/plantilla_formularios.dart';

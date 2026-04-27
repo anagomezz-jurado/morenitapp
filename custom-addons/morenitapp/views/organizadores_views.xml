@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
 
-    <!-- ================= TREE ================= -->
-
     <record id="view_organizador_tree" model="ir.ui.view">
         <field name="name">organizador.tree</field>
         <field name="model">morenitapp.organizador</field>
         <field name="arch" type="xml">
-            <tree>
+            <tree string="Organizadores">
                 <field name="cif"/>
                 <field name="nombre"/>
                 <field name="telefono"/>
@@ -16,37 +14,53 @@
         </field>
     </record>
 
-    <!-- ================= FORM ================= -->
-
     <record id="view_organizador_form" model="ir.ui.view">
         <field name="name">organizador.form</field>
         <field name="model">morenitapp.organizador</field>
         <field name="arch" type="xml">
             <form string="Organizador">
                 <sheet>
+                    <field name="logo" widget="image" class="oe_avatar" options="{'preview_image': 'logo'}"/>
+                    
+                    <div class="oe_title">
+                        <h1>
+                            <field name="nombre" placeholder="Nombre de la Hermandad / Entidad"/>
+                        </h1>
+                    </div>
 
                     <group>
-                        <field name="cif"/>
-                        <field name="nombre"/>
+                        <group string="Identificación Fiscal">
+                            <field name="cif"/>
+                        </group>
+                        <group string="Contacto">
+                            <field name="telefono"/>
+                            <field name="email" widget="email"/>
+                        </group>
                     </group>
 
-                    <group string="Contacto">
-                        <field name="telefono"/>
-                        <field name="email"/>
+                    <group string="Ubicación">
+                        <group>
+                            <field name="direccion_id" options="{'no_create': True}"/>
+                        </group>
+                        <group>
+                            <field name="piso"/>
+                            <field name="puerta"/>
+                        </group>
                     </group>
 
-                    <group string="Dirección">
-                        <field name="direccion"/>
-                        <field name="piso"/>
-                        <field name="puerta"/>
-                    </group>
-
-                    <group string="Imágenes">
-                        <field name="logo" widget="image"/>
-                        <field name="firma_presidente" widget="image"/>
-                        <field name="firma_secretario" widget="image"/>
-                        <field name="firma_tesorero" widget="image"/>
-                    </group>
+                    <notebook>
+                        <page string="Firmas Autorizadas" name="firmas">
+                            <group>
+                                <group string="Presidencia y Secretaría">
+                                    <field name="firma_presidente" widget="image" options="{'size': [150, 150]}"/>
+                                    <field name="firma_secretario" widget="image" options="{'size': [150, 150]}"/>
+                                </group>
+                                <group string="Tesorería">
+                                    <field name="firma_tesorero" widget="image" options="{'size': [150, 150]}"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
 
                 </sheet>
             </form>

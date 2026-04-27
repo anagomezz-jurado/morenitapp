@@ -94,8 +94,9 @@ class ConfiguracionDatasourceImpl extends ConfiguracionDatasource {
     return data.map((json) => TipoCargo.fromJson(json)).toList();
   }
 
-  @override
+@override
   Future<bool> crearTipoCargo(Map<String, dynamic> datos) async {
+    // Cambiado de '/configuracion/...' a '/api/configuracion/...'
     final result = await _post('/configuracion/tipocargo', datos);
     return result['id'] != null;
   }
@@ -103,6 +104,7 @@ class ConfiguracionDatasourceImpl extends ConfiguracionDatasource {
   @override
   Future<bool> editarTipoCargo(int id, Map<String, dynamic> datos) async {
     final result = await _put('/configuracion/tipocargo/$id', datos);
+    // El controlador ahora devuelve {"status": "updated"}
     return result['status'] == 'updated';
   }
 
@@ -190,29 +192,4 @@ class ConfiguracionDatasourceImpl extends ConfiguracionDatasource {
     return result['status'] == 'deleted';
   }
 
-  // --- USUARIOS ---
-  @override
-  Future<List<User>> getUsers() async {
-    final result = await _get('/usuarios');
-    final List usuariosList = result is List ? result : (result['usuarios'] ?? []);
-    return usuariosList.map((u) => UserMapper.userJsonToEntity(u)).toList();
-  }
-
-  @override
-  Future<bool> crearUsuario(Map<String, dynamic> datos) async {
-    final result = await _post('/registrar', datos);
-    return result['status'] == 'created' || result['success'] == true;
-  }
-
-  @override
-  Future<bool> editarUsuario(int id, Map<String, dynamic> datos) async {
-    final result = await _put('/usuarios/$id', datos);
-    return result['status'] == 'updated';
-  }
-
-  @override
-  Future<bool> eliminarUsuario(int id) async {
-    final result = await _delete('/usuarios/$id');
-    return result['status'] == 'deleted';
-  }
 }

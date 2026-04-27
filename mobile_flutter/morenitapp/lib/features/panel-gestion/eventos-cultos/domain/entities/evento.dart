@@ -8,7 +8,10 @@ class Evento {
   final String? lugar;
   final int? anio;
   final int? organizadorId;
+  final String? organizadorNombre; // Añadido para la UI
   final int? tipoEventoId;
+  final String color;
+  final String tipoNombre;
 
   Evento({
     required this.id,
@@ -20,6 +23,9 @@ class Evento {
     this.lugar,
     this.anio,
     this.organizadorId,
+    this.organizadorNombre,
+    required this.color,
+    required this.tipoNombre,
     this.tipoEventoId,
   });
 
@@ -29,13 +35,15 @@ class Evento {
       codEvento: json['cod_evento'] ?? '',
       nombre: json['nombre'] ?? 'Sin nombre',
       descripcion: json['descripcion'],
-      // DateTime.tryParse evita que la app truene si la fecha viene mal
-      fechaInicio: DateTime.tryParse(json['fecha_inicio'] ?? '') ?? DateTime.now(),
-      fechaFin: DateTime.tryParse(json['fecha_fin'] ?? '') ?? DateTime.now(),
+      fechaInicio: DateTime.parse(json['fecha_inicio'].replaceFirst(' ', 'T')),
+fechaFin: DateTime.parse(json['fecha_fin'].replaceFirst(' ', 'T')),
       lugar: json['lugar'],
       anio: json['anio'] is int ? json['anio'] : int.tryParse(json['anio'].toString()) ?? 0,
-      // Odoo envía Many2one como [id, "nombre"], aquí extraemos solo el ID
+      color: json['color'] ?? "#3498db",
+      tipoNombre: json['tipo_nombre'] ?? "General",
+      // Manejo de Many2one de Odoo [id, "nombre"]
       organizadorId: (json['organizador_id'] is List) ? json['organizador_id'][0] : null,
+      organizadorNombre: (json['organizador_id'] is List) ? json['organizador_id'][1] : 'Propio',
       tipoEventoId: (json['tipoevento_id'] is List) ? json['tipoevento_id'][0] : null,
     );
   }

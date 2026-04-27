@@ -1,0 +1,54 @@
+<odoo>
+
+    <record id="view_morenitapp_grupo_tree" model="ir.ui.view">
+        <field name="name">morenitapp.grupo.tree</field>
+        <field name="model">morenitapp.grupo</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="nombre"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_morenitapp_grupo_form" model="ir.ui.view">
+        <field name="name">morenitapp.grupo.form</field>
+        <field name="model">morenitapp.grupo</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+
+                    <h1>
+                        <field name="nombre"/>
+                    </h1>
+
+                    <notebook>
+                        <page string="Permisos por modelo">
+
+                            <field name="permiso_line_ids" context="{'default_grupo_id': active_id}">
+                                <tree editable="bottom">
+
+                                    <field name="modelo_id" options="{'no_create': True}"/>
+
+                                    <field name="puede_leer"/>
+                                    <field name="puede_crear"/>
+                                    <field name="puede_editar"/>
+                                    <field name="puede_borrar"/>
+
+                                </tree>
+                            </field>
+
+                        </page>
+                    </notebook>
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_morenitapp_grupo" model="ir.actions.act_window">
+        <field name="name">Grupos de Permisos</field>
+        <field name="res_model">morenitapp.grupo</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+</odoo>

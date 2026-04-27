@@ -1,3 +1,4 @@
+import 'package:morenitapp/features/panel-gestion/usuarios/domain/entities/grupo_user.dart';
 import 'package:morenitapp/features/auth/domain/entities/user.dart';
 import 'package:morenitapp/features/panel-gestion/configuracion/domain/datasources/configuracion_datasources.dart';
 import 'package:morenitapp/features/panel-gestion/configuracion/domain/entities/grupo_proveedor.dart';
@@ -17,28 +18,45 @@ class ConfiguracionRepositoryImpl extends ConfiguracionRepository {
   Future<List<TipoEvento>> getTiposEvento() => datasource.getTiposEvento();
 
   @override
-  Future<bool> crearTipoEvento(String codigo, String nombre) =>
-      datasource.crearTipoEvento({'cod_tipo_evento': codigo, 'nombre_tipo_evento': nombre});
-
+Future<void> crearTipoEvento(String codigo, String nombre, String color) async {
+  await datasource.crearTipoEvento({
+    'codigo': codigo,
+    'nombre': nombre,
+    'color': color, // <--- Importante
+  });
+}
   @override
-  Future<bool> editarTipoEvento(int id, String codigo, String nombre) =>
-      datasource.editarTipoEvento(id, {'cod_tipo_evento': codigo, 'nombre_tipo_evento': nombre});
+  Future<void> editarTipoEvento(int id, String codigo, String nombre, String color) async {
+    await datasource.editarTipoEvento(id, {
+      'codigo': codigo,
+      'nombre': nombre,
+      'color': color,
+    });
+  }
 
   @override
   Future<bool> eliminarTipoEvento(int id) => datasource.eliminarTipoEvento(id);
 
   // --- CARGOS ---
-  @override
-  Future<List<TipoCargo>> getTiposCargo() => datasource.getTiposCargo();
+@override
+Future<List<TipoCargo>> getTiposCargo() => datasource.getTiposCargo();
 
-  @override
+@override
   Future<bool> crearTipoCargo(String codigo, String nombre, String observaciones) =>
-      datasource.crearTipoCargo({'codTipoCargo': codigo, 'nombreTipoCargo': nombre, 'observaciones': observaciones});
+      datasource.crearTipoCargo({
+        'codTipoCargo': codigo, 
+        'nombreTipoCargo': nombre, 
+        'observaciones': observaciones
+      });
 
   @override
   Future<bool> editarTipoCargo(int id, String codigo, String nombre, String observaciones) =>
-      datasource.editarTipoCargo(id, {'codTipoCargo': codigo, 'nombreTipoCargo': nombre, 'observaciones': observaciones});
-
+      datasource.editarTipoCargo(id, {
+        'codTipoCargo': codigo, 
+        'nombreTipoCargo': nombre, 
+        'observaciones': observaciones
+      });
+      
   @override
   Future<bool> eliminarTipoCargo(int id) => datasource.eliminarTipoCargo(id);
 
@@ -95,23 +113,5 @@ class ConfiguracionRepositoryImpl extends ConfiguracionRepository {
   @override
   Future<bool> eliminarGrupoProveedor(int id) => datasource.eliminarGrupoProveedor(id);
 
-  @override
-Future<List<User>> getUsers() {
-  return datasource.getUsers();
-}
 
-@override
-Future<bool> crearUsuario(Map<String, dynamic> datos) {
-  return datasource.crearUsuario(datos);
-}
-
-@override
-Future<bool> editarUsuario(int id, Map<String, dynamic> datos) {
-  return datasource.editarUsuario(id, datos);
-}
-
-@override
-Future<bool> eliminarUsuario(int id) {
-  return datasource.eliminarUsuario(id);
-}
 }

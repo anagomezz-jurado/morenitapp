@@ -16,19 +16,33 @@ class RolesScreen extends ConsumerWidget {
       onRefresh: () => ref.refresh(rolesProvider),
       onNuevo: () => _showSideForm(context, ref),
       columns: const [
-        DataColumn(label: Text('ID / CÓDIGO', style: TextStyle(fontWeight: FontWeight.bold))),
-        DataColumn(label: Text('NOMBRE DEL ROL', style: TextStyle(fontWeight: FontWeight.bold))),
-        DataColumn(label: Text('ACCIONES', style: TextStyle(fontWeight: FontWeight.bold))),
+        DataColumn(
+            label: Text('ID / CÓDIGO',
+                style: TextStyle(fontWeight: FontWeight.bold))),
+        DataColumn(
+            label: Text('NOMBRE DEL ROL',
+                style: TextStyle(fontWeight: FontWeight.bold))),
+        DataColumn(
+            label: Text('ACCIONES',
+                style: TextStyle(fontWeight: FontWeight.bold))),
       ],
       rows: rolesAsync.when(
-        data: (roles) => roles.map((r) => DataRow(cells: [
-          DataCell(CircleAvatar(radius: 12, child: Text(r.codigo.toString(), style: const TextStyle(fontSize: 10)))),
-          DataCell(Text(r.nombre, style: const TextStyle(fontWeight: FontWeight.w500))),
-          DataCell(_buildActionButtons(context, 
-            onEdit: () => _showSideForm(context, ref, rol: r),
-            onDelete: () => ref.read(rolesProvider.notifier).eliminar(r.id!),
-          )),
-        ])).toList(),
+        data: (roles) => roles
+            .map((r) => DataRow(cells: [
+                  DataCell(CircleAvatar(
+                      radius: 12,
+                      child: Text(r.codigo.toString(),
+                          style: const TextStyle(fontSize: 10)))),
+                  DataCell(Text(r.nombre,
+                      style: const TextStyle(fontWeight: FontWeight.w500))),
+                  DataCell(_buildActionButtons(
+                    context,
+                    onEdit: () => _showSideForm(context, ref, rol: r),
+                    onDelete: () =>
+                        ref.read(rolesProvider.notifier).eliminar(r.id!),
+                  )),
+                ]))
+            .toList(),
         error: (_, __) => [],
         loading: () => [],
       ),
@@ -50,7 +64,9 @@ class RolesScreen extends ConsumerWidget {
             height: double.infinity,
             decoration: const BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.only(topLeft: Radius.circular(30), bottomLeft: Radius.circular(30)),
+              borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(30),
+                  bottomLeft: Radius.circular(30)),
             ),
             child: Material(child: _RolFormContent(rol: rol)),
           ),
@@ -58,20 +74,27 @@ class RolesScreen extends ConsumerWidget {
       },
       transitionBuilder: (context, anim1, anim2, child) {
         return SlideTransition(
-          position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero).animate(anim1),
+          position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
+              .animate(anim1),
           child: child,
         );
       },
     );
   }
 
-  Widget _buildActionButtons(BuildContext context, {required VoidCallback onEdit, required VoidCallback onDelete}) {
+  Widget _buildActionButtons(BuildContext context,
+      {required VoidCallback onEdit, required VoidCallback onDelete}) {
     final colors = Theme.of(context).colorScheme;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        IconButton(icon: Icon(Icons.edit_note, color: colors.primary), onPressed: onEdit),
-        IconButton(icon: const Icon(Icons.delete_sweep_outlined, color: Colors.redAccent), onPressed: onDelete),
+        IconButton(
+            icon: Icon(Icons.edit_note, color: colors.primary),
+            onPressed: onEdit),
+        IconButton(
+            icon: const Icon(Icons.delete_sweep_outlined,
+                color: Colors.redAccent),
+            onPressed: onDelete),
       ],
     );
   }
@@ -109,9 +132,11 @@ class _RolFormContentState extends ConsumerState<_RolFormContent> {
               key: formKey,
               child: Column(
                 children: [
-                  _buildField("CÓDIGO NUMÉRICO", codCtrl, "Ej: 1", colors, isNumeric: true),
+                  _buildField("CÓDIGO NUMÉRICO", codCtrl, "Ej: 1", colors,
+                      isNumeric: true),
                   const SizedBox(height: 25),
-                  _buildField("NOMBRE DEL ROL", nomCtrl, "Nombre del rol", colors),
+                  _buildField(
+                      "NOMBRE DEL ROL", nomCtrl, "Nombre del rol", colors),
                   const SizedBox(height: 50),
                   _buildSaveButton(colors),
                 ],
@@ -126,29 +151,50 @@ class _RolFormContentState extends ConsumerState<_RolFormContent> {
   Widget _buildHeader(BuildContext context, ColorScheme colors, bool isNew) {
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 40, 16, 20),
-      decoration: BoxDecoration(color: colors.primary.withOpacity(0.08), borderRadius: const BorderRadius.only(topLeft: Radius.circular(30))),
+      decoration: BoxDecoration(
+          color: colors.primary.withOpacity(0.08),
+          borderRadius: const BorderRadius.only(topLeft: Radius.circular(30))),
       child: Row(
         children: [
-          Icon(isNew ? Icons.person_add : Icons.edit_note, color: colors.primary),
+          Icon(isNew ? Icons.person_add : Icons.edit_note,
+              color: colors.primary),
           const SizedBox(width: 12),
-          Text(isNew ? 'Nuevo Rol' : 'Editar Rol', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: colors.primary)),
+          Text(isNew ? 'Nuevo Rol' : 'Editar Rol',
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: colors.primary)),
           const Spacer(),
-          IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+          IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.close)),
         ],
       ),
     );
   }
 
-  Widget _buildField(String label, TextEditingController ctrl, String hint, ColorScheme colors, {bool isNumeric = false}) {
+  Widget _buildField(
+      String label, TextEditingController ctrl, String hint, ColorScheme colors,
+      {bool isNumeric = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: colors.primary, letterSpacing: 1.1)),
+        Text(label,
+            style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                color: colors.primary,
+                letterSpacing: 1.1)),
         const SizedBox(height: 8),
         TextFormField(
           controller: ctrl,
           keyboardType: isNumeric ? TextInputType.number : TextInputType.text,
-          decoration: InputDecoration(hintText: hint, filled: true, fillColor: colors.primary.withOpacity(0.02), border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+          decoration: InputDecoration(
+              hintText: hint,
+              filled: true,
+              fillColor: colors.primary.withOpacity(0.02),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
           validator: (v) => v!.isEmpty ? 'Requerido' : null,
         ),
       ],
@@ -157,20 +203,25 @@ class _RolFormContentState extends ConsumerState<_RolFormContent> {
 
   Widget _buildSaveButton(ColorScheme colors) {
     return SizedBox(
-      width: double.infinity, height: 50,
+      width: double.infinity,
+      height: 50,
       child: FilledButton(
-        style: FilledButton.styleFrom(backgroundColor: colors.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))),
         onPressed: () {
           if (!formKey.currentState!.validate()) return;
-          final code = int.tryParse(codCtrl.text) ?? 0;
+
+          // Convertimos el código de String a int de forma segura
+          final int code = int.tryParse(codCtrl.text) ?? 0;
+          final notifier = ref.read(rolesProvider.notifier);
+
           if (widget.rol == null) {
-            ref.read(rolesProvider.notifier).crear(code, nomCtrl.text);
+            notifier.crear(code, nomCtrl.text.trim());
           } else {
-            ref.read(rolesProvider.notifier).editar(widget.rol.id, code, nomCtrl.text);
+            notifier.editar(widget.rol.id, code, nomCtrl.text.trim());
           }
+
           Navigator.pop(context);
         },
-        child: Text(widget.rol == null ? 'GUARDAR ROL' : 'ACTUALIZAR ROL', style: const TextStyle(fontWeight: FontWeight.bold)),
+        child: Text(widget.rol == null ? 'GUARDAR ROL' : 'ACTUALIZAR ROL'),
       ),
     );
   }

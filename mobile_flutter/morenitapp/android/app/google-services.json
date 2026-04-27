@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "361818182842",
+    "project_id": "morenitapp-90cc3",
+    "storage_bucket": "morenitapp-90cc3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:361818182842:android:1b33b7955b8e1a3ef29e83",
+        "android_client_info": {
+          "package_name": "com.example.morenitapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAn2d1oZgi8e2ZFqpTPbIJeCVPUcs51UHI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

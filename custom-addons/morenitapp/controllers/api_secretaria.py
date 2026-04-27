@@ -23,7 +23,7 @@ class SecretariaController(http.Controller):
         if request.httprequest.data:
             try:
                 data = json.loads(request.httprequest.data.decode('utf-8'))
-                _logger.info(f"DATOS RECIBIDOS: {data}") # LOG PARA DEPURAR
+                # Manejar el wrapper "params" de Odoo/JSON-RPC si existe
                 return data.get('params', data)
             except Exception as e:
                 _logger.error(f"Error decodificando JSON: {e}")
@@ -37,11 +37,13 @@ class SecretariaController(http.Controller):
         sudo_env = request.env[model_name].sudo()
 
         try:
+            # --- GET: Listar o Leer ---
             if method == 'GET':
                 domain = [('id', '=', record_id)] if record_id else []
                 records = sudo_env.search(domain)
                 return self._json_response([fields_map(r) for r in records])
 
+            # --- DELETE: Eliminar ---
             if method == 'DELETE':
                 rec = sudo_env.browse(record_id)
                 if rec.exists():
@@ -49,45 +51,42 @@ class SecretariaController(http.Controller):
                     return self._json_response({"success": True})
                 return self._json_response({"success": False, "error": "No encontrado"}, status=404)
 
-            # --- CORRECCIÓN AQUÍ: POST / PUT ---
+            # --- POST / PUT: Crear o Editar ---
             if method in ['POST', 'PUT']:
                 params = self._get_params()
                 
-                # 1. Limpieza de datos técnicos
+                # 1. Limpieza de IDs y campos de solo lectura de la UI
                 params.pop('id', None)
-                params = {k: v for k, v in params.items() if not k.endswith('_name')}
+                params = {k: v for k, v in params.items() if not k.endswith('_name') and not k.isnumeric()}
 
-                # 2. Mapeo de campos relacionales (Many2one)
-                # Odoo necesita el ID entero o False si es nulo
+                # 2. Mapeo estricto de Many2one (evita errores de tipo en Odoo)
                 relational_fields = [
                     'tipoautoridad_id', 'tipocargo_id', 'localidad_id', 
-                    'direccion_id', 'direccion', 'direccionCofradia'
+                    'direccion_id', 'direccion', 'direccionCofradia', 'codPostal_id'
                 ]
                 
                 for field in relational_fields:
                     if field in params:
-                        try:
-                            val = params[field]
-                            params[field] = int(val) if val else False
-                        except:
+                        val = params[field]
+                        # Odoo requiere un ID entero o False
+                        if val is None or val == "" or val == 0 or val == "0":
                             params[field] = False
+                        else:
+                            try:
+                                params[field] = int(val)
+                            except:
+                                params[field] = False
 
-                # 3. Mapeos específicos de nombres de campos Flutter -> Odoo
-                if model_name == 'morenitapp.cofradia':
-                    # Flutter envía 'direccion_id', Odoo tiene 'direccionCofradia'
-                    if 'direccion_id' in params:
-                        params['direccionCofradia'] = params.pop('direccion_id')
-                
-                if model_name == 'morenitapp.cargo':
-                    # Flutter envía 'direccion', Odoo tiene 'direccion' (pero asegurar int)
-                    pass
+                # 3. Ajustes específicos por modelo
+                if model_name == 'morenitapp.cofradia' and 'direccion_id' in params:
+                    params['direccionCofradia'] = params.pop('direccion_id')
 
-                # 4. Operación en Base de Datos
+                # 4. Ejecución en Base de Datos
                 if method == 'PUT' or record_id:
                     target_id = record_id or params.get('id')
                     rec = sudo_env.browse(int(target_id))
                     if not rec.exists():
-                        return self._json_response({"success": False, "error": "No encontrado"}, status=404)
+                        return self._json_response({"success": False, "error": "Registro no encontrado"}, status=404)
                     rec.write(params)
                     return self._json_response({"success": True, "id": rec.id})
                 else:
@@ -97,6 +96,7 @@ class SecretariaController(http.Controller):
         except Exception as e:
             _logger.error(f"Error API Secretaria ({model_name}): {str(e)}")
             return self._json_response({"success": False, "error": str(e)}, status=500)
+
     # --- RUTAS ---
 
     @http.route(['/api/autoridades', '/api/autoridades/<int:record_id>'], type='http', auth='public', methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], csrf=False)
@@ -128,20 +128,17 @@ class SecretariaController(http.Controller):
             "tipocargo_name": r.tipocargo_id.display_name if r.tipocargo_id else "",
             "fechaInicioCargo": str(r.fechaInicioCargo) if r.fechaInicioCargo else "",
             "fechaFinCargo": str(r.fechaFinCargo) if r.fechaFinCargo else None,
-            # Localización
             "direccion": r.direccion.id if r.direccion else None,
             "direccion_name": r.direccion.display_name if r.direccion else "",
             "puerta": r.puerta or "",
             "piso": r.piso or "",
             "localidad_id": r.localidad_id.id if r.localidad_id else None,
             "codPostal_id": r.codPostal_id.id if r.codPostal_id else None,
-            # Contacto e Info Adicional
             "telefono": r.telefono or "",
             "observaciones": r.observaciones or "",
             "motivo": r.motivo or "",
             "textoSaludo": r.textoSaludo or "",
         }
-        
         return self._handle_request('morenitapp.cargo', record_id, mapper)
 
     @http.route(['/api/cofradias', '/api/cofradias/<int:record_id>'], type='http', auth='public', methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], csrf=False)
@@ -155,13 +152,10 @@ class SecretariaController(http.Controller):
             "telefonoCofradia": r.telefonoCofradia or "",
             "paginaWeb": r.paginaWeb or "",
             "observaciones": r.observaciones or "",
-            # Campos Many2one
             "direccion_id": r.direccionCofradia.id if r.direccionCofradia else None,
             "direccion_name": r.direccionCofradia.display_name if r.direccionCofradia else "",
             "puerta": r.puerta or "",
             "piso": r.piso or "",
             "localidad_id": r.localidad_id.id if r.localidad_id else None,
         }
-        
-        # Asegúrate de que en _handle_request los campos terminados en _id se conviertan a int
         return self._handle_request('morenitapp.cofradia', record_id, mapper)

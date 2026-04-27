@@ -84,14 +84,12 @@ class ProvinciasNotifier extends StateNotifier<AsyncValue<List<Provincia>>> {
   }
 
   Future<void> agregarProvincia(String codigo, String nombre) async {
-    final nueva =
-        Provincia(id: 0, codProvincia: codigo, nombreProvincia: nombre);
     try {
+      // Enviamos nombres de campos que Odoo espera
+      final nueva = Provincia(id: 0, codProvincia: codigo, nombreProvincia: nombre);
       final creada = await repository.crearProvincia(nueva);
       state.whenData((lista) => state = AsyncValue.data([...lista, creada]));
-    } catch (e) {
-      rethrow;
-    }
+    } catch (e) { rethrow; }
   }
 
   Future<void> editarProvincia(int id, String nombre, String codigo) async {

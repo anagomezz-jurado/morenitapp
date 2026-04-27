@@ -5,12 +5,11 @@ import '../../domain/entities/evento.dart';
 import '../../domain/entities/organizador.dart';
 
 class EventoCultoDatasourceImpl extends EventoCultoDatasource {
-  
-  // Configuración de Dio con interceptores para logging (opcional pero recomendado)
+  // Configuración de Dio
   final dio = Dio(BaseOptions(
-    baseUrl: Environment.apiUrl, // DEBE SER: http://192.168.56.1:8069/api
-    connectTimeout: const Duration(seconds: 5),
-    receiveTimeout: const Duration(seconds: 3),
+    baseUrl: Environment.apiUrl, // Ejemplo: http://192.168.1.XX:8069/api
+    connectTimeout: const Duration(seconds: 7),
+    receiveTimeout: const Duration(seconds: 5),
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -18,28 +17,54 @@ class EventoCultoDatasourceImpl extends EventoCultoDatasource {
   ));
 
   // --- MÉTODOS BASE ---
-  // Se eliminan los '/' extras para evitar el error de doble slash en la URL
+
   Future<dynamic> _get(String path) async {
     final response = await dio.get(path);
     return response.data;
   }
 
   // --- EVENTOS ---
+
   @override
   Future<List<Evento>> getEventos() async {
     try {
-      // Si la baseUrl termina en /api, path debe ser '/eventos'
-      final result = await _get('/eventos');
-      
-      // El controlador corregido devuelve directamente una Lista []
-      final List data = result is List ? result : [];
-      
-      return data.map((e) => Evento.fromJson(e)).toList();
+      print('*** Iniciando petición a: ${dio.options.baseUrl}/eventos ***');
+
+      final response = await dio.get('/eventos');
+
+      print('*** Respuesta recibida: ${response.statusCode} ***');
+      print('*** Datos brutos: ${response.data} ***');
+
+      if (response.data == null) {
+        print('*** OJO: Odoo devolvió null ***');
+        return [];
+      }
+
+      final List<dynamic> data = response.data;
+
+      final lista = data
+          .map((json) {
+            try {
+              return Evento.fromJson(json);
+            } catch (e) {
+              // Esto te dirá si falta algún campo como 'nombre' o 'fecha'
+              print("!!! Error parseando evento ID ${json['id']}: $e");
+              return null;
+            }
+          })
+          .whereType<Evento>()
+          .toList();
+
+      print('*** Total eventos procesados: ${lista.length} ***');
+      return lista;
     } on DioException catch (e) {
-      print('DioError Eventos: ${e.type} - ${e.message}');
-      throw Exception('Error de red al obtener eventos');
+      print('!!! ERROR DE DIO: ${e.type}');
+      print('!!! Mensaje: ${e.message}');
+      print('!!! Error del server: ${e.response?.data}');
+      rethrow;
     } catch (e) {
-      throw Exception('Error al procesar eventos: $e');
+      print('!!! ERROR INESPERADO: $e');
+      rethrow;
     }
   }
 
@@ -47,9 +72,9 @@ class EventoCultoDatasourceImpl extends EventoCultoDatasource {
   Future<bool> crearEvento(Map<String, dynamic> datos) async {
     try {
       final response = await dio.post('/eventos', data: datos);
-      // El controlador de Odoo devuelve {"success": true, "id": ...}
       return response.data['success'] == true;
     } catch (e) {
+      print('Error crearEvento: $e');
       return false;
     }
   }
@@ -60,6 +85,7 @@ class EventoCultoDatasourceImpl extends EventoCultoDatasource {
       final response = await dio.put('/eventos/$id', data: datos);
       return response.data['success'] == true;
     } catch (e) {
+      print('Error editarEvento: $e');
       return false;
     }
   }
@@ -70,21 +96,23 @@ class EventoCultoDatasourceImpl extends EventoCultoDatasource {
       final response = await dio.delete('/eventos/$id');
       return response.data['success'] == true;
     } catch (e) {
+      print('Error eliminarEvento: $e');
       return false;
     }
   }
 
   // --- ORGANIZADORES ---
+
   @override
   Future<List<Organizador>> getOrganizadores() async {
     try {
       final result = await _get('/organizadores');
-      
+
       final List data = result is List ? result : [];
-      
+
       return data.map((o) => Organizador.fromJson(o)).toList();
     } on DioException catch (e) {
-      print('DioError Organizadores: ${e.message}');
+      print('DioError Organizadores: ${e.requestOptions.uri}');
       throw Exception('Error de conexión con organizadores');
     } catch (e) {
       throw Exception('Error al obtener organizadores: $e');
@@ -96,7 +124,8 @@ class EventoCultoDatasourceImpl extends EventoCultoDatasource {
     try {
       final response = await dio.post('/organizadores', data: datos);
       return response.data['success'] == true;
-    } catch (e) {
+    } on DioException catch (e) {
+      print('Error al crear organizador: ${e.response?.data}');
       return false;
     }
   }
@@ -106,7 +135,8 @@ class EventoCultoDatasourceImpl extends EventoCultoDatasource {
     try {
       final response = await dio.put('/organizadores/$id', data: datos);
       return response.data['success'] == true;
-    } catch (e) {
+    } on DioException catch (e) {
+      print('Error al editar organizador: ${e.response?.data}');
       return false;
     }
   }

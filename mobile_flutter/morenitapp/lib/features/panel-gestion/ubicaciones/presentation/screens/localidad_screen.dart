@@ -41,13 +41,15 @@ class _LocalidadScreenState extends ConsumerState<LocalidadScreen> {
       ),
       columns: const [
         DataColumn(label: Text('LOCALIDAD', style: TextStyle(fontWeight: FontWeight.bold))),
+        DataColumn(label: Text('PROVINCIA', style: TextStyle(fontWeight: FontWeight.bold))),
         DataColumn(label: Text('CAPITAL', style: TextStyle(fontWeight: FontWeight.bold))),
         DataColumn(label: Text('ACCIONES', style: TextStyle(fontWeight: FontWeight.bold))),
       ],
       rows: localidadesAsync.when(
         data: (lista) => lista.map((loc) => DataRow(cells: [
           DataCell(Text(loc.nombreLocalidad, style: const TextStyle(fontWeight: FontWeight.w500))),
-          DataCell(Text(loc.nombreCapital)),
+          DataCell(Text(loc.codProvinciaId != null ? provinciasAsync.value!.firstWhere((p) => p.id == loc.codProvinciaId!).nombreProvincia : '-', style: const TextStyle(fontWeight: FontWeight.w500))),
+          DataCell(Text(loc.nombreCapital ?? '-', style: const TextStyle(fontWeight: FontWeight.w500))),
           DataCell(Row(
             children: [
               IconButton(icon: const Icon(Icons.edit_note, color: Colors.blue), onPressed: () => _showSideForm(context, localidad: loc)),

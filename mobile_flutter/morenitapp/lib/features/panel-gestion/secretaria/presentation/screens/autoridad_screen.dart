@@ -1,12 +1,29 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:morenitapp/shared/excel/excel_Service.dart';
+import 'package:morenitapp/shared/widgets/disenio_informes.dart';
 import 'package:morenitapp/shared/widgets/plantilla_ventanas.dart';
 import '../../domain/entities/autoridad.dart';
 import '../providers/secretaria_provider.dart';
 
 class AutoridadesScreen extends ConsumerWidget {
   const AutoridadesScreen({super.key});
+   List<List<String>> prepararDatos(List<Autoridad> lista) {
+      return lista
+          .map((h) => [
+                (h.codAutoridad ?? 'S/N').toString(),
+                h.nombreAutoridad ?? 'S/N',
+                h.cargo ?? 'S/N',
+                h.tipoautoridadName ?? 'S/N',
+                h.localidadName ?? 'S/N',
+                h.observaciones ?? '-',
+              ])
+          .toList();
+    }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -15,6 +32,42 @@ class AutoridadesScreen extends ConsumerWidget {
     return PlantillaVentanas(
       title: 'Gestión de Autoridades',
       isLoading: autoridadesAsync.isLoading,
+
+      onDownloadExcel: () async {
+        final lista = autoridadesAsync.value ?? [];
+        if (lista.isEmpty) return;
+        ExcelService.descargarExcel(
+          nombreArchivo: 'Autoridades',
+          cabeceras: [
+            'Código',
+            'Nombre',
+            'Cargo',
+            'Tipo',
+            'Localidad',
+            'OBSERVACIONES'
+          ],
+          filas: prepararDatos(lista),
+        );
+      },
+      onDownloadPDF: () async {
+        final lista = autoridadesAsync.value ?? [];
+        if (lista.isEmpty) return;
+
+        Uint8List? logoBytes;
+        try {
+          final byteData = await rootBundle.load('assets/icono.png');
+          logoBytes = byteData.buffer.asUint8List();
+        } catch (e) {
+          debugPrint('Aviso: No se pudo cargar el logo: $e');
+        }
+
+        await ReporteGenerator.generarPDFInformativo(
+          titulo: "LISTADO DE AUTORIDADES",
+          headers: ['Código', 'Nombre', 'Cargo', 'Tipo', 'Localidad', 'OBSERVACIONES'],
+          data: prepararDatos(lista),
+          logoBytes: logoBytes,
+        );
+      },
       onRefresh: () => ref.read(autoridadesProvider.notifier).refresh(),
       // Navega a la pantalla del formulario
       onNuevo: () => context.push('/secretaria/autoridades/nueva'),

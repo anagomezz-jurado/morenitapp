@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:morenitapp/features/panel-gestion/hermanos/presentation/screens/calle_search_delegate.dart';
+import 'package:morenitapp/shared/widgets/calle_search_delegate.dart';
 import 'package:morenitapp/features/panel-gestion/hermanos/domain/entities/hermano.dart';
 import 'package:morenitapp/features/panel-gestion/hermanos/presentation/providers/hermanos_provider.dart';
 import 'package:morenitapp/features/panel-gestion/ubicaciones/domain/entities/calle.dart';
@@ -209,8 +209,9 @@ class _NuevoHermanoState extends ConsumerState<NuevoHermano> {
   void _onSave() async {
     if (!_formKey.currentState!.validate()) return;
     
+    // Validación lógica de IBAN
     if (metodoPago == 'Domiciliado' && ibanCtrl.text.trim().length < 10) {
-       ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor, introduce un IBAN válido'), backgroundColor: Colors.orange)
       );
       return;
@@ -219,9 +220,9 @@ class _NuevoHermanoState extends ConsumerState<NuevoHermano> {
     setState(() => _isLoading = true);
 
     try {
-      final datos = {
+      // Mapeo de datos para Odoo
+      final Map<String, dynamic> datosOdoo = {
         "numero_hermano": int.tryParse(numeroCtrl.text) ?? 0,
-        "codigo_hermano": codigoHermanoCtrl.text.trim(),
         "nombre": nombreCtrl.text.trim(),
         "apellido1": apellido1Ctrl.text.trim(),
         "apellido2": apellido2Ctrl.text.trim(),
@@ -230,7 +231,6 @@ class _NuevoHermanoState extends ConsumerState<NuevoHermano> {
         "fecha_alta": formatDate(fechaAltaDate),
         "metodo_pago": (metodoPago == 'Domiciliado') ? 'banco' : 'metalico',
         "responsable": esResponsable,
-        "calles_responsable": esResponsable ? callesAsignadas.map((c) => c.id).toList() : [],
         "calle_id": calleSeleccionadaId,
         "piso": pisoCtrl.text.trim(),
         "puerta": puertaCtrl.text.trim(),
@@ -241,14 +241,19 @@ class _NuevoHermanoState extends ConsumerState<NuevoHermano> {
       };
 
       if (widget.hermanoAEditar == null) {
-        await ref.read(hermanosListadoProvider.notifier).createHermano(Hermano.fromJson(datos));
+        // CREACIÓN
+        await ref.read(hermanosListadoProvider.notifier).createHermano(Hermano.fromJson(datosOdoo));
       } else {
-        await ref.read(hermanosListadoProvider.notifier).updateHermano(widget.hermanoAEditar!.id!, datos);
+        // EDICIÓN: Pasamos el ID y el mapa de cambios
+        await ref.read(hermanosListadoProvider.notifier).updateHermano(
+          widget.hermanoAEditar!.id!, 
+          datosOdoo
+        );
       }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Guardado correctamente'), backgroundColor: Colors.green)
+          const SnackBar(content: Text('✅ Guardado correctamente'), backgroundColor: Colors.green)
         );
         context.pop();
       }
@@ -256,16 +261,19 @@ class _NuevoHermanoState extends ConsumerState<NuevoHermano> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Error'),
-            content: Text(e.toString()),
-            actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK'))],
-          ),
-        );
+        _showErrorDialog(e.toString());
       }
     }
+  }
+  void _showErrorDialog(String error) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Error al guardar'),
+        content: Text(error),
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Entendido'))],
+      ),
+    );
   }
 
   String formatDate(DateTime d) => "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";

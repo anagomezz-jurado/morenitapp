@@ -32,9 +32,12 @@ class SideMenuState extends ConsumerState<SideMenu> {
       backgroundColor: colors.surface,
       children: [
         MenuDiseno(
-            userName: user?.fullName ?? 'Usuario',
-            colors: colors,
-            hasNotch: hasNotch),
+          userName: user?.fullName ?? 'Administrador',
+          subTitulo:
+              'Gestión Administrativa', // <--- Texto para el usuario normal
+          colors: colors,
+          hasNotch: hasNotch,
+        ),
         const SectionHeader(title: 'PRINCIPAL'),
         MenuTile(
           icon: Icons.dashboard_rounded,
@@ -115,32 +118,25 @@ class SideMenuState extends ConsumerState<SideMenu> {
                 label: 'Tipo de evento',
                 isSubItem: true,
                 onTap: () => _navigate('/tipo-evento')),
-             MenuTile(
+            MenuTile(
                 icon: Icons.admin_panel_settings_rounded,
                 label: 'Grupo de proveedores',
                 isSubItem: true,
                 onTap: () => _navigate('/grupo-proveedor')),
-             MenuTile(
+            MenuTile(
                 icon: Icons.admin_panel_settings_rounded,
                 label: 'Tipos de autoridades',
                 isSubItem: true,
                 onTap: () => _navigate('/tipo-autoridades')),
-                 MenuTile(
+            MenuTile(
                 icon: Icons.admin_panel_settings_rounded,
                 label: 'Tipos de cargos',
                 isSubItem: true,
                 onTap: () => _navigate('/tipo-cargos')),
-
-            MenuTile(
-                icon: Icons.admin_panel_settings_rounded,
-                label: 'Gestión de Roles',
-                isSubItem: true,
-                onTap: () => _navigate('/roles')),
            
           ],
         ),
-
-         const SectionHeader(title: 'Ubicaciones'),
+        const SectionHeader(title: 'Ubicaciones'),
         MenuExpansionGroup(
           icon: Icons.menu_book_rounded,
           title: 'Provincias',
@@ -152,7 +148,7 @@ class SideMenuState extends ConsumerState<SideMenu> {
                 onTap: () => _navigate('/provincia')),
           ],
         ),
-         MenuExpansionGroup(
+        MenuExpansionGroup(
           icon: Icons.menu_book_rounded,
           title: 'Localidades',
           children: [
@@ -163,7 +159,7 @@ class SideMenuState extends ConsumerState<SideMenu> {
                 onTap: () => _navigate('/localidad')),
           ],
         ),
-         MenuExpansionGroup(
+        MenuExpansionGroup(
           icon: Icons.menu_book_rounded,
           title: 'Códigos postales',
           children: [
@@ -174,8 +170,7 @@ class SideMenuState extends ConsumerState<SideMenu> {
                 onTap: () => _navigate('/codigo-postal')),
           ],
         ),
-
-         MenuExpansionGroup(
+        MenuExpansionGroup(
           icon: Icons.menu_book_rounded,
           title: 'Calles',
           children: [
@@ -186,7 +181,6 @@ class SideMenuState extends ConsumerState<SideMenu> {
                 onTap: () => _navigate('/calle')),
           ],
         ),
-
         const SectionHeader(title: 'CONTENIDO'),
         MenuExpansionGroup(
           icon: Icons.menu_book_rounded,
@@ -215,8 +209,7 @@ class SideMenuState extends ConsumerState<SideMenu> {
                 onTap: () => _navigate('/anunciantes')),
           ],
         ),
-
-         const SectionHeader(title: 'Gestión de Usuarios'),
+        const SectionHeader(title: 'Gestión de Usuarios'),
         MenuExpansionGroup(
           icon: Icons.menu_book_rounded,
           title: 'Usuarios de la App',
@@ -226,9 +219,13 @@ class SideMenuState extends ConsumerState<SideMenu> {
                 label: 'Usuarios de la App',
                 isSubItem: true,
                 onTap: () => _navigate('/usuarios')),
+             MenuTile(
+                icon: Icons.admin_panel_settings_rounded,
+                label: 'Gestión de Roles',
+                isSubItem: true,
+                onTap: () => _navigate('/roles')),
           ],
         ),
-
         const SizedBox(height: 20),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),

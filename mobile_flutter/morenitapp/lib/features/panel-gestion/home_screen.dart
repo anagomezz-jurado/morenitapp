@@ -9,8 +9,9 @@ import 'package:morenitapp/features/panel-gestion/eventos-cultos/domain/entities
 // Providers
 import 'package:morenitapp/features/auth/presentation/providers/auth_provider.dart';
 import 'package:morenitapp/features/panel-gestion/hermanos/presentation/providers/hermanos_provider.dart';
-// Asegúrate de que la ruta del archivo que me pasaste sea esta:
 import 'package:morenitapp/features/panel-gestion/eventos-cultos/presentation/providers/evento_culto_provider.dart';
+// Importante para que el contador de anunciantes sea real
+import 'package:morenitapp/features/panel-gestion/proveedores/presentation/providers/proveedor_providers.dart';
 
 // Widgets
 import 'package:morenitapp/shared/widgets/side_menu.dart';
@@ -24,14 +25,14 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = Theme.of(context).colorScheme;
 
-    // 1. Escuchamos los providers
+    // Escuchamos los providers
     final authState = ref.watch(authProvider);
     final user = authState.user;
-
     final hermanosAsync = ref.watch(hermanosListadoProvider);
-    
-    // Usamos el eventosProvider que definiste en tu código
     final eventosAsync = ref.watch(eventosProvider);
+    
+    // Vinculación real con la lista de anunciantes
+    final anunciantesData = ref.watch(listaSoloAnunciantes);
 
     return Scaffold(
       key: _scaffoldKey,
@@ -41,31 +42,37 @@ class HomeScreen extends ConsumerWidget {
         user: user,
         hermanosAsync: hermanosAsync,
         eventosAsync: eventosAsync,
+        totalAnunciantes: anunciantesData.length.toString(),
       ),
     );
   }
 }
-
 class _MainContent extends StatelessWidget {
   final ColorScheme colors;
   final User? user;
   final AsyncValue<List<Hermano>> hermanosAsync;
   final AsyncValue<List<Evento>> eventosAsync;
+  final String totalAnunciantes;
 
   const _MainContent({
     required this.colors,
     required this.user,
     required this.hermanosAsync,
     required this.eventosAsync,
+    required this.totalAnunciantes,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Total de hermanos reactivo
-    final totalHermanos = hermanosAsync.when(
-      data: (list) => list.length.toString(),
-      loading: () => '...',
-      error: (_, __) => '0',
+    // --- LÓGICA DE FILTRADO PARA LOS CONTADORES ---
+    final statsHermanos = hermanosAsync.when(
+      data: (list) {
+        final activos = list.where((h) => h.estado == 'activo').length;
+        final bajas = list.where((h) => h.estado == 'baja').length;
+        return {'activos': activos.toString(), 'bajas': bajas.toString()};
+      },
+      loading: () => {'activos': '...', 'bajas': '...'},
+      error: (_, __) => {'activos': '0', 'bajas': '0'},
     );
 
     return SafeArea(
@@ -117,9 +124,7 @@ class _MainContent extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          (user != null)
-                              ? '${user!.nombre} ${user!.apellido1}'
-                              : 'Admin',
+                          (user != null) ? '${user!.nombre} ${user!.apellido1}' : 'Admin',
                           style: const TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
@@ -132,30 +137,54 @@ class _MainContent extends StatelessWidget {
 
                   const SizedBox(height: 30),
 
-                  // --- ESTADÍSTICAS ---
-                  _buildStatCards(totalHermanos),
+                  // --- ESTADÍSTICAS ACTUALIZADAS (3 TARJETAS) ---
+                  _buildStatCards(
+                    statsHermanos['activos']!, 
+                    statsHermanos['bajas']!, 
+                    totalAnunciantes
+                  ),
 
                   const SizedBox(height: 25),
                   const _SectionTitle(title: 'Resumen de actividad'),
-                  const _ActivityCard(
-                    description: 'Se registró un nuevo hermano: Juan Pérez',
-                    time: 'Hace 10 min',
+                  
+                  // --- ACTIVIDAD DINÁMICA ---
+                  hermanosAsync.when(
+                    data: (list) {
+                      if (list.isEmpty) return const _ActivityCard(description: 'No hay registros recientes', time: '-');
+                      // Mostramos el último independientemente de si es alta o baja
+                      final ultimo = list.last;
+                      final esBaja = ultimo.estado == 'baja';
+                      return _ActivityCard(
+                        description: esBaja 
+                          ? 'Se tramitó la baja de: ${ultimo.nombre} ${ultimo.apellido1}'
+                          : 'Nuevo hermano activo: ${ultimo.nombre} ${ultimo.apellido1}',
+                        time: 'Recientemente',
+                      );
+                    },
+                    loading: () => const LinearProgressIndicator(),
+                    error: (_, __) => const _ActivityCard(description: 'Error al cargar actividad', time: 'Error'),
                   ),
 
                   const SizedBox(height: 25),
                   const _SectionTitle(title: 'Próximos eventos'),
 
-                  // --- LÓGICA DE EVENTOS DINÁMICA ---
+                  // --- LÓGICA DE EVENTOS ---
                   eventosAsync.when(
                     data: (eventos) {
-                      if (eventos.isEmpty) {
-                        return const _NoEventsWidget();
-                      }
+                      final ahora = DateTime.now();
+                      final hoy = DateTime(ahora.year, ahora.month, ahora.day);
+                      final proximosEventos = eventos.where((e) {
+                        final fechaEvento = DateTime(e.fechaInicio.year, e.fechaInicio.month, e.fechaInicio.day);
+                        return fechaEvento.isAtSameMomentAs(hoy) || fechaEvento.isAfter(hoy);
+                      }).toList();
 
-                      // Mostramos el evento más cercano
-                      final proximo = eventos.first;
+                      proximosEventos.sort((a, b) => a.fechaInicio.compareTo(b.fechaInicio));
+
+                      if (proximosEventos.isEmpty) return const _NoEventsWidget();
+
+                      final proximo = proximosEventos.first;
                       return _EventTile(
-                        title: proximo.nombre, // Cambia a 'nombre' o 'titulo' según tu entidad
+                        title: proximo.nombre,
                         date: proximo.fechaInicio.toString().substring(0, 10),
                         icon: Icons.calendar_month,
                       );
@@ -174,7 +203,46 @@ class _MainContent extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCards(String total) {
+  // --- GRID DE 3 TARJETAS ---
+  Widget _buildStatCards(String activos, String bajas, String totalA) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return GridView(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 200, // Ajustado para que quepan 3 o se reorganicen
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 1.1,
+          ),
+          children: [
+            _StatCard(
+              title: 'Activos',
+              value: activos,
+              icon: Icons.person_add_alt_1_rounded,
+              color: Colors.green,
+            ),
+            _StatCard(
+              title: 'Bajas',
+              value: bajas,
+              icon: Icons.person_off_rounded,
+              color: Colors.green,
+            ),
+            _StatCard(
+              title: 'Anunciantes',
+              value: totalA,
+              icon: Icons.ads_click,
+              color: Colors.green,
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+  Widget _buildStatCards(String totalH, String totalA) {
     return LayoutBuilder(
       builder: (context, constraints) {
         bool isMobile = constraints.maxWidth < 600;
@@ -190,24 +258,24 @@ class _MainContent extends StatelessWidget {
           children: [
             _StatCard(
               title: 'Total Hermanos',
-              value: total,
+              value: totalH,
               icon: Icons.people_alt_rounded,
-              color: colors.primary,
+              color: Colors.green,
             ),
-            const _StatCard(
+            _StatCard(
               title: 'Anunciantes',
-              value: '12',
+              value: totalA, // Vinculado a la lógica de proveedores
               icon: Icons.ads_click,
-              color: Colors.orange,
+              color: Colors.green,
             ),
           ],
         );
       },
     );
   }
-}
 
-// --- SUB-WIDGETS ---
+
+// --- SUB-WIDGETS (CON TU DISEÑO ORIGINAL) ---
 
 class _NoEventsWidget extends StatelessWidget {
   const _NoEventsWidget();
@@ -230,30 +298,67 @@ class _NoEventsWidget extends StatelessWidget {
     );
   }
 }
-
 class _StatCard extends StatelessWidget {
   final String title;
   final String value;
   final IconData icon;
   final Color color;
-  const _StatCard({required this.title, required this.value, required this.icon, required this.color});
+
+  const _StatCard({
+    required this.title,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colors.outline.withOpacity(0.15)),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          )
+        ],
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: color, size: 28),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(icon, color: color, size: 26),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.bold,
+              color: colors.onSurface,
+            ),
+          ),
           const SizedBox(height: 4),
-          FittedBox(child: Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold))),
-          Text(title, style: TextStyle(color: Colors.grey.shade600, fontSize: 12), textAlign: TextAlign.center),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              color: colors.onSurface.withOpacity(0.6),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
@@ -265,55 +370,131 @@ class _SectionTitle extends StatelessWidget {
   const _SectionTitle({required this.title});
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 15),
-    child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-  );
+        padding: const EdgeInsets.only(bottom: 15),
+        child: Text(title,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      );
 }
-
 class _ActivityCard extends StatelessWidget {
   final String description;
   final String time;
-  const _ActivityCard({required this.description, required this.time});
-  @override
-  Widget build(BuildContext context) => Card(
-    elevation: 0,
-    color: Colors.grey.shade100,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-    child: ListTile(
-      title: Text(description, style: const TextStyle(fontSize: 14)),
-      subtitle: Text(time, style: const TextStyle(fontSize: 12)),
-      trailing: const Icon(Icons.arrow_right),
-    ),
-  );
-}
 
-class _EventTile extends StatelessWidget {
-  final String title;
-  final String date;
-  final IconData icon;
-  const _EventTile({required this.title, required this.date, required this.icon});
+  const _ActivityCard({required this.description, required this.time});
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Container(
-      padding: const EdgeInsets.all(15),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF051906),
-        borderRadius: BorderRadius.circular(15),
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.outline.withOpacity(0.15)),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
       ),
       child: Row(
         children: [
-          Icon(icon, color: Colors.white),
-          const SizedBox(width: 15),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: colors.primary.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(Icons.update, color: colors.primary),
+          ),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                Text(date, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                Text(
+                  description,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: colors.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  time,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colors.onSurface.withOpacity(0.5),
+                  ),
+                ),
               ],
             ),
+          ),
+          Icon(Icons.arrow_forward_ios_rounded,
+              size: 18, color: colors.onSurface.withOpacity(0.3)),
+        ],
+      ),
+    );
+  }
+}
+class _EventTile extends StatelessWidget {
+  final String title;
+  final String date;
+  final IconData icon;
+
+  const _EventTile({
+    required this.title,
+    required this.date,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: colors.primaryContainer,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow.withOpacity(0.12),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
           )
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: colors.onPrimaryContainer, size: 26),
+          const SizedBox(width: 18),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: colors.onPrimaryContainer,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  date,
+                  style: TextStyle(
+                    color: colors.onPrimaryContainer.withOpacity(0.7),
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

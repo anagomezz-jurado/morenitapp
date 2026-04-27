@@ -2,10 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:formz/formz.dart';
 import 'package:morenitapp/features/auth/presentation/providers/auth_provider.dart';
-import 'package:morenitapp/shared/infrastructure/inputs/full_name.dart';
 import 'package:morenitapp/shared/infrastructure/inputs/inputs.dart';
-import 'package:morenitapp/shared/infrastructure/inputs/password.dart';
-import 'package:morenitapp/shared/infrastructure/inputs/telefono.dart';
 
 //! 1. State del Provider
 class RegisterFormState {
@@ -20,7 +17,7 @@ class RegisterFormState {
   final Email email;
   final Password password;
   final Password passwordConfirmation;
-  final Phone telefono; // Correcto: tipo Phone
+  final Phone telefono;
 
   final bool recibirNotiEmail;
   final bool recibirNotiTelefono;
@@ -86,7 +83,6 @@ class RegisterFormNotifier extends StateNotifier<RegisterFormState> {
     required bool recibirNotiTelefono,
   }) registerUserCallback;
 
-  // Añadimos una referencia al ref para poder limpiar errores del authProvider
   final Ref ref;
 
   RegisterFormNotifier({
@@ -94,18 +90,19 @@ class RegisterFormNotifier extends StateNotifier<RegisterFormState> {
     required this.ref,
   }) : super(RegisterFormState());
 
-  // Método privado para limpiar errores del servidor al empezar a escribir
   void _clearServerError() {
     if (ref.read(authProvider).errorMessage.isNotEmpty) {
       ref.read(authProvider.notifier).clearErrorMessage();
     }
   }
 
+  // --- Manejadores de cambios ---
+
   onNombreChange(String value) {
     final newNombre = FullName.dirty(value);
     state = state.copyWith(
       nombre: newNombre,
-      isValid: Formz.validate([newNombre, state.apellido1, state.apellido2, state.email, state.password, state.passwordConfirmation, state.telefono])
+      isValid: _validateForm(nombre: newNombre)
     );
   }
 
@@ -113,7 +110,7 @@ class RegisterFormNotifier extends StateNotifier<RegisterFormState> {
     final newApellido = FullName.dirty(value);
     state = state.copyWith(
       apellido1: newApellido,
-      isValid: Formz.validate([state.nombre, newApellido, state.apellido2, state.email, state.password, state.passwordConfirmation, state.telefono])
+      isValid: _validateForm(apellido1: newApellido)
     );
   }
 
@@ -121,33 +118,34 @@ class RegisterFormNotifier extends StateNotifier<RegisterFormState> {
     final newApellido = FullName.dirty(value);
     state = state.copyWith(
       apellido2: newApellido,
-      isValid: Formz.validate([state.nombre, state.apellido1, newApellido, state.email, state.password, state.passwordConfirmation, state.telefono])
+      isValid: _validateForm(apellido2: newApellido)
     );
   }
 
   onTelefonoChange(String value) {
-    _clearServerError(); // Limpiamos error de "teléfono ya existe"
-    final newTelefono = Phone.dirty(value); // CORREGIDO: Phone, no FullName
+    _clearServerError(); 
+    final newTelefono = Phone.dirty(value);
     state = state.copyWith(
       telefono: newTelefono,
-      isValid: Formz.validate([state.nombre, state.apellido1, state.apellido2, state.email, state.password, state.passwordConfirmation, newTelefono])
+      isValid: _validateForm(telefono: newTelefono)
     );
   }
 
   onEmailChange(String value) {
-    _clearServerError(); // Limpiamos error de "email ya existe"
+    _clearServerError();
     final newEmail = Email.dirty(value);
     state = state.copyWith(
       email: newEmail,
-      isValid: Formz.validate([newEmail, state.nombre, state.apellido1, state.apellido2, state.password, state.passwordConfirmation, state.telefono])
+      isValid: _validateForm(email: newEmail)
     );
   }
 
   onPasswordChange(String value) {
     final newPassword = Password.dirty(value);
+    // Al cambiar la contraseña, debemos re-validar la confirmación también
     state = state.copyWith(
       password: newPassword,
-      isValid: Formz.validate([newPassword, state.passwordConfirmation, state.nombre, state.apellido1, state.apellido2, state.email, state.telefono])
+      isValid: _validateForm(password: newPassword)
     );
   }
 
@@ -155,18 +153,58 @@ class RegisterFormNotifier extends StateNotifier<RegisterFormState> {
     final newConfirmation = Password.dirty(value);
     state = state.copyWith(
       passwordConfirmation: newConfirmation,
-      isValid: Formz.validate([state.password, newConfirmation, state.nombre, state.apellido1, state.apellido2, state.email, state.telefono])
+      isValid: _validateForm(passwordConfirmation: newConfirmation)
     );
+  }
+
+  // Helper para no repetir la lista de Formz.validate en cada método
+  bool _validateForm({
+    FullName? nombre,
+    FullName? apellido1,
+    FullName? apellido2,
+    Email? email,
+    Password? password,
+    Password? passwordConfirmation,
+    Phone? telefono,
+  }) {
+    // Validamos que todos los campos sean correctos según sus reglas individuales
+    final isFieldsValid = Formz.validate([
+      nombre ?? state.nombre,
+      apellido1 ?? state.apellido1,
+      apellido2 ?? state.apellido2,
+      email ?? state.email,
+      password ?? state.password,
+      passwordConfirmation ?? state.passwordConfirmation,
+      telefono ?? state.telefono,
+    ]);
+
+    // Lógica extra: Las contraseñas deben ser idénticas
+    final doPasswordsMatch = (password ?? state.password).value == 
+                             (passwordConfirmation ?? state.passwordConfirmation).value;
+
+    return isFieldsValid && doPasswordsMatch;
   }
 
   onNotiEmailChange(bool value) => state = state.copyWith(recibirNotiEmail: value);
   onNotiTelefonoChange(bool value) => state = state.copyWith(recibirNotiTelefono: value);
-  onTerminosChanged(bool value) => state = state.copyWith(aceptaTerminos: value);
+  onTerminosChanged(bool value) {
+    state = state.copyWith(
+      aceptaTerminos: value,
+      isValid: _validateForm() // Revalidamos el formulario total
+    );
+  }
+
+  // --- Submit ---
 
   onFormSubmit() async {
     _touchEveryField();
+    
+    // Verificación final de seguridad
     if (!state.isValid || !state.aceptaTerminos) return;
-    if (state.password.value != state.passwordConfirmation.value) return;
+    if (state.password.value != state.passwordConfirmation.value) {
+       // Aquí podrías lanzar un error visual de "Contraseñas no coinciden"
+       return;
+    }
 
     state = state.copyWith(isPosting: true);
 
@@ -185,13 +223,13 @@ class RegisterFormNotifier extends StateNotifier<RegisterFormState> {
   }
 
   _touchEveryField() {
-    final nombre    = FullName.dirty(state.nombre.value);
-    final ap1       = FullName.dirty(state.apellido1.value);
-    final ap2       = FullName.dirty(state.apellido2.value);
-    final email     = Email.dirty(state.email.value);
-    final password  = Password.dirty(state.password.value);
-    final conf      = Password.dirty(state.passwordConfirmation.value);
-    final telefono  = Phone.dirty(state.telefono.value); // CORREGIDO: Phone, no FullName
+    final nombre   = FullName.dirty(state.nombre.value);
+    final ap1      = FullName.dirty(state.apellido1.value);
+    final ap2      = FullName.dirty(state.apellido2.value);
+    final email    = Email.dirty(state.email.value);
+    final password = Password.dirty(state.password.value);
+    final conf     = Password.dirty(state.passwordConfirmation.value);
+    final telefono = Phone.dirty(state.telefono.value);
 
     state = state.copyWith(
       isFormPosted: true,
@@ -202,14 +240,21 @@ class RegisterFormNotifier extends StateNotifier<RegisterFormState> {
       password: password,
       passwordConfirmation: conf,
       telefono: telefono,
-      isValid: Formz.validate([nombre, ap1, ap2, email, password, conf, telefono])
+      isValid: _validateForm(
+        nombre: nombre, 
+        apellido1: ap1, 
+        apellido2: ap2, 
+        email: email, 
+        password: password, 
+        passwordConfirmation: conf, 
+        telefono: telefono
+      )
     );
   }
 }
 
 final registerFormProvider = StateNotifierProvider.autoDispose<RegisterFormNotifier, RegisterFormState>((ref) {
   final registerUserCallback = ref.watch(authProvider.notifier).registerUser;
-  // Pasamos el ref al notifier para gestionar la limpieza de errores
   return RegisterFormNotifier(
     registerUserCallback: registerUserCallback,
     ref: ref

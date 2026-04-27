@@ -1,8 +1,9 @@
+import 'package:morenitapp/features/panel-gestion/usuarios/domain/entities/grupo_user.dart';
 import 'package:morenitapp/features/auth/domain/entities/user.dart';
 
 abstract class AuthDataSource {
   Future<User> login(String email, String password);
-  
+
   Future<User> register({
     required String email,
     required String password,
@@ -15,7 +16,8 @@ abstract class AuthDataSource {
   });
 
   Future<User> checkAuthStatus(String token);
-  
-  // AÑADIR ESTA LÍNEA
-  Future<List<User>> getUsuarios(); 
+
+  Future<List<User>> getUsuarios();
+
+
 }

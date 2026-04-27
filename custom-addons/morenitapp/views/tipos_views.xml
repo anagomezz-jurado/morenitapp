@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_morenitapp_tipoautoridad_tree" model="ir.ui.view">
+        <field name="name">morenitapp.tipoautoridad.tree</field>
+        <field name="model">morenitapp.tipoautoridad</field>
+        <field name="arch" type="xml">
+            <tree editable="bottom">
+                <field name="codTipoAutoridad"/>
+                <field name="nombreTipoAutoridad"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_tipo_autoridades" model="ir.actions.act_window">
+        <field name="name">Tipos de Autoridades</field>
+        <field name="res_model">morenitapp.tipoautoridad</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="view_morenitapp_grupoproveedor_tree" model="ir.ui.view">
+        <field name="name">morenitapp.grupoproveedor.tree</field>
+        <field name="model">morenitapp.grupoproveedor</field>
+        <field name="arch" type="xml">
+            <tree editable="bottom">
+                <field name="cod_grupo"/>
+                <field name="nombre"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_grupos_proveedores" model="ir.actions.act_window">
+        <field name="name">Grupos de Proveedores</field>
+        <field name="res_model">morenitapp.grupoproveedor</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="view_morenitapp_tipoevento_tree" model="ir.ui.view">
+        <field name="name">morenitapp.tipoevento.tree</field>
+        <field name="model">morenitapp.tipoevento</field>
+        <field name="arch" type="xml">
+            <tree editable="bottom">
+                <field name="cod_tipo_evento"/>
+                <field name="nombre_tipo_evento"/>
+                <field name="color"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_tipo_eventos" model="ir.actions.act_window">
+        <field name="name">Tipos de Eventos</field>
+        <field name="res_model">morenitapp.tipoevento</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="view_morenitapp_tipocargo_tree" model="ir.ui.view">
+        <field name="name">morenitapp.tipocargo.tree</field>
+        <field name="model">morenitapp.tipocargo</field>
+        <field name="arch" type="xml">
+            <tree editable="bottom">
+                <field name="codTipoCargo"/>
+                <field name="nombreTipoCargo"/>
+                <field name="observaciones"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_tipo_cargos" model="ir.actions.act_window">
+        <field name="name">Tipos de Cargos</field>
+        <field name="res_model">morenitapp.tipocargo</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+</odoo>

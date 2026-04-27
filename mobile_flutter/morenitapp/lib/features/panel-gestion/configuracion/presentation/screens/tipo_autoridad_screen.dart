@@ -1,10 +1,24 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:morenitapp/features/panel-gestion/configuracion/domain/entities/tipo_autoridad.dart';
 import 'package:morenitapp/features/panel-gestion/configuracion/presentation/providers/configuracion_provider.dart';
+import 'package:morenitapp/shared/excel/excel_Service.dart';
+import 'package:morenitapp/shared/widgets/disenio_informes.dart';
 import 'package:morenitapp/shared/widgets/plantilla_ventanas.dart';
 
 class TipoAutoridadScreen extends ConsumerWidget {
   const TipoAutoridadScreen({super.key});
+  List<List<String>> prepararDatos(List<TipoAutoridad> lista) {
+      return lista
+          .map((h) => [
+                (h.codigo ?? 'S/N').toString(),
+                h.nombre,
+              ])
+          .toList();
+    }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -13,6 +27,38 @@ class TipoAutoridadScreen extends ConsumerWidget {
     return PlantillaVentanas(
       title: 'Tipos de Autoridad',
       isLoading: autoridadesAsync.isLoading,
+      onDownloadExcel: () async {
+        final lista = autoridadesAsync.value ?? [];
+        if (lista.isEmpty) return;
+        ExcelService.descargarExcel(
+          nombreArchivo: 'Tipos_Autoridad',
+          cabeceras: [
+            'Código',
+            'Nombre',
+          ],
+          filas: prepararDatos(lista),
+        );
+      },
+      onDownloadPDF: () async {
+        final lista = autoridadesAsync.value ?? [];
+        if (lista.isEmpty) return;
+
+        Uint8List? logoBytes;
+        try {
+          final byteData = await rootBundle.load('assets/icono.png');
+          logoBytes = byteData.buffer.asUint8List();
+        } catch (e) {
+          debugPrint('Aviso: No se pudo cargar el logo: $e');
+        }
+
+        await ReporteGenerator.generarPDFInformativo(
+          titulo: "LISTADO DE TIPOS DE AUTORIDAD",
+          headers: ['Código', 'Nombre'],
+          data: prepararDatos(lista),
+          logoBytes: logoBytes,
+        );
+      },
+      
       onRefresh: () => ref.refresh(tiposAutoridadProvider),
       onNuevo: () => _showSideForm(context, ref),
       columns: const [

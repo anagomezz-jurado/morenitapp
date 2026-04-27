@@ -51,21 +51,20 @@
 
     <!--  CALENDAR (CORRECTO) -->
     <record id="view_evento_calendar" model="ir.ui.view">
-        <field name="name">evento.calendar</field>
-        <field name="model">morenitapp.evento</field>
-        <field name="arch" type="xml">
-            <calendar string="Eventos"
-                      date_start="fecha_inicio"
-                      date_stop="fecha_fin"
-                      color="organizador_id">
-                
-                <field name="display_name"/>
-
-                <field name="lugar"/>
-                <field name="organizador_id"/>
-
-            </calendar>
-        </field>
-    </record>
+    <field name="name">morenitapp.evento.calendar</field>
+    <field name="model">morenitapp.evento</field>
+    <field name="arch" type="xml">
+        <calendar string="Eventos"
+                  date_start="fecha_inicio"
+                  date_stop="fecha_fin"
+                  color="tipoevento_id">
+            
+            <field name="nombre"/> 
+            
+            <field name="lugar"/>
+            <field name="organizador_id"/>
+        </calendar>
+    </field>
+</record>
 
 </odoo>

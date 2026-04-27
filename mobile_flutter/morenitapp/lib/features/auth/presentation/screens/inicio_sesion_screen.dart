@@ -20,10 +20,9 @@ class LoginScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // --- LÓGICA DE REDIRECCIÓN POR ROLES ---
     ref.listen(authProvider, (previous, next) {
-      // 1. Si hay un mensaje de error, lo mostramos
-      if (next.errorMessage.isNotEmpty) {
-        showSnackbar(context, next.errorMessage);
-      }
+  if (next.errorMessage.isNotEmpty) {
+    showSnackbar(context, next.errorMessage);
+  }
 
       // 2. Si el estado cambia a autenticado, verificamos el rol
       if (next.authStatus == AuthStatus.authenticated && next.user != null) {

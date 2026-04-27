@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+
     <record id="view_morenitapp_rol_tree" model="ir.ui.view">
         <field name="name">morenitapp.rol.tree</field>
         <field name="model">morenitapp.rol</field>
         <field name="arch" type="xml">
             <tree editable="bottom">
                 <field name="codRol"/>
-                <field name="name"/> </tree>
+                <field name="name"/>
+            </tree>
         </field>
     </record>
 
@@ -23,6 +25,34 @@
         </field>
     </record>
 
+    <record id="view_morenitapp_usuario_form" model="ir.ui.view">
+        <field name="name">morenitapp.usuario.form</field>
+        <field name="model">morenitapp.usuario</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group string="Información Personal">
+                            <field name="nombre"/>
+                            <field name="apellido1"/>
+                            <field name="apellido2"/>
+                            <field name="telefono"/>
+                        </group>
+                        <group string="Acceso y Seguridad">
+                            <field name="email"/>
+                            <field name="contrasena" password="1"/>
+                            <field name="rol_id"/>
+                        </group>
+                    </group>
+                    <group string="Notificaciones">
+                        <field name="recibirNotiEmail"/>
+                        <field name="recibirNotiTelefono"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
     <record id="action_morenitapp_rol" model="ir.actions.act_window">
         <field name="name">Roles</field>
         <field name="res_model">morenitapp.rol</field>
@@ -35,15 +65,16 @@
         <field name="view_mode">tree,form</field>
     </record>
 
+    <menuitem id="menu_morenitapp_usuario_item" 
+              name="Usuarios de la App" 
+              parent="menu_seguridad_root" 
+              action="action_morenitapp_usuario" 
+              sequence="10"/>
+
     <menuitem id="menu_morenitapp_rol_item" 
               name="Roles de Usuario" 
-              parent="menu_configuracion" 
+              parent="menu_seguridad_root" 
               action="action_morenitapp_rol" 
               sequence="20"/>
 
-    <menuitem id="menu_morenitapp_usuario_item" 
-              name="Usuarios de la App" 
-              parent="menu_gestion_usuarios" 
-              action="action_morenitapp_usuario" 
-              sequence="10"/>
 </odoo>

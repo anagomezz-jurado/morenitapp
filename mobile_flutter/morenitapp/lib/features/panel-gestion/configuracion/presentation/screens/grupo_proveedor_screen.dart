@@ -1,7 +1,12 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:morenitapp/features/panel-gestion/configuracion/domain/entities/grupo_proveedor.dart';
 import 'package:morenitapp/features/panel-gestion/configuracion/presentation/providers/configuracion_provider.dart';
+import 'package:morenitapp/shared/excel/excel_Service.dart';
+import 'package:morenitapp/shared/widgets/disenio_informes.dart';
 import 'package:morenitapp/shared/widgets/plantilla_ventanas.dart';
 
 class GrupoProveedorScreen extends ConsumerWidget {
@@ -13,9 +18,49 @@ class GrupoProveedorScreen extends ConsumerWidget {
     // Accedemos a los colores del AppTheme
     final colors = Theme.of(context).colorScheme;
 
+     List<List<String>> prepararDatos(List<GrupoProveedor> lista) {
+      return lista
+          .map((h) => [
+                (h.codigo ?? 'S/N').toString(),
+                h.nombre,
+              ])
+          .toList();
+    }
+
     return PlantillaVentanas(
       title: 'Grupos de Proveedores',
       isLoading: gruposAsync.isLoading,
+      onDownloadExcel: () async {
+        final lista = gruposAsync.value ?? [];
+        if (lista.isEmpty) return;
+        ExcelService.descargarExcel(
+          nombreArchivo: 'Grupos_Proveedores',
+          cabeceras: [
+            'Código',
+            'Nombre',
+          ],
+          filas: prepararDatos(lista),
+        );
+      },
+      onDownloadPDF: () async {
+        final lista = gruposAsync.value ?? [];
+        if (lista.isEmpty) return;
+
+        Uint8List? logoBytes;
+        try {
+          final byteData = await rootBundle.load('assets/icono.png');
+          logoBytes = byteData.buffer.asUint8List();
+        } catch (e) {
+          debugPrint('Aviso: No se pudo cargar el logo: $e');
+        }
+
+        await ReporteGenerator.generarPDFInformativo(
+          titulo: "LISTADO DE GRUPOS DE PROVEEDORES",
+          headers: ['Código', 'Nombre'],
+          data: prepararDatos(lista),
+          logoBytes: logoBytes,
+        );
+      },
       onRefresh: () => ref.refresh(gruposProveedorProvider),
       onNuevo: () => _showSideForm(context, ref), 
       columns: const [

@@ -1,4 +1,5 @@
-import '../entities/user.dart';
+import 'package:morenitapp/features/panel-gestion/usuarios/domain/entities/grupo_user.dart';
+import 'package:morenitapp/features/auth/domain/entities/user.dart';
 
 abstract class AuthRepository {
   Future<User> login(String email, String password);
@@ -15,5 +16,7 @@ abstract class AuthRepository {
   });
 
   Future<User> checkAuthStatus(String token);
+
   Future<List<User>> getUsuarios();
+
 }

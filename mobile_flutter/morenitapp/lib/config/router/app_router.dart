@@ -10,7 +10,11 @@ import 'package:morenitapp/features/panel-gestion/configuracion/presentation/scr
 import 'package:morenitapp/features/panel-gestion/configuracion/presentation/screens/tipo_autoridad_screen.dart';
 import 'package:morenitapp/features/panel-gestion/configuracion/presentation/screens/tipo_cargo_screen.dart';
 import 'package:morenitapp/features/panel-gestion/configuracion/presentation/screens/tipo_evento_screen.dart';
-import 'package:morenitapp/features/panel-gestion/configuracion/presentation/screens/usuarios_screen.dart';
+import 'package:morenitapp/features/panel-gestion/eventos-cultos/domain/entities/evento.dart';
+import 'package:morenitapp/features/panel-gestion/eventos-cultos/domain/entities/organizador.dart';
+import 'package:morenitapp/features/panel-gestion/eventos-cultos/presentation/screens/nuevo_evento.dart';
+import 'package:morenitapp/features/panel-gestion/eventos-cultos/presentation/screens/nuevo_organizador.dart';
+import 'package:morenitapp/features/panel-gestion/usuarios/presentation/screens/usuarios_screen.dart';
 import 'package:morenitapp/features/panel-gestion/eventos-cultos/presentation/screens/calendario_eventos_screen.dart';
 import 'package:morenitapp/features/panel-gestion/eventos-cultos/presentation/screens/eventos_gestion_screen.dart';
 import 'package:morenitapp/features/panel-gestion/eventos-cultos/presentation/screens/organizadores_screen.dart';
@@ -35,6 +39,7 @@ import 'package:morenitapp/features/panel-gestion/ubicaciones/presentation/scree
 import 'package:morenitapp/features/panel-gestion/ubicaciones/presentation/screens/codigo_postal_screen.dart';
 import 'package:morenitapp/features/panel-gestion/ubicaciones/presentation/screens/localidad_screen.dart';
 import 'package:morenitapp/features/panel-gestion/ubicaciones/presentation/screens/provincia_screen.dart';
+import 'package:morenitapp/features/panel_usuario/perfil/screens/perfil-screen.dart';
 import 'package:morenitapp/features/panel_usuario/screens/panel_usuario_screen.dart';
 
 // Providers
@@ -97,30 +102,27 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           builder: (context, state) => const CofradiasScreen()),
 
       // CARGOS
-GoRoute(
-  path: '/secretaria/cargos/nuevo', 
-  builder: (context, state) => const CargoFormScreen()
-),
-GoRoute(
-  path: '/secretaria/cargos/editar', 
-  builder: (context, state) {
-    final cargo = (state.extra is Cargo) ? state.extra as Cargo : null;
-    return CargoFormScreen(cargoAEditar: cargo);
-  }
-),
+      GoRoute(
+          path: '/secretaria/cargos/nuevo',
+          builder: (context, state) => const CargoFormScreen()),
+      GoRoute(
+          path: '/secretaria/cargos/editar',
+          builder: (context, state) {
+            final cargo = (state.extra is Cargo) ? state.extra as Cargo : null;
+            return CargoFormScreen(cargoAEditar: cargo);
+          }),
 
 // COFRADÍAS
-GoRoute(
-  path: '/secretaria/cofradias/nueva', 
-  builder: (context, state) => const CofradiaFormScreen()
-),
-GoRoute(
-  path: '/secretaria/cofradias/editar', 
-  builder: (context, state) {
-    final cofradia = (state.extra is Cofradia) ? state.extra as Cofradia : null;
-    return CofradiaFormScreen(cofradiaAEditar: cofradia);
-  }
-),
+      GoRoute(
+          path: '/secretaria/cofradias/nueva',
+          builder: (context, state) => const CofradiaFormScreen()),
+      GoRoute(
+          path: '/secretaria/cofradias/editar',
+          builder: (context, state) {
+            final cofradia =
+                (state.extra is Cofradia) ? state.extra as Cofradia : null;
+            return CofradiaFormScreen(cofradiaAEditar: cofradia);
+          }),
 
       GoRoute(
           path: '/libros', builder: (context, state) => const LibrosScreen()),
@@ -132,9 +134,37 @@ GoRoute(
       GoRoute(
           path: '/gestion-eventos',
           builder: (context, state) => const EventosGestionScreen()),
+      // --- RUTAS DE EVENTOS ---
+      GoRoute(
+        path: '/panel-gestion/eventos-cultos/eventos/nuevo',
+        builder: (context, state) => const NuevoEvento(),
+      ),
+
+      GoRoute(
+        path: '/panel-gestion/eventos-cultos/eventos/editar',
+        builder: (context, state) {
+          final evento = (state.extra is Evento) ? state.extra as Evento : null;
+          return NuevoEvento(eventoAEditar: evento);
+        },
+      ),
+
       GoRoute(
           path: '/organizadores',
           builder: (context, state) => const OrganizadoresScreen()),
+      // --- RUTAS DE ORGANIZADORES (Corregidas y añadidas) ---
+      GoRoute(
+          path: '/panel-gestion/eventos-cultos/organizadores/nuevo',
+          builder: (context, state) => const NuevoOrganizador()),
+
+      GoRoute(
+          path: '/panel-gestion/eventos-cultos/organizadores/editar',
+          builder: (context, state) {
+            // Extraemos el organizador del parámetro extra
+            final organizador = (state.extra is Organizador)
+                ? state.extra as Organizador
+                : null;
+            return NuevoOrganizador(organizadorAEditar: organizador);
+          }),
 
       // PROVEEDORES
       GoRoute(
@@ -178,37 +208,56 @@ GoRoute(
 
       // PANEL DE USUARIO (Acceso para todos los logueados)
       GoRoute(
-          path: '/panel-usuario',
-          builder: (context, state) => const PanelUsuarioScreen()),
+        path: '/panel-usuario',
+        builder: (context, state) => const PanelUsuarioScreen(),
+      ),
+
+      GoRoute(
+        path: '/mi-perfil',
+        builder: (context, state) =>
+            const PerfilScreen(), // Asegúrate de importar PerfilScreen
+      ),
     ],
     redirect: (context, state) {
       final isGoingTo = state.matchedLocation;
       final authStatus = authState.authStatus;
       final user = authState.user;
 
-      // 1. Si no está autenticado
+      // 1. Manejo de usuarios NO autenticados
       if (authStatus == AuthStatus.notAuthenticated) {
-        if (isGoingTo != '/login' && isGoingTo != '/registrarse')
+        if (isGoingTo != '/login' && isGoingTo != '/registrarse') {
           return '/login';
+        }
         return null;
       }
 
-      // 2. Si está autenticado
+      // 2. Manejo de usuarios autenticados
       if (authStatus == AuthStatus.authenticated) {
-        // Evitar que vuelva al login/registro
+        // Evitar que un usuario logueado entre al Login o Registro
         if (isGoingTo == '/login' || isGoingTo == '/registrarse') {
           return (user?.isAdmin == true) ? '/' : '/panel-usuario';
         }
 
-        // --- RESTRICCIÓN DE SEGURIDAD PARA USUARIOS NORMALES ---
-        // Si el usuario NO es admin e intenta entrar a cualquier ruta que no sea /panel-usuario
-        if (user?.isAdmin != true && isGoingTo != '/panel-usuario') {
-          return '/panel-usuario';
+        // --- LÓGICA PARA USUARIOS NORMALES (NO ADMINS) ---
+        if (user?.isAdmin != true) {
+          // Definimos las rutas a las que SÍ tiene permiso un usuario normal
+          final allowedUserRoutes = [
+            '/panel-usuario',
+            '/mi-perfil',
+            '/libros',
+            '/gestion-eventos', // Si quieres que vean la lista de eventos
+          ];
+
+          // Si intenta ir a una ruta que NO está en la lista permitida, lo devolvemos al panel
+          if (!allowedUserRoutes.contains(isGoingTo)) {
+            return '/panel-usuario';
+          }
         }
 
-        // Si es admin y por error entra a panel-usuario, lo mandamos a la gestión
+        // --- LÓGICA PARA ADMINISTRADORES ---
+        // Si un admin intenta entrar a la vista simplificada de usuario, lo mandamos a gestión
         if (user?.isAdmin == true && isGoingTo == '/panel-usuario') {
-          return '/';
+          return '/panel-usuario';
         }
       }
 

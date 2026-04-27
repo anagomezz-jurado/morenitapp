@@ -8,3 +8,4 @@ class TipoEvento(models.Model):
 
     cod_tipo_evento = fields.Char(string="Código de Tipo de Evento", required=True)
     nombre_tipo_evento = fields.Char(string="Nombre de Tipo de Evento", required=True)
+    color = fields.Char(string="Color Hexadecimal", default="#3498db", help="Ejemplo: #FF5733")
