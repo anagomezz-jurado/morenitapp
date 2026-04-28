@@ -10,7 +10,8 @@ import 'package:morenitapp/shared/widgets/menu_usuario.dart';
 class PanelUsuarioScreen extends ConsumerWidget {
   const PanelUsuarioScreen({super.key});
 
-  static final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  static final GlobalKey<ScaffoldState> _scaffoldKey =
+      GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -62,13 +63,13 @@ class _MainContent extends StatelessWidget {
 
                   const SizedBox(height: 20), // Espacio reducido
                   const _SectionTitle(title: 'Accesos Directos'),
-                  
+
                   // Quitamos el SizedBox grande y dejamos que el Grid se ajuste
-                  _QuickActionsGrid(colors: colors),
+                  _QuickActionsGrid(colors: colors, user: user),
 
                   // Reducimos este espacio que es el que mencionas entre Grid y Próximo Evento
-                  const SizedBox(height: 10), 
-                  
+                  const SizedBox(height: 10),
+
                   const _SectionTitle(title: 'Próximo Evento'),
 
                   eventosAsync.when(
@@ -76,11 +77,14 @@ class _MainContent extends StatelessWidget {
                         ? const _NoEventsWidget()
                         : _EventTile(
                             title: eventos.first.nombre,
-                            date: eventos.first.fechaInicio.toString().substring(0, 10),
+                            date: eventos.first.fechaInicio
+                                .toString()
+                                .substring(0, 10),
                             icon: Icons.event_available_rounded,
                           ),
                     loading: () => const LinearProgressIndicator(),
-                    error: (_, __) => const Text('No se pudieron cargar los eventos'),
+                    error: (_, __) =>
+                        const Text('No se pudieron cargar los eventos'),
                   ),
                   const SizedBox(height: 20),
                 ],
@@ -99,7 +103,8 @@ class _MainContent extends StatelessWidget {
         padding: const EdgeInsets.all(8.0),
         child: IconButton(
           icon: const Icon(Icons.notes_rounded, size: 30),
-          onPressed: () => PanelUsuarioScreen._scaffoldKey.currentState?.openDrawer(),
+          onPressed: () =>
+              PanelUsuarioScreen._scaffoldKey.currentState?.openDrawer(),
         ),
       ),
     );
@@ -144,13 +149,15 @@ class _RemindersSection extends StatelessWidget {
             decoration: BoxDecoration(
               color: item['bg'] as Color,
               borderRadius: BorderRadius.circular(15),
-              border: Border.all(color: (item['color'] as Color).withOpacity(0.2)),
+              border:
+                  Border.all(color: (item['color'] as Color).withOpacity(0.2)),
             ),
             child: Row(
               children: [
                 CircleAvatar(
                   backgroundColor: (item['color'] as Color).withOpacity(0.2),
-                  child: Icon(item['icon'] as IconData, color: item['color'] as Color),
+                  child: Icon(item['icon'] as IconData,
+                      color: item['color'] as Color),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -167,7 +174,8 @@ class _RemindersSection extends StatelessWidget {
                       ),
                       Text(
                         item['desc'] as String,
-                        style: const TextStyle(fontSize: 12, color: Colors.black87),
+                        style: const TextStyle(
+                            fontSize: 12, color: Colors.black87),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -196,17 +204,25 @@ class _WelcomeBanner extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(25),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [colors.primary, colors.primaryContainer]),
+        gradient:
+            LinearGradient(colors: [colors.primary, colors.primaryContainer]),
         borderRadius: BorderRadius.circular(25),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Paz y Bien,', style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 16)),
+          Text('Paz y Bien,',
+              style: TextStyle(
+                  color: Colors.white.withOpacity(0.8), fontSize: 16)),
           Text('${user?.nombre ?? "Hermano"}',
-              style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold)),
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold)),
           const SizedBox(height: 15),
-          if (user?.numeroHermano != null && user!.numeroHermano != 'No vinculado' && user!.numeroHermano!.isNotEmpty)
+          if (user?.numeroHermano != null &&
+              user!.numeroHermano != 'No vinculado' &&
+              user!.numeroHermano!.isNotEmpty)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
@@ -216,10 +232,12 @@ class _WelcomeBanner extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.verified_user, color: Colors.white, size: 16),
+                  const Icon(Icons.verified_user,
+                      color: Colors.white, size: 16),
                   const SizedBox(width: 6),
                   Text('Hermano Nº ${user!.numeroHermano}',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                      style: const TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.w600)),
                 ],
               ),
             )
@@ -227,7 +245,8 @@ class _WelcomeBanner extends StatelessWidget {
             GestureDetector(
               onTap: () => context.push('/mi-perfil'),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(10),
@@ -238,7 +257,8 @@ class _WelcomeBanner extends StatelessWidget {
                   children: [
                     Icon(Icons.link_rounded, color: Colors.white70, size: 16),
                     SizedBox(width: 6),
-                    Text('Vincular número de hermano', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                    Text('Vincular número de hermano',
+                        style: TextStyle(color: Colors.white70, fontSize: 13)),
                   ],
                 ),
               ),
@@ -248,37 +268,52 @@ class _WelcomeBanner extends StatelessWidget {
     );
   }
 }
+
 class _QuickActionsGrid extends StatelessWidget {
   final ColorScheme colors;
-  const _QuickActionsGrid({required this.colors});
+  final User? user;
+  const _QuickActionsGrid({
+    required this.colors,
+    required this.user,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final isAdmin = user?.isAdmin == true;
+
     // Usamos una Row en lugar de GridView para eliminar el espacio vertical fantasma
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Wrap(
+        alignment: WrapAlignment.spaceAround,
+        spacing: 20,
+        runSpacing: 15,
         children: [
           _QuickActionItem(
-            icon: Icons.person_outline, 
-            label: 'Mi Perfil', 
-            color: colors.primary, 
-            onTap: () => context.push('/mi-perfil')
+            icon: Icons.person_outline,
+            label: 'Mi Perfil',
+            color: colors.primary,
+            onTap: () => context.push('/mi-perfil'),
           ),
           _QuickActionItem(
-            icon: Icons.menu_book_outlined, 
-            label: 'Libros', 
-            color: colors.primary, 
-            onTap: () => context.push('/listado-libros')
+            icon: Icons.menu_book_outlined,
+            label: 'Libros',
+            color: colors.primary,
+            onTap: () => context.push('/listado-libros'),
           ),
           _QuickActionItem(
-            icon: Icons.calendar_today_outlined, 
-            label: 'Eventos', 
-            color: colors.primary, 
-            onTap: () => context.push('/calendario')
+            icon: Icons.calendar_today_outlined,
+            label: 'Eventos',
+            color: colors.primary,
+            onTap: () => context.push('/calendario'),
           ),
+          if (isAdmin)
+            _QuickActionItem(
+              icon: Icons.admin_panel_settings,
+              label: 'Gestión',
+              color: Colors.redAccent,
+              onTap: () => context.push('/'),
+            ),
         ],
       ),
     );
@@ -292,7 +327,11 @@ class _QuickActionItem extends StatelessWidget {
   final Color color;
   final VoidCallback? onTap;
 
-  const _QuickActionItem({required this.icon, required this.label, required this.color, this.onTap});
+  const _QuickActionItem(
+      {required this.icon,
+      required this.label,
+      required this.color,
+      this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -307,7 +346,8 @@ class _QuickActionItem extends StatelessWidget {
             child: Icon(icon, color: color),
           ),
           const SizedBox(height: 4), // Reducido de 8 a 4
-          Text(label, 
+          Text(
+            label,
             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
             textAlign: TextAlign.center,
           ),
@@ -316,13 +356,15 @@ class _QuickActionItem extends StatelessWidget {
     );
   }
 }
+
 class _SectionTitle extends StatelessWidget {
   final String title;
   const _SectionTitle({required this.title});
   @override
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.only(bottom: 15),
-        child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        child: Text(title,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
       );
 }
 
@@ -330,7 +372,8 @@ class _EventTile extends StatelessWidget {
   final String title;
   final String date;
   final IconData icon;
-  const _EventTile({required this.title, required this.date, required this.icon});
+  const _EventTile(
+      {required this.title, required this.date, required this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -348,8 +391,12 @@ class _EventTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                Text(date, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                Text(title,
+                    style: const TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold)),
+                Text(date,
+                    style:
+                        const TextStyle(color: Colors.white70, fontSize: 12)),
               ],
             ),
           )
@@ -372,7 +419,8 @@ class _NoEventsWidget extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade300),
       ),
       child: const Center(
-        child: Text('No hay próximos eventos', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500)),
+        child: Text('No hay próximos eventos',
+            style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500)),
       ),
     );
   }

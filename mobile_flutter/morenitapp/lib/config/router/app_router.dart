@@ -263,10 +263,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         }
 
         // --- LÓGICA PARA ADMINISTRADORES ---
-        // Si un admin intenta entrar a la vista simplificada de usuario, lo mandamos a gestión
-        if (user?.isAdmin == true && isGoingTo == '/panel-usuario') {
-          return '/panel-usuario';
-        }
+        if (user?.isAdmin == true) {
+  return null;
+}
       }
 
       return null;
