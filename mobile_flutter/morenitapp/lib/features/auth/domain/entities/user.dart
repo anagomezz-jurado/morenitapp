@@ -13,6 +13,8 @@ class User {
   final bool recibirNotiEmail;
   final bool recibirNotiTelefono;
   final String token;
+  final int? hermanoId;
+final String? numeroHermano;
 
   User({
     required this.id,
@@ -29,6 +31,8 @@ class User {
     required this.recibirNotiEmail,
     required this.recibirNotiTelefono,
     required this.token,
+    this.hermanoId,
+    this.numeroHermano,
   });
 
   // --- GETTERS DE CONVENIENCIA ---
@@ -43,44 +47,43 @@ class User {
   bool get esGrupoAdmin => isAdmin;
 
   // --- MÉTODOS DE MAPEO ---
-
-  factory User.fromJson(Map<String, dynamic> json) {
-    return User(
-      // Aseguramos que el ID siempre sea String, incluso si Odoo manda int
-      id: (json['id'] ?? '').toString(),
-      nombre: json['nombre'] ?? '',
-      apellido1: json['apellido1'] ?? '',
-      apellido2: json['apellido2'] ?? '',
-      email: json['email'] ?? '',
-      telefono: json['telefono'] ?? '',
-      rolId: json['rol_id'] is int ? json['rol_id'] : int.tryParse(json['rol_id']?.toString() ?? '2') ?? 2,
-      rolName: json['rol_name'] ?? 'Usuario',
-      grupoId: json['grupo_id'] is int ? json['grupo_id'] : int.tryParse(json['grupo_id']?.toString() ?? ''),
-      grupoName: json['grupo_name'] ?? 'Sin grupo',
-      roles: json['roles'] != null ? List<String>.from(json['roles']) : [],
-      recibirNotiEmail: json['recibirNotiEmail'] ?? false,
-      recibirNotiTelefono: json['recibirNotiTelefono'] ?? false,
-      // El token suele ser el ID en esta implementación
-      token: (json['token'] ?? json['id'] ?? '').toString(),
-    );
+factory User.fromJson(Map<String, dynamic> json) {
+  String cleanString(dynamic val) {
+    if (val == null || val == false || val.toString() == 'false') return '';
+    // Si es una lista (formato Odoo [id, nombre]), sacamos el nombre
+    if (val is List && val.length > 1) return val[1].toString();
+    return val.toString();
   }
 
-  Map<String, dynamic> toJson() => {
-    "id": id,
-    "nombre": nombre,
-    "apellido1": apellido1,
-    "apellido2": apellido2,
-    "email": email,
-    "telefono": telefono,
-    "rol_id": rolId,
-    "rol_name": rolName,
-    "grupo_id": grupoId,
-    "grupo_name": grupoName,
-    "roles": roles,
-    "recibirNotiEmail": recibirNotiEmail,
-    "recibirNotiTelefono": recibirNotiTelefono,
-    "token": token,
-  };
+  int? parseOdooId(dynamic value) {
+    if (value is List && value.isNotEmpty) return value[0] as int;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value);
+    return null;
+  }
+
+  return User(
+    id: (json['id'] ?? '').toString(),
+    nombre: cleanString(json['nombre']),
+    apellido1: cleanString(json['apellido1']),
+    apellido2: cleanString(json['apellido2']),
+    email: cleanString(json['email']),
+    telefono: cleanString(json['telefono']),
+    rolId: json['rol_id'] is int ? json['rol_id'] : int.tryParse(json['rol_id']?.toString() ?? '2') ?? 2,
+    rolName: cleanString(json['rol_name'] ?? 'Usuario'),
+    grupoId: parseOdooId(json['grupo_id']),
+    grupoName: cleanString(json['grupo_name'] ?? 'Sin grupo'),
+    roles: json['roles'] != null ? List<String>.from(json['roles']) : [],
+    recibirNotiEmail: json['recibirNotiEmail'] ?? false,
+    recibirNotiTelefono: json['recibirNotiTelefono'] ?? false,
+    token: (json['token'] ?? json['id'] ?? '').toString(),
+    hermanoId: parseOdooId(json['hermano_id']),
+    // MEJORA AQUÍ:
+    numeroHermano: cleanString(json['numero_hermano']).isEmpty 
+        ? 'No vinculado' 
+        : cleanString(json['numero_hermano']),
+  );
+}
 
   // --- MÉTODO COPYWITH (Para Riverpod / Inmutabilidad) ---
 
@@ -99,6 +102,9 @@ class User {
     bool? recibirNotiEmail,
     bool? recibirNotiTelefono,
     String? token,
+    int? hermanoId,
+String? numeroHermano,
+
   }) {
     return User(
       id: id ?? this.id,
@@ -115,6 +121,8 @@ class User {
       recibirNotiEmail: recibirNotiEmail ?? this.recibirNotiEmail,
       recibirNotiTelefono: recibirNotiTelefono ?? this.recibirNotiTelefono,
       token: token ?? this.token,
+      hermanoId: hermanoId ?? this.hermanoId,
+    numeroHermano: numeroHermano ?? this.numeroHermano,
     );
   }
 }

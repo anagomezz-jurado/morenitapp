@@ -16,6 +16,11 @@ class Usuario(models.Model):
         'morenitapp.rol', 
         string='Rol'
     )
+    hermano_id = fields.Many2one(
+        'morenitapp.hermano',
+        string='Hermano',
+        ondelete='set null'
+    )
     
     recibirNotiEmail = fields.Boolean(default=True)
     recibirNotiTelefono = fields.Boolean(default=False)

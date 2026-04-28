@@ -28,12 +28,44 @@ class HermanosDatasourceImpl extends HermanoDatasource {
   @override
   Future<List<Hermano>> obtenerHermanos({int limit = 10, int offset = 0}) async {
     try {
-      // IMPORTANTE: Añadir /api
       final response = await dio.get('/hermanos');
       final data = _processResponse(response);
-      return (data as List).map((h) => Hermano.fromJson(h)).toList();
+      
+      // Aseguramos que data sea una lista para evitar errores de cast
+      if (data is! List) {
+        // A veces Odoo devuelve la lista dentro de un campo 'result'
+        if (data is Map && data['result'] != null) {
+          return (data['result'] as List).map((h) => Hermano.fromJson(h)).toList();
+        }
+        return [];
+      }
+
+      return data.map((h) => Hermano.fromJson(h)).toList();
     } catch (e) {
       throw CustomError('Error al obtener hermanos: $e');
+    }
+  }
+
+  // MÉTODO CORREGIDO: Búsqueda por DNI
+  @override
+  Future<Hermano> getHermanoByDni(String dni) async {
+    try {
+      // 1. Obtenemos la lista (o podrías llamar a un endpoint de búsqueda si el backend lo tiene)
+      final todos = await obtenerHermanos();
+      
+      // 2. Buscamos con normalización (quitar espacios y pasar a Mayúsculas)
+      final dniBusqueda = dni.trim().toUpperCase();
+      
+      try {
+        return todos.firstWhere(
+          (h) => h.dni?.toString().trim().toUpperCase() == dniBusqueda
+        );
+      } catch (e) {
+        // Si firstWhere no encuentra nada, lanza una excepción StateError
+        throw CustomError('No se ha encontrado ningún hermano con el DNI: $dni');
+      }
+    } catch (e) {
+      throw CustomError(e.toString());
     }
   }
 
@@ -94,14 +126,11 @@ class HermanosDatasourceImpl extends HermanoDatasource {
     }
   }
 
-  // Métodos de compatibilidad
+// Métodos de compatibilidad
   @override
   Future<void> updateHermano(int id, Map<String, dynamic> datos) => actualizarHermano(id, datos);
+  
   @override
-  Future<List<Hermano>> getHermanos({int limit = 10, int offset = 0}) => obtenerHermanos();
-  @override
-  Future<Hermano> getHermanoByDni(String dni) async {
-     final todos = await obtenerHermanos();
-     return todos.firstWhere((h) => h.dni == dni);
-  }
+  Future<List<Hermano>> getHermanos({int limit = 10, int offset = 0}) => obtenerHermanos(limit: limit, offset: offset);
+
 }

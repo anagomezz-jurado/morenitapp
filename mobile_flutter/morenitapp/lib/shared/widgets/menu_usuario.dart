@@ -65,14 +65,14 @@ class MenuUsuarioState extends ConsumerState<MenuUsuario> {
           icon: Icons.menu_book_rounded,
           label: 'Libros Anuales',
           isSelected: navDrawerIndex == 2,
-          onTap: () => _navigate('/libros', 2),
+          onTap: () => _navigate('/listado-libros', 2),
         ),
         
         MenuTile(
           icon: Icons.event_note_rounded,
           label: 'Próximos Eventos',
           isSelected: navDrawerIndex == 3,
-          onTap: () => _navigate('/gestion-eventos', 3),
+          onTap: () => _navigate('/calendario', 3),
         ),
 
         const Divider(indent: 20, endIndent: 20),

@@ -37,6 +37,7 @@
                             <field name="apellido1"/>
                             <field name="apellido2"/>
                             <field name="telefono"/>
+                            <field name="hermano_id"/>
                         </group>
                         <group string="Acceso y Seguridad">
                             <field name="email"/>

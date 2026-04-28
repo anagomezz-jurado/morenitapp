@@ -7,7 +7,6 @@ _logger = logging.getLogger(__name__)
 class UsuarioAPI(http.Controller):
 
     def _get_user_dict(self, u):
-        """Helper centralizado para mantener consistencia con el modelo User de Flutter"""
         return {
             'id': u.id,
             'nombre': u.nombre or '',
@@ -19,7 +18,10 @@ class UsuarioAPI(http.Controller):
             'rol_name': u.rol_id.name if u.rol_id else 'Usuario',
             'recibirNotiEmail': u.recibirNotiEmail,
             'recibirNotiTelefono': u.recibirNotiTelefono,
-            'token': str(u.id)
+            'token': str(u.id),
+            'hermano_id': u.hermano_id.id if u.hermano_id else None,
+            # ↓ CORRECCIÓN: 'numero_hermano' (snake_case) para que coincida con el mapper Flutter
+            'numero_hermano': u.hermano_id.codigo_hermano if u.hermano_id else None,
         }
 
     @http.route('/api/usuarios', auth='public', type='json', methods=['POST'], csrf=False, cors='*')
@@ -67,13 +69,21 @@ class UsuarioAPI(http.Controller):
             if not usuario.exists():
                 return {"success": False, "error": "Usuario no encontrado"}
 
-            vals = {
-                'nombre': data.get('nombre'),
-                'email': data.get('email'),
-                'rol_id': data.get('rol_id'),
-            }
-            if data.get('password'): # Solo si Flutter envía nueva pass
-                vals['contrasena'] = data.get('password')
+            # Mapeamos dinámicamente lo que venga de Flutter
+            vals = {}
+            campos_permitidos = [
+                'nombre', 'email', 'rol_id', 'telefono', 
+                'recibirNotiEmail', 'recibirNotiTelefono', 'apellido1', 'apellido2','hermano_id'
+            ]
+
+            for campo in campos_permitidos:
+                if campo in data:
+                    vals[campo] = data[campo]
+
+            # Manejo de contraseña (si viene)
+            password = data.get('password') or data.get('contrasena')
+            if password:
+                vals['contrasena'] = password
 
             usuario.write(vals)
             return {"success": True, "user": self._get_user_dict(usuario)}

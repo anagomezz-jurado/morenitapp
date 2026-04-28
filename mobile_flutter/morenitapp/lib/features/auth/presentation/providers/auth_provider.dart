@@ -14,12 +14,12 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
 
   return AuthNotifier(
       authRepository: authRepository,
-      keyValueStorageService: keyValueStorageService
-  );
+      keyValueStorageService: keyValueStorageService);
 });
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepositoryImpl();
 });
+
 // --- NOTIFIER ---
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository authRepository;
@@ -59,7 +59,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }) async {
     // Resetear estado de error antes de intentar
     state = state.copyWith(authStatus: AuthStatus.checking, errorMessage: '');
-    
+
     try {
       final user = await authRepository.register(
         email: email,
@@ -71,9 +71,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         recibirNotiEmail: recibirNotiEmail,
         recibirNotiTelefono: recibirNotiTelefono,
       );
-      
+
       _setLoggedUser(user);
-      
     } on CustomError catch (e) {
       // Aquí es donde capturamos el error "Email already exists" del Repositorio
       state = state.copyWith(
@@ -88,30 +87,40 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  void checkAuthStatus() async {
-    final token = await keyValueStorageService.getValue<String>('token');
-    if (token == null) {
-      state = state.copyWith(authStatus: AuthStatus.notAuthenticated);
-      return;
-    }
+  // Dentro de tu AuthNotifier
+Future<void> checkAuthStatus() async {
+  final token = await keyValueStorageService.getValue<String>('token');
+  if (token == null) return logout();
 
-    try {
-      final user = await authRepository.checkAuthStatus(token);
-      _setLoggedUser(user);
-    } catch (e) {
-      logout();
-    }
-  }
-
-  void _setLoggedUser(User user) async {
-    await keyValueStorageService.setKeyValue('token', user.token);
-    
-    // IMPORTANTE: Aseguramos que el estado se actualice con el nuevo usuario
+  try {
+    final user = await authRepository.checkAuthStatus(token);
+    // ESTO ES LO QUE ACTUALIZA LA UI
     state = state.copyWith(
       user: user,
       authStatus: AuthStatus.authenticated,
-      errorMessage: '',
     );
+  } catch (e) {
+    logout();
+  }
+}
+// --- Dentro de la clase AuthNotifier ---
+
+  Future<void> _setLoggedUser(User user) async {
+    try {
+      // 1. Guardamos el token en el almacenamiento local (SharedPreferences)
+      // Usamos await para garantizar que se escriba antes de cambiar el estado de la UI
+      await keyValueStorageService.setKey<String>('token', user.token);
+
+      // 2. Actualizamos el estado para que la UI reaccione y navegue al Home
+      state = state.copyWith(
+        user: user,
+        authStatus: AuthStatus.authenticated,
+        errorMessage: '',
+      );
+    } catch (e) {
+      // Si por algo falla el almacenamiento físico, cerramos sesión por seguridad
+      logout('Error al guardar la sesión en el dispositivo');
+    }
   }
 
   Future<void> logout([String? errorMessage]) async {
@@ -119,8 +128,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(
         authStatus: AuthStatus.notAuthenticated,
         user: null,
-        errorMessage: errorMessage ?? ''
-    );
+        errorMessage: errorMessage ?? '');
   }
 }
 
@@ -132,19 +140,16 @@ class AuthState {
   final User? user;
   final String errorMessage;
 
-  AuthState({
-    this.authStatus = AuthStatus.checking, // Estado inicial siempre es checking
-    this.user,
-    this.errorMessage = ''
-  });
+  AuthState(
+      {this.authStatus =
+          AuthStatus.checking, // Estado inicial siempre es checking
+      this.user,
+      this.errorMessage = ''});
 
-  AuthState copyWith({
-    AuthStatus? authStatus, 
-    User? user, 
-    String? errorMessage
-  }) => AuthState(
-      authStatus: authStatus ?? this.authStatus,
-      user: user ?? this.user,
-      errorMessage: errorMessage ?? this.errorMessage
-  );
+  AuthState copyWith(
+          {AuthStatus? authStatus, User? user, String? errorMessage}) =>
+      AuthState(
+          authStatus: authStatus ?? this.authStatus,
+          user: user ?? this.user,
+          errorMessage: errorMessage ?? this.errorMessage);
 }

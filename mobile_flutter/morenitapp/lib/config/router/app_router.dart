@@ -39,6 +39,7 @@ import 'package:morenitapp/features/panel-gestion/ubicaciones/presentation/scree
 import 'package:morenitapp/features/panel-gestion/ubicaciones/presentation/screens/codigo_postal_screen.dart';
 import 'package:morenitapp/features/panel-gestion/ubicaciones/presentation/screens/localidad_screen.dart';
 import 'package:morenitapp/features/panel-gestion/ubicaciones/presentation/screens/provincia_screen.dart';
+import 'package:morenitapp/features/panel_usuario/perfil/screens/libro-screen.dart';
 import 'package:morenitapp/features/panel_usuario/perfil/screens/perfil-screen.dart';
 import 'package:morenitapp/features/panel_usuario/screens/panel_usuario_screen.dart';
 
@@ -217,6 +218,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) =>
             const PerfilScreen(), // Asegúrate de importar PerfilScreen
       ),
+
+      GoRoute(
+        path: '/listado-libros',
+        builder: (context, state) =>
+            const LibrosListadoScreen(), // Asegúrate de importar LibrosListadoScreen
+      ),
     ],
     redirect: (context, state) {
       final isGoingTo = state.matchedLocation;
@@ -244,8 +251,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           final allowedUserRoutes = [
             '/panel-usuario',
             '/mi-perfil',
-            '/libros',
-            '/gestion-eventos', // Si quieres que vean la lista de eventos
+            '/listado-libros',
+            '/gestion-eventos', 
+            '/calendario',
           ];
 
           // Si intenta ir a una ruta que NO está en la lista permitida, lo devolvemos al panel

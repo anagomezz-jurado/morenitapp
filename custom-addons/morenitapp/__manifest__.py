@@ -5,7 +5,7 @@
     'author': "Ana Gómez",
     'category': 'Tools',
     'version': '1.0',
-    'depends': ['base'],
+    'depends': ['base','mail'],
     'data': [
         # 1. Primero la seguridad (Primero Grupos, luego Reglas de Acceso)
         'security/ir.model.access.csv',
@@ -30,7 +30,7 @@
         'views/tipos_views.xml',
         'views/usuario_view.xml',
         'views/grupos_usuarios.xml',
-        
+
         # 4. Acciones y Menús (Siempre al final)
         'views/actions_morenitapp.xml',
         'views/menus_morenitapp.xml',

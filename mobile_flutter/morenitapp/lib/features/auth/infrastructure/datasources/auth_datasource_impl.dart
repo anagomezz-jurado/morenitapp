@@ -85,29 +85,24 @@ Future<User> login(String email, String password) async {
     return UserMapper.userJsonToEntity(res['user']);
   }
 // --- AuthDataSourceImpl (Flutter) ---
+@override
+Future<User> checkAuthStatus(String token) async {
+  try {
+    final response = await dio.post('/usuarios', data: {
+      "params": {
+        "domain": [["id", "=", int.parse(token)]],
+        // SIN "fields" — que Odoo devuelva todo
+      }
+    });
 
-  @override
-  Future<User> checkAuthStatus(String token) async {
-    try {
-      // Si tu token es un UUID (String), no puedes hacer int.parse(token)
-      // Deberías buscar por una columna 'token' en tu modelo de Odoo,
-      // o si el token es el ID, enviarlo como entero desde el origen.
-
-      final response = await dio.post('/usuarios', data: {
-        "params": {
-          "domain": [
-            ["id", "=", token]
-          ] // Removido int.parse si el ID viene ya como int o si usas UUID
-        }
-      });
-
-      final res = response.data['result'];
-      if (res == null || res['usuarios'].isEmpty)
-        throw CustomError('Sesión no válida');
-
-      return UserMapper.userJsonToEntity(res['usuarios'][0]);
-    } catch (e) {
-      throw CustomError('Error de autenticación');
+    final res = response.data['result'];
+    if (res == null || res['success'] == false || res['usuarios'].isEmpty) {
+      throw CustomError('Sesión no válida');
     }
+
+    return UserMapper.userJsonToEntity(res['usuarios'][0]);
+  } catch (e) {
+    throw CustomError('Error de autenticación');
   }
+}
 }
