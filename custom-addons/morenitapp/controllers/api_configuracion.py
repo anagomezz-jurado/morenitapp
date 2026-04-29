@@ -8,7 +8,7 @@ _logger = logging.getLogger(__name__)
 
 class ConfiguracionController(http.Controller):
 
-    # --- UTILIDADES DE RESPUESTA (Igual que Ubicaciones) ---
+    # --- UTILIDADES DE RESPUESTA ---
     def _response_cors(self):
         headers = [
             ('Access-Control-Allow-Origin', '*'),
@@ -23,7 +23,7 @@ class ConfiguracionController(http.Controller):
             ('Content-Type', 'application/json'),
             ('Access-Control-Allow-Origin', '*'),
         ]
-        return request.make_response(json.dumps(data), headers=headers, status=status)
+        return request.make_response(json.dumps(data, default=str), headers=headers, status=status)
 
     def _error_response(self, message, status=500):
         return self._json_response({'error': message, 'status': status}, status=status)
@@ -34,7 +34,8 @@ class ConfiguracionController(http.Controller):
         'tipocargo': 'morenitapp.tipocargo',
         'tipoautoridad': 'morenitapp.tipoautoridad',
         'rol': 'morenitapp.rol',
-        'grupoproveedor': 'morenitapp.grupoproveedor'
+        'grupoproveedor': 'morenitapp.grupoproveedor',
+        'tiponotificacion': 'morenitapp.notificacion.tipo'
     }
 
     @http.route([
@@ -61,12 +62,12 @@ class ConfiguracionController(http.Controller):
                 res = []
                 for r in records:
                     row = {'id': r.id}
-                    # Adaptación de campos según el tipo (Uso de getattr para seguridad)
+                    
                     if tipo == 'tipoevento':
                         row.update({
                             'codigo': getattr(r, 'cod_tipo_evento', ''),
                             'nombre': getattr(r, 'nombre_tipo_evento', ''),
-                            'color': getattr(r, 'color', '#3498db'),  # ← añadir esta línea
+                            'color': getattr(r, 'color', '#3498db'),
                         })
                     elif tipo == 'tipocargo':
                         row.update({
@@ -89,17 +90,22 @@ class ConfiguracionController(http.Controller):
                             'codigo': getattr(r, 'cod_grupo', ''),
                             'nombre': getattr(r, 'nombre', '')
                         })
+                    # --- Lógica para Tipo de Notificación ---
+                    elif tipo == 'tiponotificacion':
+                        row.update({
+                            'nombre': getattr(r, 'name', '')
+                        })
+                        
                     res.append(row)
                 return self._json_response(res)
 
+            # --- POST / PUT (CREAR O EDITAR) ---
             if method in ['POST', 'PUT']:
-                # Obtener parámetros del body JSON
                 try:
                     params = json.loads(request.httprequest.data)
                 except:
-                    params = kw # Fallback a form-data si no es JSON
+                    params = kw
 
-                # record_id viene del parámetro 'id' de la ruta o del body
                 target_id = id or params.pop('id', None)
 
                 if method == 'PUT' or target_id:
@@ -107,12 +113,10 @@ class ConfiguracionController(http.Controller):
                     if not rec.exists():
                         return self._error_response("Registro no encontrado", 404)
                     rec.write(params)
-                    # IMPORTANTE: Devolvemos 'status': 'updated' para que Flutter lo reconozca
                     return self._json_response({"status": "updated", "id": rec.id})
                 else:
                     # POST: Crear
                     nuevo = obj.create(params)
-                    # IMPORTANTE: Devolvemos 'id' para que la validación result['id'] != null pase
                     return self._json_response({"success": True, "id": nuevo.id}, status=201)
 
             # --- DELETE (ELIMINAR) ---

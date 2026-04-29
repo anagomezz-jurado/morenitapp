@@ -45,7 +45,6 @@ class UserMapper {
     grupoName: odooString(data['grupo_name'] ?? 'Sin grupo'),
     roles: (data['roles'] != null) ? List<String>.from(data['roles']) : [],
     recibirNotiEmail: data['recibirNotiEmail'] ?? true,
-    recibirNotiTelefono: data['recibirNotiTelefono'] ?? false,
   );
 }
 }

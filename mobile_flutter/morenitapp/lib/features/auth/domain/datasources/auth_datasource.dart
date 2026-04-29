@@ -12,7 +12,6 @@ abstract class AuthDataSource {
     required String apellido2,
     required String telefono,
     required bool recibirNotiEmail,
-    required bool recibirNotiTelefono,
   });
 
   Future<User> checkAuthStatus(String token);

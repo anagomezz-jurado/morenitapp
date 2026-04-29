@@ -10,8 +10,10 @@ import 'package:morenitapp/features/panel-gestion/configuracion/presentation/scr
 import 'package:morenitapp/features/panel-gestion/configuracion/presentation/screens/tipo_autoridad_screen.dart';
 import 'package:morenitapp/features/panel-gestion/configuracion/presentation/screens/tipo_cargo_screen.dart';
 import 'package:morenitapp/features/panel-gestion/configuracion/presentation/screens/tipo_evento_screen.dart';
+import 'package:morenitapp/features/panel-gestion/configuracion/presentation/screens/tipos_notificacion.dart';
 import 'package:morenitapp/features/panel-gestion/eventos-cultos/domain/entities/evento.dart';
 import 'package:morenitapp/features/panel-gestion/eventos-cultos/domain/entities/organizador.dart';
+import 'package:morenitapp/features/panel-gestion/eventos-cultos/presentation/screens/notificacion.dart';
 import 'package:morenitapp/features/panel-gestion/eventos-cultos/presentation/screens/nuevo_evento.dart';
 import 'package:morenitapp/features/panel-gestion/eventos-cultos/presentation/screens/nuevo_organizador.dart';
 import 'package:morenitapp/features/panel-gestion/usuarios/presentation/screens/usuarios_screen.dart';
@@ -40,6 +42,7 @@ import 'package:morenitapp/features/panel-gestion/ubicaciones/presentation/scree
 import 'package:morenitapp/features/panel-gestion/ubicaciones/presentation/screens/localidad_screen.dart';
 import 'package:morenitapp/features/panel-gestion/ubicaciones/presentation/screens/provincia_screen.dart';
 import 'package:morenitapp/features/panel_usuario/perfil/screens/libro-screen.dart';
+import 'package:morenitapp/features/panel_usuario/perfil/screens/notificaciones_screen.dart';
 import 'package:morenitapp/features/panel_usuario/perfil/screens/perfil-screen.dart';
 import 'package:morenitapp/features/panel_usuario/screens/panel_usuario_screen.dart';
 
@@ -133,6 +136,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           path: '/calendario',
           builder: (context, state) => const CalendarioEventosScreen()),
       GoRoute(
+        path: '/notificacion',
+        builder: (context, state) => const NotificacionesScreen(),
+      ),
+      GoRoute(
           path: '/gestion-eventos',
           builder: (context, state) => const EventosGestionScreen()),
       // --- RUTAS DE EVENTOS ---
@@ -156,6 +163,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
           path: '/panel-gestion/eventos-cultos/organizadores/nuevo',
           builder: (context, state) => const NuevoOrganizador()),
+      GoRoute(
+        path: '/notificaciones-usuario',
+        builder: (_, __) => const NotificacionesUsuarioScreen(),
+      ),
 
       GoRoute(
           path: '/panel-gestion/eventos-cultos/organizadores/editar',
@@ -203,6 +214,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           path: '/tipo-cargos',
           builder: (context, state) => const TipoCargoScreen()),
       GoRoute(
+        path: '/tipo-notificacion',
+        builder: (context, state) => TiposNotificacionScreen(),
+      ),
+      GoRoute(
           path: '/grupo-proveedor',
           builder: (context, state) => const GrupoProveedorScreen()),
       GoRoute(path: '/roles', builder: (context, state) => const RolesScreen()),
@@ -230,7 +245,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final authStatus = authState.authStatus;
       final user = authState.user;
 
-      // 1. Manejo de usuarios NO autenticados
+      final isGuest = user?.rolId == 3;
+
+      // 1. NO autenticado
       if (authStatus == AuthStatus.notAuthenticated) {
         if (isGoingTo != '/login' && isGoingTo != '/registrarse') {
           return '/login';
@@ -238,34 +255,53 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         return null;
       }
 
-      // 2. Manejo de usuarios autenticados
+      // 2. Autenticado
       if (authStatus == AuthStatus.authenticated) {
-        // Evitar que un usuario logueado entre al Login o Registro
+        //  Evitar volver a login/registro
         if (isGoingTo == '/login' || isGoingTo == '/registrarse') {
           return (user?.isAdmin == true) ? '/' : '/panel-usuario';
         }
 
-        // --- LÓGICA PARA USUARIOS NORMALES (NO ADMINS) ---
-        if (user?.isAdmin != true) {
-          // Definimos las rutas a las que SÍ tiene permiso un usuario normal
+        // USUARIO INVITADO
+        if (isGuest) {
+          if (isGoingTo == '/mi-perfil') {
+            return '/registrarse';
+          }
+
+          // 👉 rutas permitidas para invitado
+          final allowedGuestRoutes = [
+            '/panel-usuario',
+            '/calendario',
+            '/gestion-eventos',
+            '/listado-libros',
+            '/notificaciones-usuario',
+          ];
+
+          if (!allowedGuestRoutes.contains(isGoingTo)) {
+            return '/panel-usuario';
+          }
+        }
+
+        //  USUARIO NORMAL (NO admin)
+        if (user?.isAdmin != true && !isGuest) {
           final allowedUserRoutes = [
             '/panel-usuario',
             '/mi-perfil',
             '/listado-libros',
-            '/gestion-eventos', 
+            '/gestion-eventos',
             '/calendario',
+            '/notificaciones-usuario',
           ];
 
-          // Si intenta ir a una ruta que NO está en la lista permitida, lo devolvemos al panel
           if (!allowedUserRoutes.contains(isGoingTo)) {
             return '/panel-usuario';
           }
         }
 
-        // --- LÓGICA PARA ADMINISTRADORES ---
+        // 🔵 ADMIN
         if (user?.isAdmin == true) {
-  return null;
-}
+          return null;
+        }
       }
 
       return null;

@@ -5,6 +5,7 @@ import 'package:flutter/gestures.dart';
 import 'package:morenitapp/config/theme/app_theme.dart';
 import 'package:morenitapp/features/auth/presentation/providers/auth_provider.dart';
 import 'package:morenitapp/features/auth/presentation/providers/register_form_provider.dart';
+import 'package:morenitapp/shared/textos_inicio.dart';
 import 'package:morenitapp/shared/widgets/widgets.dart'; // Asegúrate de tener MainBackground aquí
 
 class RegisterScreen extends ConsumerWidget {
@@ -174,15 +175,7 @@ class _RegisterFormCard extends ConsumerWidget {
             contentPadding: EdgeInsets.zero,
             dense: true,
           ),
-          SwitchListTile(
-            title: const Text('Notificaciones por WhatsApp',
-                style: TextStyle(fontSize: 13)),
-            value: registerForm.recibirNotiTelefono,
-            activeColor: primaryColor,
-            onChanged: notifier.onNotiTelefonoChange,
-            contentPadding: EdgeInsets.zero,
-            dense: true,
-          ),
+          
           Row(
             children: [
               Checkbox(
@@ -205,7 +198,7 @@ class _RegisterFormCard extends ConsumerWidget {
                             decoration: TextDecoration.underline),
                         recognizer: TapGestureRecognizer()
                           ..onTap = () => _showLegalNotice(
-                              context, 'Términos', 'Contenido legal...'),
+                              context, 'Términos', AppStrings.terminosycondiciones),
                       ),
                     ],
                   ),
@@ -257,9 +250,9 @@ class _FooterLinks extends StatelessWidget {
       alignment: WrapAlignment.center,
       spacing: 8,
       children: [
-        _link(context, 'Política de privacidad'),
+        _link(context, 'Política de privacidad', AppStrings.politicaPrivacidad),
         const Text('|', style: TextStyle(color: Colors.grey)),
-        _link(context, 'Aviso legal'),
+        _link(context, 'Aviso legal', AppStrings.avisoLegal),
         const SizedBox(width: double.infinity),
         const Text('Copyright 2026 MorenitApp',
             style: TextStyle(fontSize: 11, color: Colors.grey)),
@@ -267,13 +260,15 @@ class _FooterLinks extends StatelessWidget {
     );
   }
 
-  Widget _link(BuildContext context, String title) {
-    return GestureDetector(
-      onTap: () => _showLegalNotice(context, title, 'Contenido...'),
-      child: Text(title,
-          style: const TextStyle(fontSize: 11, color: Colors.brown)),
-    );
-  }
+  Widget _link(BuildContext context, String title, String content) {
+  return GestureDetector(
+    onTap: () => _showLegalNotice(context, title, content),
+    child: Text(
+      title,
+      style: const TextStyle(fontSize: 11, color: Colors.brown),
+    ),
+  );
+}
 }
 
 void _showLegalNotice(BuildContext context, String title, String content) {

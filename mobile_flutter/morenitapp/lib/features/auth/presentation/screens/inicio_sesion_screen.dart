@@ -154,9 +154,9 @@ class _LoginFormCard extends ConsumerWidget {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: () {
-                print('Botón invitado pulsado'); // Agrega este print para debug
-                context.push('/panel-usuario');
+              onPressed: () async {
+                await ref.read(authProvider.notifier).loginAsGuest();
+                
               },
               icon: const Icon(Icons.person_search_outlined),
               label: const Text('Continuar como invitado'),

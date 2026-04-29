@@ -1,4 +1,5 @@
 import 'package:morenitapp/features/panel-gestion/eventos-cultos/domain/entities/evento.dart';
+import 'package:morenitapp/features/panel-gestion/eventos-cultos/domain/entities/notificacion.dart';
 import 'package:morenitapp/features/panel-gestion/eventos-cultos/domain/entities/organizador.dart';
 
 abstract class EventoCultoDatasource {
@@ -13,4 +14,12 @@ abstract class EventoCultoDatasource {
   Future<bool> crearEvento(Map<String, dynamic> datos);
   Future<bool> editarEvento(int id, Map<String, dynamic> datos);
   Future<bool> eliminarEvento(int id);
+
+  // Notificaciones
+  Future<List<Notificacion>> getNotificaciones();
+  Future<bool> crearNotificacion(Notificacion noti);
+  Future<bool> eliminarNotificacion(int id);
+
+  // Usuarios con email OK
+  Future<List<DestinatarioInfo>> getUsuariosConEmail();
 }

@@ -11,7 +11,6 @@ class User {
   final String grupoName;
   final List<String> roles;
   final bool recibirNotiEmail;
-  final bool recibirNotiTelefono;
   final String token;
   final int? hermanoId;
 final String? numeroHermano;
@@ -29,7 +28,6 @@ final String? numeroHermano;
     required this.grupoName,
     this.roles = const [],
     required this.recibirNotiEmail,
-    required this.recibirNotiTelefono,
     required this.token,
     this.hermanoId,
     this.numeroHermano,
@@ -75,7 +73,6 @@ factory User.fromJson(Map<String, dynamic> json) {
     grupoName: cleanString(json['grupo_name'] ?? 'Sin grupo'),
     roles: json['roles'] != null ? List<String>.from(json['roles']) : [],
     recibirNotiEmail: json['recibirNotiEmail'] ?? false,
-    recibirNotiTelefono: json['recibirNotiTelefono'] ?? false,
     token: (json['token'] ?? json['id'] ?? '').toString(),
     hermanoId: parseOdooId(json['hermano_id']),
     // MEJORA AQUÍ:
@@ -100,7 +97,6 @@ factory User.fromJson(Map<String, dynamic> json) {
     String? grupoName,
     List<String>? roles,
     bool? recibirNotiEmail,
-    bool? recibirNotiTelefono,
     String? token,
     int? hermanoId,
 String? numeroHermano,
@@ -119,7 +115,6 @@ String? numeroHermano,
       grupoName: grupoName ?? this.grupoName,
       roles: roles ?? this.roles,
       recibirNotiEmail: recibirNotiEmail ?? this.recibirNotiEmail,
-      recibirNotiTelefono: recibirNotiTelefono ?? this.recibirNotiTelefono,
       token: token ?? this.token,
       hermanoId: hermanoId ?? this.hermanoId,
     numeroHermano: numeroHermano ?? this.numeroHermano,

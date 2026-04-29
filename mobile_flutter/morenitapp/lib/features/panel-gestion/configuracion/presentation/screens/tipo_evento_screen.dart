@@ -13,40 +13,34 @@ class TipoEventoScreen extends ConsumerWidget {
   const TipoEventoScreen({super.key});
 
   List<List<String>> prepararDatos(List<TipoEvento> lista) {
-      return lista
-          .map((h) => [
-                (h.codigo ?? 'S/N').toString(),
-                h.nombre,
-              ])
-          .toList();
-    }
-
+    return lista.map((h) => [
+      (h.codigo ?? 'S/N').toString(),
+      h.nombre,
+    ]).toList();
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // 1. Log para saber cuándo se reconstruye el widget
+    debugPrint('--- Renderizando TipoEventoScreen ---');
+    
     final eventosAsync = ref.watch(tiposEventoProvider);
 
     return PlantillaVentanas(
       title: 'Tipos de Evento',
-      
       isLoading: eventosAsync.isLoading,
-
-       onDownloadExcel: () async {
+      onDownloadExcel: () async {
         final lista = eventosAsync.value ?? [];
         if (lista.isEmpty) return;
         ExcelService.descargarExcel(
           nombreArchivo: 'Tipos_Evento',
-          cabeceras: [
-            'Código',
-            'Nombre',
-          ],
+          cabeceras: ['Código', 'Nombre'],
           filas: prepararDatos(lista),
         );
       },
       onDownloadPDF: () async {
         final lista = eventosAsync.value ?? [];
         if (lista.isEmpty) return;
-
         Uint8List? logoBytes;
         try {
           final byteData = await rootBundle.load('assets/icono.png');
@@ -62,49 +56,44 @@ class TipoEventoScreen extends ConsumerWidget {
           logoBytes: logoBytes,
         );
       },
-      
       onRefresh: () => ref.refresh(tiposEventoProvider),
       onNuevo: () => _showSideForm(context, ref),
       columns: const [
-        DataColumn(
-            label:
-                Text('CÓDIGO', style: TextStyle(fontWeight: FontWeight.bold))),
-        DataColumn(
-            label: Text('NOMBRE DEL EVENTO',
-                style: TextStyle(fontWeight: FontWeight.bold))),
-        DataColumn(
-            label: Text('ACCIONES',
-                style: TextStyle(fontWeight: FontWeight.bold))),
+        DataColumn(label: Text('CÓDIGO', style: TextStyle(fontWeight: FontWeight.bold))),
+        DataColumn(label: Text('NOMBRE DEL EVENTO', style: TextStyle(fontWeight: FontWeight.bold))),
+        DataColumn(label: Text('ACCIONES', style: TextStyle(fontWeight: FontWeight.bold))),
       ],
       rows: eventosAsync.when(
-        data: (lista) => lista
-            .map((e) => DataRow(cells: [
-                  DataCell(Text(e.codigo)),
-                  DataCell(Text(e.nombre)),
-                  DataCell(_buildActionButtons(
-                    context,
-                    onEdit: () => _showSideForm(context, ref, evento: e),
-                    onDelete: () =>
-                        ref.read(tiposEventoProvider.notifier).eliminar(e.id!),
-                  )),
-                ]))
-            .toList(),
-        // CAMBIO: Si hay un error, al menos queremos saberlo en consola
+        data: (lista) {
+          debugPrint('Datos cargados exitosamente: ${lista.length} items');
+          return lista.map((e) => DataRow(cells: [
+            DataCell(Text(e.codigo)),
+            DataCell(Text(e.nombre)),
+            DataCell(_buildActionButtons(
+              context,
+              onEdit: () => _showSideForm(context, ref, evento: e),
+              onDelete: () => ref.read(tiposEventoProvider.notifier).eliminar(e.id!),
+            )),
+          ])).toList();
+        },
         error: (err, stack) {
-          print('Error cargando eventos: $err');
+          // LOG CRÍTICO: Aquí verás por qué no funciona
+          debugPrint('--- ERROR EN PROVIDER EVENTOS ---');
+          debugPrint('Error: $err');
+          debugPrint('Stacktrace: $stack');
+          
           return [
-            const DataRow(cells: [
-              DataCell(Text('ERROR')),
-              DataCell(Text('No se pudieron cargar los datos')),
-              DataCell(Text('-')),
+            DataRow(cells: [
+              const DataCell(Icon(Icons.error, color: Colors.red)),
+              DataCell(Text('Error: $err')),
+              const DataCell(Text('-')),
             ])
           ];
         },
-        // CAMBIO: Mientras carga, podrías poner una fila indicativa
         loading: () => [
           const DataRow(cells: [
-            DataCell(CircularProgressIndicator()),
-            DataCell(Text('Cargando...')),
+            DataCell(SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
+            DataCell(Text('Cargando datos de Odoo...')),
             DataCell(Text('...')),
           ])
         ],

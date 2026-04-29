@@ -63,7 +63,6 @@ Future<User> login(String email, String password) async {
     required String apellido2,
     required String telefono,
     required bool recibirNotiEmail,
-    required bool recibirNotiTelefono,
   }) async {
     final response = await dio.post('/registrar', data: {
       "params": {
@@ -74,7 +73,6 @@ Future<User> login(String email, String password) async {
         'apellido2': apellido2,
         'telefono': telefono,
         'recibirNotiEmail': recibirNotiEmail,
-        'recibirNotiTelefono': recibirNotiTelefono,
       }
     });
 

@@ -1,7 +1,7 @@
+from odoo import http, fields  # ← añadir fields aquí
+from odoo.http import request
 import json
 import logging
-from odoo import http
-from odoo.http import request
 
 _logger = logging.getLogger(__name__)
 
@@ -19,6 +19,7 @@ class EventoCultoController(http.Controller):
             status=status
         )
 
+    # --- ORGANIZADORES ---
     @http.route(['/api/organizadores', '/api/organizadores/<int:id>'], 
                 type='http', auth='public', methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], csrf=False)
     def api_organizadores(self, id=None, **kw):
@@ -40,7 +41,6 @@ class EventoCultoController(http.Controller):
                     "direccion_id": r.direccion_id.id if r.direccion_id else None,
                     "piso": r.piso or "",
                     "puerta": r.puerta or "",
-                    # Decodificación de binarios a string base64
                     "logo": r.logo.decode('utf-8') if r.logo else None,
                     "firma_presidente": r.firma_presidente.decode('utf-8') if r.firma_presidente else None,
                     "firma_secretario": r.firma_secretario.decode('utf-8') if r.firma_secretario else None,
@@ -51,7 +51,6 @@ class EventoCultoController(http.Controller):
             body = json.loads(request.httprequest.data) if request.httprequest.data else {}
 
             if request.httprequest.method == 'POST':
-                # Odoo acepta automáticamente strings base64 en campos Binary
                 nuevo = model.create(body)
                 return self._json_response({"success": True, "id": nuevo.id})
 
@@ -72,7 +71,7 @@ class EventoCultoController(http.Controller):
         except Exception as e:
             return self._json_response({"error": str(e)}, status=500)
 
-    # --- GESTIÓN DE EVENTOS ---
+    # --- EVENTOS ---
     @http.route(['/api/eventos', '/api/eventos/<int:id>'], 
             type='http', auth='public', 
             methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], csrf=False)
@@ -93,7 +92,6 @@ class EventoCultoController(http.Controller):
                     "fecha_fin": r.fecha_fin.strftime('%Y-%m-%d %H:%M:%S') if r.fecha_fin else None,
                     "lugar": r.lugar or "",
                     "anio": r.anio or 0,
-                    # ✅ Formato [id, "nombre"] para Flutter
                     "organizador_id": [r.organizador_id.id, r.organizador_id.nombre] if r.organizador_id else None,
                     "tipoevento_id": [r.tipoevento_id.id, r.tipoevento_id.nombre_tipo_evento] if r.tipoevento_id else None,
                     "tipo_nombre": r.tipoevento_id.nombre_tipo_evento if r.tipoevento_id else "General",
@@ -104,8 +102,6 @@ class EventoCultoController(http.Controller):
             body = {}
             if request.httprequest.data:
                 body = json.loads(request.httprequest.data.decode('utf-8'))
-            
-            # ✅ Elimina nulos para que Odoo no los rechace
             body = {k: v for k, v in body.items() if v is not None}
 
             if request.httprequest.method == 'POST':
@@ -130,4 +126,72 @@ class EventoCultoController(http.Controller):
 
         except Exception as e:
             _logger.error(f"Error en Eventos: {str(e)}")
+            return self._json_response({"error": str(e)}, status=500)
+
+    # --- NOTIFICACIONES ---
+    # --- NOTIFICACIONES ---
+    @http.route(['/api/notificaciones', '/api/notificaciones/<int:id>'],
+                type='http', auth='public',
+                methods=['GET', 'POST', 'DELETE', 'OPTIONS'], csrf=False)
+    def api_notificaciones(self, id=None, **kw):
+        if request.httprequest.method == 'OPTIONS':
+            return self._json_response({})
+
+        model = request.env['morenitapp.notificacion'].sudo()
+
+        try:
+            if request.httprequest.method == 'GET':
+                records = model.search([('id', '=', id)] if id else [])
+                data = [{
+                    "id": r.id,
+                    "asunto": r.asunto or "",
+                    "mensaje": r.mensaje or "",
+                    "tipoid": r.tipo_id.id if r.tipo_id else None,
+                    "tiponombre": r.tipo_id.name if r.tipo_id else "Sin tipo",
+                    "fecharegistro": r.fecha_registro.strftime('%Y-%m-%d %H:%M:%S') if r.fecha_registro else None,
+                    "usuarioids": r.usuario_ids.ids,
+                    # Añadimos nombre y email de cada destinatario
+                    "destinatarios": [{
+                        "id": u.id,
+                        "nombre": u.nombre or "",
+                        "email": u.email or "",
+                    } for u in r.usuario_ids],
+                } for r in records]
+                return self._json_response(data if not id else (data[0] if data else {}))
+
+            body = {}
+            if request.httprequest.data:
+                body = json.loads(request.httprequest.data.decode('utf-8'))
+
+            if request.httprequest.method == 'POST':
+                vals = {
+                    'asunto': body.get('asunto'),
+                    'mensaje': body.get('mensaje'),
+                    # fecha_registro se pone automáticamente por el default del modelo
+                }
+                if body.get('tipoid'):
+                    vals['tipo_id'] = body.get('tipoid')
+
+                nueva = model.create(vals)
+                nueva._onchange_tipo_id()
+                nueva.write({'usuario_ids': [(6, 0, nueva.usuario_ids.ids)]})
+
+                if body.get('enviarahora'):
+                    nueva.action_enviar_notificacion()
+
+                return self._json_response({
+                    "success": True,
+                    "id": nueva.id,
+                    "message": "Notificación enviada correctamente"
+                })
+
+            if request.httprequest.method == 'DELETE' and id:
+                record = model.browse(id)
+                if record.exists():
+                    record.unlink()
+                    return self._json_response({"success": True})
+                return self._json_response({"error": "No encontrado"}, status=404)
+
+        except Exception as e:
+            _logger.error(f"Error en Notificaciones: {str(e)}")
             return self._json_response({"error": str(e)}, status=500)

@@ -30,6 +30,8 @@
         'views/tipos_views.xml',
         'views/usuario_view.xml',
         'views/grupos_usuarios.xml',
+        'views/tipo_notificacion_views.xml',
+        'views/notificacion_views.xml',
 
         # 4. Acciones y Menús (Siempre al final)
         'views/actions_morenitapp.xml',

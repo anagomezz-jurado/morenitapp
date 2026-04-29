@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_notificacion_tipo_tree" model="ir.ui.view">
+        <field name="name">morenitapp.notificacion.tipo.tree</field>
+        <field name="model">morenitapp.notificacion.tipo</field>
+        <field name="arch" type="xml">
+            <tree editable="bottom">
+                <field name="name" string="Nombre de la Categoría"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_notificacion_tree" model="ir.ui.view">
+        <field name="name">morenitapp.notificacion.tree</field>
+        <field name="model">morenitapp.notificacion</field>
+        <field name="arch" type="xml">
+            <tree string="Notificaciones">
+                <field name="create_date" string="Fecha de Creación"/>
+                <field name="tipo_id" string="Categoría"/>
+                <field name="asunto"/>
+                <field name="usuario_ids" widget="many2many_tags" string="Enviado a"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_notificacion_form" model="ir.ui.view">
+        <field name="name">morenitapp.notificacion.form</field>
+        <field name="model">morenitapp.notificacion</field>
+        <field name="arch" type="xml">
+            <form string="Notificación">
+                <header>
+                    <button name="action_enviar_notificacion" 
+                            type="object" 
+                            string="Enviar por Email" 
+                            class="oe_highlight" 
+                            icon="fa-envelope"
+                            confirm="¿Estás seguro de que quieres enviar este correo a todos los destinatarios con el check de Email activo?"/>
+                    
+                   
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="asunto" class="oe_edit_only" string="Asunto de la Notificación"/>
+                        <h1>
+                            <field name="asunto" placeholder="Ej: Convocatoria de Asamblea General..."/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="tipo_id" 
+                                   string="Tipo de Aviso" 
+                                   options="{'no_create': True, 'no_open': True}"/>
+                        </group>
+                        <group>
+                            <field name="create_date" readonly="1" string="Fecha Registro"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Mensaje" name="body">
+                            <field name="mensaje" 
+                                   widget="html" 
+                                   options="{'style-inline': true}" 
+                                   placeholder="Escriba aquí el contenido de la notificación..."/>
+                        </page>
+                        
+                        <page string="Destinatarios" name="destinatarios">
+                            <field name="usuario_ids">
+                                <tree create="false"> <field name="nombre"/>
+                                    <field name="email"/>
+                                    <field name="telefono"/>
+                                    <field name="recibirNotiEmail" string="Email OK" widget="boolean_toggle"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_notificacion_tipo" model="ir.actions.act_window">
+        <field name="name">Tipos de Notificación</field>
+        <field name="res_model">morenitapp.notificacion.tipo</field>
+        <field name="view_mode">tree</field>
+    </record>
+
+    <record id="action_notificacion" model="ir.actions.act_window">
+        <field name="name">Enviar Notificaciones</field>
+        <field name="res_model">morenitapp.notificacion</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+</odoo>

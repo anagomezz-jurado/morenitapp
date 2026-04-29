@@ -34,7 +34,6 @@ class AuthRepositoryImpl extends AuthRepository {
     required String apellido2,
     required String telefono,
     required bool recibirNotiEmail,
-    required bool recibirNotiTelefono,
   }) {
     return dataSource.register(
       email: email,
@@ -44,7 +43,6 @@ class AuthRepositoryImpl extends AuthRepository {
       apellido2: apellido2,
       telefono: telefono,
       recibirNotiEmail: recibirNotiEmail,
-      recibirNotiTelefono: recibirNotiTelefono,
     );
   }
 

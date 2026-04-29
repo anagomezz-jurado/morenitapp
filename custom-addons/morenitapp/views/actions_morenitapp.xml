@@ -142,4 +142,16 @@
     </record>
 
 
+    <record id="action_notificaciones" model="ir.actions.act_window">
+        <field name="name">Notificaciones Enviadas</field>
+        <field name="res_model">morenitapp.notificacion</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="action_tipos_notificaciones" model="ir.actions.act_window">
+        <field name="name">Tipos de Notificaciones</field>
+        <field name="res_model">morenitapp.notificacion.tipo</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
 </odoo>

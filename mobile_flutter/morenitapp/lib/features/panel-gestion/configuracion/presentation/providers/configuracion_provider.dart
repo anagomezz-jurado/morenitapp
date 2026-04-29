@@ -1,6 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:morenitapp/features/auth/domain/entities/user.dart';
 import 'package:morenitapp/features/panel-gestion/configuracion/domain/entities/grupo_proveedor.dart';
+import 'package:morenitapp/features/panel-gestion/configuracion/domain/entities/notificacion_tipo.dart';
 import 'package:morenitapp/features/panel-gestion/configuracion/domain/entities/tipo_autoridad.dart';
 import 'package:morenitapp/features/panel-gestion/configuracion/domain/entities/tipo_cargo.dart';
 import 'package:morenitapp/features/panel-gestion/configuracion/domain/entities/tipo_evento.dart';
@@ -156,6 +158,54 @@ class GruposProveedorNotifier extends AsyncNotifier<List<GrupoProveedor>> {
     await ref.read(configuracionRepositoryProvider).eliminarGrupoProveedor(id);
     ref.invalidateSelf();
   }
+
+  
 }
+final notificacionTiposProvider = AsyncNotifierProvider<NotificacionTiposNotifier, List<NotificacionTipo>>(
+  NotificacionTiposNotifier.new,
+);
 
+class NotificacionTiposNotifier extends AsyncNotifier<List<NotificacionTipo>> {
+  
+  @override
+  Future<List<NotificacionTipo>> build() async {
+    // Usamos watch para mantener la reactividad
+    return ref.watch(configuracionRepositoryProvider).getNotificacionTipos();
+  }
 
+  Future<bool> crear(String nombre) async {
+    try {
+      await ref.read(configuracionRepositoryProvider).crearNotificacionTipo(nombre);
+      ref.invalidateSelf(); // Refresca la lista
+      return true; // <--- AGREGAR ESTO
+    } catch (e) {
+      debugPrint('Error al crear: $e');
+      return false; // <--- AGREGAR ESTO
+    }
+  }
+
+  Future<bool> editar(int id, String nombre) async {
+    try {
+      await ref.read(configuracionRepositoryProvider).editarNotificacionTipo(id, nombre);
+      ref.invalidateSelf(); // Refresca la lista
+      return true; // <--- AGREGAR ESTO
+    } catch (e) {
+      debugPrint('Error al editar: $e');
+      return false; // <--- AGREGAR ESTO
+    }
+  }
+Future<bool> eliminar(int id) async {
+  try {
+    // IMPORTANTE: Asegúrate de tener el await aquí
+    await ref.read(configuracionRepositoryProvider).eliminarNotificacionTipo(id);
+    
+    // Refrescamos el estado para que desaparezca de la lista
+    ref.invalidateSelf();
+    
+    return true; // Operación exitosa
+  } catch (e) {
+    debugPrint('Error al eliminar: $e');
+    return false; // Algo salió mal
+  }
+}
+}

@@ -1,5 +1,6 @@
 import 'package:morenitapp/features/panel-gestion/eventos-cultos/domain/datasources/evento_culto_datasource.dart';
 import 'package:morenitapp/features/panel-gestion/eventos-cultos/domain/entities/evento.dart';
+import 'package:morenitapp/features/panel-gestion/eventos-cultos/domain/entities/notificacion.dart';
 import 'package:morenitapp/features/panel-gestion/eventos-cultos/domain/entities/organizador.dart';
 import 'package:morenitapp/features/panel-gestion/eventos-cultos/domain/repositories/evento_culto_repository.dart';
 
@@ -31,4 +32,16 @@ class EventoCultoRepositoryImpl extends EventoCultoRepository {
 
   @override
   Future<bool> eliminarOrganizador(int id) => datasource.eliminarOrganizador(id);
+
+  @override
+  Future<List<Notificacion>> getNotificaciones() => datasource.getNotificaciones();
+
+  @override
+  Future<bool> crearNotificacion(Notificacion noti) => datasource.crearNotificacion(noti);
+
+  @override
+  Future<bool> eliminarNotificacion(int id) => datasource.eliminarNotificacion(id);
+
+  @override
+  Future<List<DestinatarioInfo>> getUsuariosConEmail() => datasource.getUsuariosConEmail();
 }

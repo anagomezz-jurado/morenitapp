@@ -55,7 +55,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String apellido2,
     required String telefono,
     bool recibirNotiEmail = true,
-    bool recibirNotiTelefono = false,
   }) async {
     // Resetear estado de error antes de intentar
     state = state.copyWith(authStatus: AuthStatus.checking, errorMessage: '');
@@ -69,7 +68,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
         apellido2: apellido2,
         telefono: telefono,
         recibirNotiEmail: recibirNotiEmail,
-        recibirNotiTelefono: recibirNotiTelefono,
       );
 
       _setLoggedUser(user);
@@ -103,6 +101,25 @@ Future<void> checkAuthStatus() async {
     logout();
   }
 }
+ // ✅ ESTE MÉTODO DEBE ESTAR AQUÍ (FUERA DE OTROS MÉTODOS)
+  Future<void> loginAsGuest() async {
+    state = state.copyWith(
+      authStatus: AuthStatus.authenticated,
+      user: User(
+        id: '0', 
+        nombre: 'Invitado',
+        apellido1: '',
+        apellido2: '',
+        email: '',
+        telefono: '',
+        rolId: 3,
+        rolName: 'Invitado',
+        grupoName: '',
+        recibirNotiEmail: false,
+        token: '', 
+      ),
+    );
+  }
 // --- Dentro de la clase AuthNotifier ---
 
   Future<void> _setLoggedUser(User user) async {
@@ -153,3 +170,4 @@ class AuthState {
           user: user ?? this.user,
           errorMessage: errorMessage ?? this.errorMessage);
 }
+

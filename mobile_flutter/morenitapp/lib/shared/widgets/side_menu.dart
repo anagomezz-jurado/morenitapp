@@ -106,6 +106,11 @@ class SideMenuState extends ConsumerState<SideMenu> {
                 label: 'Organizadores',
                 isSubItem: true,
                 onTap: () => _navigate('/organizadores')),
+            MenuTile(
+                icon: Icons.list_alt_rounded,
+                label: 'Notificaciones',
+                isSubItem: true,
+                onTap: () => _navigate('/notificacion')),
           ],
         ),
         const SectionHeader(title: 'ADMINISTRACIÓN DE TIPOS'),
@@ -118,6 +123,11 @@ class SideMenuState extends ConsumerState<SideMenu> {
                 label: 'Tipo de evento',
                 isSubItem: true,
                 onTap: () => _navigate('/tipo-evento')),
+                MenuTile(
+                icon: Icons.category_rounded,
+                label: 'Tipo de notificacion',
+                isSubItem: true,
+                onTap: () => _navigate('/tipo-notificacion')),
             MenuTile(
                 icon: Icons.admin_panel_settings_rounded,
                 label: 'Grupo de proveedores',

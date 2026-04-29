@@ -23,3 +23,5 @@ access_grupo_permiso_admin,morenitapp.grupo.permiso.admin,model_morenitapp_grupo
 access_rol_public,morenitapp.rol.public,model_morenitapp_rol,,1,0,0,0
 access_usuario_public,morenitapp.usuario.public,model_morenitapp_usuario,,1,0,1,0
 access_roles,roles_access,model_morenitapp_rol,base.group_user,1,1,1,1
+access_notificacion_admin,morenitapp.notificacion.admin,model_morenitapp_notificacion,base.group_system,1,1,1,1
+access_notificacion_tipo_admin,morenitapp.notificacion.tipo.admin,model_morenitapp_notificacion_tipo,base.group_system,1,1,1,1

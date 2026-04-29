@@ -57,6 +57,8 @@ class MenuUsuarioState extends ConsumerState<MenuUsuario> {
           isSelected: navDrawerIndex == 1,
           onTap: () => _navigate('/mi-perfil', 1),
         ),
+        
+
         const SectionHeader(title: 'CONTENIDO Y EVENTOS'),
         MenuTile(
           icon: Icons.menu_book_rounded,
@@ -69,6 +71,12 @@ class MenuUsuarioState extends ConsumerState<MenuUsuario> {
           label: 'Próximos Eventos',
           isSelected: navDrawerIndex == 3,
           onTap: () => _navigate('/calendario', 3),
+        ),
+        MenuTile(
+          icon: Icons.notifications_active_rounded,
+          label: 'Notificaciones',
+          isSelected: navDrawerIndex == 4,
+          onTap: () => _navigate('/notificaciones-usuario', 4),
         ),
         const Divider(indent: 20, endIndent: 20),
         if (isAdmin) ...[
@@ -88,6 +96,7 @@ class MenuUsuarioState extends ConsumerState<MenuUsuario> {
           padding: const EdgeInsets.all(16),
           child: _LogoutButton(
               onTap: () => ref.read(authProvider.notifier).logout()),
+              
         ),
       ],
     );

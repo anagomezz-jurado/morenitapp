@@ -47,7 +47,6 @@
                     </group>
                     <group string="Notificaciones">
                         <field name="recibirNotiEmail"/>
-                        <field name="recibirNotiTelefono"/>
                     </group>
                 </sheet>
             </form>

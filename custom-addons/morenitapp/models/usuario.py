@@ -2,6 +2,7 @@ from odoo import models, fields
 
 class Usuario(models.Model):
     _name = 'morenitapp.usuario'
+    _inherit = ['mail.thread']
     _description = 'Usuario MorenitApp'
 
     nombre = fields.Char(required=True)
@@ -23,4 +24,3 @@ class Usuario(models.Model):
     )
     
     recibirNotiEmail = fields.Boolean(default=True)
-    recibirNotiTelefono = fields.Boolean(default=False)

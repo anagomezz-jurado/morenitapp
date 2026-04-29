@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:morenitapp/config/constants/environment.dart';
+import 'package:morenitapp/features/panel-gestion/eventos-cultos/domain/entities/notificacion.dart';
 import '../../domain/datasources/evento_culto_datasource.dart';
 import '../../domain/entities/evento.dart';
 import '../../domain/entities/organizador.dart';
@@ -150,4 +151,80 @@ class EventoCultoDatasourceImpl extends EventoCultoDatasource {
       return false;
     }
   }
+ // --- NOTIFICACIONES ---
+  @override
+  Future<List<Notificacion>> getNotificaciones() async {
+    try {
+      final response = await dio.get('/notificaciones');
+      // Odoo con type='json' devuelve: {"jsonrpc":"2.0","result": [...]}
+      // Dio lo parsea y response.data ya es el mapa completo
+      final dynamic raw = response.data;
+          print('*** URL notificaciones: ${dio.options.baseUrl}/notificaciones ***');
+
+      
+      // Maneja ambos casos: lista directa o envuelta en 'result'
+      List<dynamic> data;
+      if (raw is List) {
+        data = raw;
+      } else if (raw is Map && raw.containsKey('result')) {
+        data = raw['result'] as List<dynamic>;
+      } else {
+        print('Formato inesperado en notificaciones: $raw');
+        return [];
+      }
+
+      return data.map((json) => Notificacion.fromJson(json)).toList();
+    } catch (e) {
+      print('Error getNotificaciones: $e');
+      return [];
+    }
+  }
+
+  @override
+  Future<bool> crearNotificacion(Notificacion noti) async {
+    try {
+      final response = await dio.post('/notificaciones', data: noti.toJson());
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Error crearNotificacion: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> eliminarNotificacion(int id) async {
+    try {
+      final response = await dio.delete('/notificaciones/$id');
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+@override
+Future<List<DestinatarioInfo>> getUsuariosConEmail() async {
+  try {
+    final response = await dio.post('/usuarios', data: {"params": {}});
+
+    final res = response.data['result'];
+    if (res == null || res['success'] == false) return [];
+
+    final List list = res['usuarios'] ?? [];
+
+    // Filtramos en Flutter los que tienen recibirNotiEmail=true y email válido
+    return list
+        .where((u) =>
+            u['recibirNotiEmail'] == true &&
+            u['email'] != null &&
+            u['email'].toString().isNotEmpty)
+        .map((u) => DestinatarioInfo(
+              id: u['id'] is int ? u['id'] : int.tryParse(u['id'].toString()) ?? 0,
+              nombre: u['nombre'] ?? '',
+              email: u['email'] ?? '',
+            ))
+        .toList();
+  } catch (e) {
+    print('Error getUsuariosConEmail: $e');
+    return [];
+  }
+}
 }

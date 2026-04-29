@@ -1,6 +1,7 @@
 
 import 'package:morenitapp/features/auth/domain/entities/user.dart';
 import 'package:morenitapp/features/panel-gestion/configuracion/domain/entities/grupo_proveedor.dart';
+import 'package:morenitapp/features/panel-gestion/configuracion/domain/entities/notificacion_tipo.dart';
 import 'package:morenitapp/features/panel-gestion/configuracion/domain/entities/tipo_autoridad.dart';
 import 'package:morenitapp/features/panel-gestion/configuracion/domain/entities/tipo_cargo.dart';
 import 'package:morenitapp/features/panel-gestion/configuracion/domain/entities/tipo_evento.dart';
@@ -32,5 +33,11 @@ abstract class ConfiguracionDatasource {
 Future<bool> crearGrupoProveedor(Map<String, dynamic> datos);
 Future<bool> editarGrupoProveedor(int id, Map<String, dynamic> datos);
 Future<bool> eliminarGrupoProveedor(int id);
+// --- NOTIFICACIONES TIPO ---
+  Future<List<NotificacionTipo>> getNotificacionTipos();
+  // Se cambia String por Map para ser consistente con el resto del Datasource
+  Future<bool> crearNotificacionTipo(Map<String, dynamic> datos);
+  Future<bool> editarNotificacionTipo(int id, Map<String, dynamic> datos);
+  Future<bool> eliminarNotificacionTipo(int id);
 
 }

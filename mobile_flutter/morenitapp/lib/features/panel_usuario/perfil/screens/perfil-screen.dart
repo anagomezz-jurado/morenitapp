@@ -381,18 +381,7 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
                           : (val) =>
                               _updateData({'recibirNotiEmail': val}),
                     ),
-                    SwitchListTile(
-                      secondary: const Icon(Icons.phone_android_outlined,
-                          color: Colors.green),
-                      title: const Text('Notificaciones WhatsApp',
-                          style: TextStyle(fontSize: 15)),
-                      activeColor: colors.primary,
-                      value: user.recibirNotiTelefono,
-                      onChanged: _isProcessing
-                          ? null
-                          : (val) =>
-                              _updateData({'recibirNotiTelefono': val}),
-                    ),
+                    
                   ],
                 ),
                 const SizedBox(height: 25),

@@ -1,20 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
 
-    <!-- ROOT -->
+
     <menuitem id="menu_morenitapp_root"
               name="MorenitApp"
               sequence="1"
               web_icon="morenitapp,static/description/icon.png"/>
 
-    <!-- DASHBOARD -->
     <menuitem id="menu_dashboard"
               name="Dashboard"
               parent="menu_morenitapp_root"
               action="action_dashboard"
               sequence="1"/>
 
-    <!-- HERMANOS -->
     <menuitem id="menu_hermanos_root"
               name="Gestión de Hermanos"
               parent="menu_morenitapp_root"
@@ -32,7 +30,6 @@
               action="action_hermanos_baja"
               sequence="20"/>
 
-    <!-- SECRETARÍA -->
     <menuitem id="menu_secretaria_root"
               name="Secretaría"
               parent="menu_morenitapp_root"
@@ -56,7 +53,6 @@
               action="action_cofradias"
               sequence="30"/>
 
-    <!-- EVENTOS -->
     <menuitem id="menu_eventos_root"
               name="Eventos y Cultos"
               parent="menu_morenitapp_root"
@@ -80,7 +76,17 @@
               action="action_organizadores"
               sequence="30"/>
 
-    <!-- LIBROS -->
+    <menuitem id="menu_comunicacion_root"
+              name="Comunicación"
+              parent="menu_morenitapp_root"
+              sequence="35"/>
+
+    <menuitem id="menu_notificaciones_lista"
+              name="Enviar Notificación"
+              parent="menu_comunicacion_root"
+              action="action_notificaciones"
+              sequence="10"/>
+
     <menuitem id="menu_libros_root"
               name="Libros y Publicaciones"
               parent="menu_morenitapp_root"
@@ -92,7 +98,6 @@
               action="action_libros"
               sequence="10"/>
 
-    <!-- PROVEEDORES -->
     <menuitem id="menu_proveedores_root"
               name="Proveedores"
               parent="menu_morenitapp_root"
@@ -104,33 +109,16 @@
               action="action_proveedores"
               sequence="10"/>
 
-    <!-- UBICACIONES -->
     <menuitem id="menu_ubicaciones_root"
               name="Ubicaciones"
               parent="menu_morenitapp_root"
               sequence="60"/>
 
-    <menuitem id="menu_provincias"
-              name="Provincias"
-              parent="menu_ubicaciones_root"
-              action="action_provincias"/>
+    <menuitem id="menu_provincias" name="Provincias" parent="menu_ubicaciones_root" action="action_provincias"/>
+    <menuitem id="menu_localidades" name="Localidades" parent="menu_ubicaciones_root" action="action_localidades"/>
+    <menuitem id="menu_codigos_postales" name="Códigos Postales" parent="menu_ubicaciones_root" action="action_codigos_postales"/>
+    <menuitem id="menu_calles" name="Calles" parent="menu_ubicaciones_root" action="action_calles"/>
 
-    <menuitem id="menu_localidades"
-              name="Localidades"
-              parent="menu_ubicaciones_root"
-              action="action_localidades"/>
-
-    <menuitem id="menu_codigos_postales"
-              name="Códigos Postales"
-              parent="menu_ubicaciones_root"
-              action="action_codigos_postales"/>
-
-    <menuitem id="menu_calles"
-              name="Calles"
-              parent="menu_ubicaciones_root"
-              action="action_calles"/>
-
-    <!-- CONFIGURACIÓN -->
     <menuitem id="menu_configuracion_root"
               name="Configuración de Tipos"
               parent="menu_morenitapp_root"
@@ -142,10 +130,10 @@
               action="action_tipo_evento"
               sequence="10"/>
 
-    <menuitem id="menu_grupos_proveedores"
-              name="Grupos de Proveedores"
-              parent="menu_configuracion_root"
-              action="action_grupo_proveedores"
+    <menuitem id="menu_tipo_notificacion" 
+              name="Tipos de Notificación" 
+              parent="menu_configuracion_root" 
+              action="action_tipos_notificaciones" 
               sequence="20"/>
 
     <menuitem id="menu_tipo_autoridades"
@@ -160,7 +148,12 @@
               action="action_tipos_cargos"
               sequence="40"/>
 
-    <!-- SEGURIDAD -->
+    <menuitem id="menu_grupos_proveedores"
+              name="Grupos de Proveedores"
+              parent="menu_configuracion_root"
+              action="action_grupo_proveedores"
+              sequence="50"/>
+
     <menuitem id="menu_seguridad_root"
               name="Gestión de Usuarios"
               parent="menu_morenitapp_root"
@@ -183,7 +176,5 @@
               parent="menu_seguridad_root"
               action="action_morenitapp_grupo"
               sequence="30"/>
-
-
 
 </odoo>

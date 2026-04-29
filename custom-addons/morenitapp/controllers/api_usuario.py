@@ -17,7 +17,6 @@ class UsuarioAPI(http.Controller):
             'rol_id': u.rol_id.id if u.rol_id else 2,
             'rol_name': u.rol_id.name if u.rol_id else 'Usuario',
             'recibirNotiEmail': u.recibirNotiEmail,
-            'recibirNotiTelefono': u.recibirNotiTelefono,
             'token': str(u.id),
             'hermano_id': u.hermano_id.id if u.hermano_id else None,
             # ↓ CORRECCIÓN: 'numero_hermano' (snake_case) para que coincida con el mapper Flutter
@@ -53,7 +52,6 @@ class UsuarioAPI(http.Controller):
                 'rol_id': data.get('rol_id', 2),
                 'telefono': data.get('telefono', ''),
                 'recibirNotiEmail': data.get('recibirNotiEmail', True),
-                'recibirNotiTelefono': data.get('recibirNotiTelefono', False),
             }
             nuevo = request.env['morenitapp.usuario'].sudo().create(vals)
             return {"success": True, "user": self._get_user_dict(nuevo)}
@@ -73,7 +71,7 @@ class UsuarioAPI(http.Controller):
             vals = {}
             campos_permitidos = [
                 'nombre', 'email', 'rol_id', 'telefono', 
-                'recibirNotiEmail', 'recibirNotiTelefono', 'apellido1', 'apellido2','hermano_id'
+                'recibirNotiEmail', 'apellido1', 'apellido2','hermano_id'
             ]
 
             for campo in campos_permitidos:
@@ -136,7 +134,6 @@ class UsuarioAPI(http.Controller):
                 'telefono': data.get('telefono', ''),
                 'rol_id': 2, # Siempre estándar al registrarse
                 'recibirNotiEmail': data.get('recibirNotiEmail', True),
-                'recibirNotiTelefono': data.get('recibirNotiTelefono', False),
             })
             return {"success": True, "user": self._get_user_dict(nuevo)}
         except Exception as e:

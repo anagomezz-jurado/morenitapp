@@ -1,3 +1,4 @@
+import 'package:morenitapp/features/panel-gestion/configuracion/domain/entities/notificacion_tipo.dart';
 import 'package:morenitapp/features/panel-gestion/usuarios/domain/entities/grupo_user.dart';
 import 'package:morenitapp/features/auth/domain/entities/user.dart';
 import 'package:morenitapp/features/panel-gestion/configuracion/domain/datasources/configuracion_datasources.dart';
@@ -112,6 +113,25 @@ Future<List<TipoCargo>> getTiposCargo() => datasource.getTiposCargo();
 
   @override
   Future<bool> eliminarGrupoProveedor(int id) => datasource.eliminarGrupoProveedor(id);
+@override
+  Future<List<NotificacionTipo>> getNotificacionTipos() {
+    return datasource.getNotificacionTipos();
+  }
 
+  @override
+  Future<bool> crearNotificacionTipo(String nombre) {
+    // Aquí convertimos el String al Map que el Datasource espera
+    return datasource.crearNotificacionTipo({'name': nombre});
+  }
+
+  @override
+  Future<bool> editarNotificacionTipo(int id, String nombre) {
+    return datasource.editarNotificacionTipo(id, {'name': nombre});
+  }
+
+  @override
+  Future<bool> eliminarNotificacionTipo(int id) {
+    return datasource.eliminarNotificacionTipo(id);
+  }
 
 }

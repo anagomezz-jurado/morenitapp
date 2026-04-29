@@ -20,7 +20,6 @@ class RegisterFormState {
   final Phone telefono;
 
   final bool recibirNotiEmail;
-  final bool recibirNotiTelefono;
 
   RegisterFormState({
     this.isPosting = false,
@@ -35,7 +34,6 @@ class RegisterFormState {
     this.passwordConfirmation = const Password.pure(),
     this.telefono = const Phone.pure(),
     this.recibirNotiEmail = true,
-    this.recibirNotiTelefono = false,
   });
 
   RegisterFormState copyWith({
@@ -51,7 +49,6 @@ class RegisterFormState {
     Password? passwordConfirmation,
     Phone? telefono,
     bool? recibirNotiEmail,
-    bool? recibirNotiTelefono,
   }) => RegisterFormState(
     isPosting: isPosting ?? this.isPosting,
     isFormPosted: isFormPosted ?? this.isFormPosted,
@@ -65,7 +62,6 @@ class RegisterFormState {
     passwordConfirmation: passwordConfirmation ?? this.passwordConfirmation,
     telefono: telefono ?? this.telefono,
     recibirNotiEmail: recibirNotiEmail ?? this.recibirNotiEmail,
-    recibirNotiTelefono: recibirNotiTelefono ?? this.recibirNotiTelefono,
   );
 }
 
@@ -79,9 +75,7 @@ class RegisterFormNotifier extends StateNotifier<RegisterFormState> {
     required String apellido1,
     required String apellido2,
     required String telefono,
-    required bool recibirNotiEmail,
-    required bool recibirNotiTelefono,
-  }) registerUserCallback;
+    required bool recibirNotiEmail,  }) registerUserCallback;
 
   final Ref ref;
 
@@ -186,7 +180,6 @@ class RegisterFormNotifier extends StateNotifier<RegisterFormState> {
   }
 
   onNotiEmailChange(bool value) => state = state.copyWith(recibirNotiEmail: value);
-  onNotiTelefonoChange(bool value) => state = state.copyWith(recibirNotiTelefono: value);
   onTerminosChanged(bool value) {
     state = state.copyWith(
       aceptaTerminos: value,
@@ -216,7 +209,6 @@ class RegisterFormNotifier extends StateNotifier<RegisterFormState> {
       apellido2: state.apellido2.value,
       telefono: state.telefono.value,
       recibirNotiEmail: state.recibirNotiEmail,
-      recibirNotiTelefono: state.recibirNotiTelefono,
     );
 
     state = state.copyWith(isPosting: false);
