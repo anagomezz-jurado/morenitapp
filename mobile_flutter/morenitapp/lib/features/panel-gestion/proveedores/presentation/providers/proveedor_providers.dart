@@ -8,70 +8,48 @@ final proveedorRepositoryProvider = Provider((ref) {
   return ProveedorRepositoryImpl(ProveedorDatasourceImpl());
 });
 
-// 2. Notifier Principal (Usa AsyncNotifier para manejo de estados asíncronos)
-final proveedoresProvider = AsyncNotifierProvider<ProveedoresNotifier, List<Proveedor>>(ProveedoresNotifier.new);
+// 2. Notifier Principal
+final proveedoresProvider =
+    AsyncNotifierProvider<ProveedoresNotifier, List<Proveedor>>(
+        ProveedoresNotifier.new);
 
 class ProveedoresNotifier extends AsyncNotifier<List<Proveedor>> {
-  
   @override
   Future<List<Proveedor>> build() async {
     return ref.watch(proveedorRepositoryProvider).getProveedores();
   }
 
-  Future<void> crear({
-    required String codigo, 
-    required String nombre, 
-    String? contacto,
-    String? telefono,
-    String? email,
-    String? direccion,
-    bool esAnunciante = false,
-    int? grupoId
-  }) async {
+  Future<bool> crear(Map<String, dynamic> datos) async {
     state = const AsyncValue.loading();
     try {
-      await ref.read(proveedorRepositoryProvider).crearProveedor({
-        'cod_proveedor': codigo,
-        'nombre': nombre,
-        'contacto': contacto,
-        'telefono': telefono,
-        'email': email,
-        'direccion': direccion,
-        'anunciante': esAnunciante,
-        'grupo_id': grupoId,
-      });
-      ref.invalidateSelf();
-    } catch (e, stack) { 
-      state = AsyncValue.error(e, stack); 
+      final success =
+          await ref.read(proveedorRepositoryProvider).crearProveedor(datos);
+      if (success) {
+        ref.invalidateSelf();
+        return true;
+      }
+      return false;
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+      return false;
     }
   }
 
-  Future<void> editar({
-    required String id,
-    required String codigo,
-    required String nombre,
-    String? contacto,
-    String? telefono,
-    String? email,
-    String? direccion,
-    required bool esAnunciante,
-    int? grupoId,
-  }) async {
+  Future<bool> actualizar(Map<String, dynamic> datos) async {
     state = const AsyncValue.loading();
     try {
-      final success = await ref.read(proveedorRepositoryProvider).editarProveedor(int.parse(id), {
-        'cod_proveedor': codigo,
-        'nombre': nombre,
-        'contacto': contacto,
-        'telefono': telefono,
-        'email': email,
-        'direccion': direccion,
-        'anunciante': esAnunciante,
-        'grupo_id': grupoId,
-      });
-      if (success) ref.invalidateSelf();
-    } catch (e, stack) { 
-      state = AsyncValue.error(e, stack); 
+      final id = int.parse(datos['id'].toString());
+      final success = await ref
+          .read(proveedorRepositoryProvider)
+          .editarProveedor(id, datos);
+      if (success) {
+        ref.invalidateSelf();
+        return true;
+      }
+      return false;
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+      return false;
     }
   }
 
@@ -80,23 +58,19 @@ class ProveedoresNotifier extends AsyncNotifier<List<Proveedor>> {
       await ref.read(proveedorRepositoryProvider).eliminarProveedor(id);
       ref.invalidateSelf();
     } catch (e) {
-      // Manejo de error
     }
   }
 }
 
 // --- PROVIDERS FILTRADOS ---
-
-// FILTRO: Solo anunciantes (true)
 final listaSoloAnunciantes = Provider<List<Proveedor>>((ref) {
   final estadoProveedores = ref.watch(proveedoresProvider);
   return estadoProveedores.maybeWhen(
-    data: (listado) => listado.where((p) => p.anunciante == true).toList(),
+    data: (listado) => listado.where((p) => p.anunciante).toList(),
     orElse: () => [],
   );
 });
 
-// FILTRO: Todos (Proveedores + Anunciantes)
 final listaTodosLosProveedores = Provider<List<Proveedor>>((ref) {
   final estadoProveedores = ref.watch(proveedoresProvider);
   return estadoProveedores.maybeWhen(

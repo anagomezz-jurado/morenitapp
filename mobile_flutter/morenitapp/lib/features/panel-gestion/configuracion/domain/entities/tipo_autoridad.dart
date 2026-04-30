@@ -6,8 +6,8 @@ class TipoAutoridad {
   TipoAutoridad({this.id, required this.codigo, required this.nombre});
 
   factory TipoAutoridad.fromJson(Map<String, dynamic> json) => TipoAutoridad(
-    id: json['id'],
-    codigo: json['codigo'] ?? '',
-    nombre: json['nombre'] ?? '',
-  );
+        id: json['id'],
+        codigo: json['codigo'] ?? '',
+        nombre: json['nombre'] ?? '',
+      );
 }

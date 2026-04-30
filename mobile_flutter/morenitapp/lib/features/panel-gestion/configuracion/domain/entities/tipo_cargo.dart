@@ -4,12 +4,16 @@ class TipoCargo {
   final String nombre;
   final String observaciones;
 
-  TipoCargo({this.id, required this.codigo, required this.nombre, this.observaciones = ''});
+  TipoCargo(
+      {this.id,
+      required this.codigo,
+      required this.nombre,
+      this.observaciones = ''});
 
   factory TipoCargo.fromJson(Map<String, dynamic> json) => TipoCargo(
-    id: json['id'],
-    codigo: json['codigo'] ?? '',
-    nombre: json['nombre'] ?? '',
-    observaciones: json['observaciones'] ?? '',
-  );
+        id: json['id'],
+        codigo: json['codigo'] ?? '',
+        nombre: json['nombre'] ?? '',
+        observaciones: json['observaciones'] ?? '',
+      );
 }

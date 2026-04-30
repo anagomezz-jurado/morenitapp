@@ -38,7 +38,12 @@ class EventoCultoController(http.Controller):
                     "nombre": r.nombre or "",
                     "telefono": r.telefono or "",
                     "email": r.email or "",
-                    "direccion_id": r.direccion_id.id if r.direccion_id else None,
+                    "calle_id": r.calle_id.id if r.calle_id else None,
+                    "calle_name": r.calle_id.nombreCalle if r.calle_id else "",
+                    "numero": r.numero or "",
+                    "escalera": r.escalera or "",
+                    "bloque": r.bloque or "",
+                    "portal": r.portal or "",
                     "piso": r.piso or "",
                     "puerta": r.puerta or "",
                     "logo": r.logo.decode('utf-8') if r.logo else None,
@@ -95,7 +100,7 @@ class EventoCultoController(http.Controller):
                     "organizador_id": [r.organizador_id.id, r.organizador_id.nombre] if r.organizador_id else None,
                     "tipoevento_id": [r.tipoevento_id.id, r.tipoevento_id.nombre_tipo_evento] if r.tipoevento_id else None,
                     "tipo_nombre": r.tipoevento_id.nombre_tipo_evento if r.tipoevento_id else "General",
-                    "color": r.tipoevento_id.color if r.tipoevento_id and r.tipoevento_id.color else "#3498db",
+                    "color": r.color or "#3498db",
                 } for r in records]
                 return self._json_response(data if not id else (data[0] if data else {}))
 

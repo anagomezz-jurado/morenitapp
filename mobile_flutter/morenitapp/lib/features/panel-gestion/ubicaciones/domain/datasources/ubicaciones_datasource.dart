@@ -4,7 +4,6 @@ import '../entities/calle.dart';
 import '../entities/codigo_postal.dart';
 
 abstract class UbicacionDatasource {
-  
   // --- PROVINCIAS ---
   Future<List<Provincia>> getProvincias();
   Future<Provincia> crearProvincia(Provincia provincia);
@@ -28,5 +27,4 @@ abstract class UbicacionDatasource {
   Future<Calle> crearCalle(Calle calle);
   Future<bool> eliminarCalle(int id);
   Future<bool> editarCalle(int id, Map<String, dynamic> datos);
-  
 }

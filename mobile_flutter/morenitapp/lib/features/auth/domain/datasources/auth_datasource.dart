@@ -1,4 +1,3 @@
-import 'package:morenitapp/features/panel-gestion/usuarios/domain/entities/grupo_user.dart';
 import 'package:morenitapp/features/auth/domain/entities/user.dart';
 
 abstract class AuthDataSource {

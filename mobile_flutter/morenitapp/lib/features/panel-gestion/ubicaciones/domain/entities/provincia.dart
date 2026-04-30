@@ -18,12 +18,11 @@ class Provincia {
   }
 
   Map<String, dynamic> toJson() => {
-    'id': id, // Es buena práctica incluir el ID en el JSON si existe
-    'codProvincia': codProvincia,
-    'nombreProvincia': nombreProvincia,
-  };
+        'id': id, 
+        'codProvincia': codProvincia,
+        'nombreProvincia': nombreProvincia,
+      };
 
-  // Implementación correcta de copyWith
   Provincia copyWith({
     int? id,
     String? codProvincia,

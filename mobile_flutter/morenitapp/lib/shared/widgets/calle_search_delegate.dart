@@ -12,7 +12,6 @@ class CalleSearchDelegate extends SearchDelegate {
   @override
   ThemeData appBarTheme(BuildContext context) {
     final parentTheme = Theme.of(context);
-    // Usamos los colores dinámicos del tema para la barra de búsqueda
     return parentTheme.copyWith(
       appBarTheme: AppBarTheme(
         backgroundColor: parentTheme.colorScheme.surface,
@@ -53,12 +52,14 @@ class CalleSearchDelegate extends SearchDelegate {
   Widget _mostrarResultados(BuildContext context) {
     // Accedemos a los colores del tema actual
     final colors = Theme.of(context).colorScheme;
-    
+
     final callesAsync = ref.watch(callesProvider);
     final localidadesAsync = ref.watch(localidadesProvider);
     final cpsAsync = ref.watch(codigosPostalesProvider);
 
-    if (callesAsync.isLoading || localidadesAsync.isLoading || cpsAsync.isLoading) {
+    if (callesAsync.isLoading ||
+        localidadesAsync.isLoading ||
+        cpsAsync.isLoading) {
       return Center(child: CircularProgressIndicator(color: colors.primary));
     }
 
@@ -67,37 +68,42 @@ class CalleSearchDelegate extends SearchDelegate {
         .toList();
 
     return Container(
-      color: const Color(0xFFF0F2F5), // Mantengo el fondo gris suave de tu plantilla
+      color: const Color(
+          0xFFF0F2F5), // Mantengo el fondo gris suave de tu plantilla
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         itemCount: sugerencias.length + (query.isNotEmpty ? 1 : 0),
         itemBuilder: (context, i) {
-          
           // --- Opción para añadir nueva calle ---
           if (i == sugerencias.length) {
             return Card(
               elevation: 0,
               margin: const EdgeInsets.only(bottom: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               child: ListTile(
                 leading: CircleAvatar(
                   backgroundColor: colors.primaryContainer,
-                  child: Icon(Icons.add_location_alt_rounded, color: colors.primary),
+                  child: Icon(Icons.add_location_alt_rounded,
+                      color: colors.primary),
                 ),
-                title: Text('Añadir nueva calle: "$query"', 
-                  style: TextStyle(fontWeight: FontWeight.bold, color: colors.primary)),
+                title: Text('Añadir nueva calle: "$query"',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, color: colors.primary)),
                 onTap: () => close(context, query),
               ),
             );
           }
 
           final calle = sugerencias[i];
-          
+
           final loc = localidadesAsync.value?.cast<Localidad?>().firstWhere(
-            (l) => l?.id.toString() == calle.localidadId.toString(), orElse: () => null);
+              (l) => l?.id.toString() == calle.localidadId.toString(),
+              orElse: () => null);
 
           final cp = cpsAsync.value?.cast<CodigoPostal?>().firstWhere(
-            (c) => c?.id.toString() == calle.codPostalId.toString(), orElse: () => null);
+              (c) => c?.id.toString() == calle.codPostalId.toString(),
+              orElse: () => null);
 
           // --- Tarjeta de resultado con colores de AppTheme ---
           return Container(
@@ -114,22 +120,23 @@ class CalleSearchDelegate extends SearchDelegate {
               ],
             ),
             child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               leading: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: colors.primary, // Fondo Primario dinámico
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(Icons.location_on_rounded, color: colors.onPrimary, size: 22),
+                child: Icon(Icons.location_on_rounded,
+                    color: colors.onPrimary, size: 22),
               ),
               title: Text(
                 calle.nombreCalle,
                 style: const TextStyle(
-                  fontWeight: FontWeight.bold, 
-                  fontSize: 16, 
-                  color: Color(0xFF2D3436)
-                ),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Color(0xFF2D3436)),
               ),
               subtitle: Padding(
                 padding: const EdgeInsets.only(top: 4.0),
@@ -138,7 +145,8 @@ class CalleSearchDelegate extends SearchDelegate {
                   style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                 ),
               ),
-              trailing: const Icon(Icons.chevron_right_rounded, color: Colors.grey),
+              trailing:
+                  const Icon(Icons.chevron_right_rounded, color: Colors.grey),
               onTap: () => close(context, calle),
             ),
           );

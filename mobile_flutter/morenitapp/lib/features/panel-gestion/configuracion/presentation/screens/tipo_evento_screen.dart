@@ -13,17 +13,18 @@ class TipoEventoScreen extends ConsumerWidget {
   const TipoEventoScreen({super.key});
 
   List<List<String>> prepararDatos(List<TipoEvento> lista) {
-    return lista.map((h) => [
-      (h.codigo ?? 'S/N').toString(),
-      h.nombre,
-    ]).toList();
+    return lista
+        .map((h) => [
+              (h.codigo ?? 'S/N').toString(),
+              h.nombre,
+            ])
+        .toList();
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 1. Log para saber cuándo se reconstruye el widget
     debugPrint('--- Renderizando TipoEventoScreen ---');
-    
+
     final eventosAsync = ref.watch(tiposEventoProvider);
 
     return PlantillaVentanas(
@@ -59,29 +60,38 @@ class TipoEventoScreen extends ConsumerWidget {
       onRefresh: () => ref.refresh(tiposEventoProvider),
       onNuevo: () => _showSideForm(context, ref),
       columns: const [
-        DataColumn(label: Text('CÓDIGO', style: TextStyle(fontWeight: FontWeight.bold))),
-        DataColumn(label: Text('NOMBRE DEL EVENTO', style: TextStyle(fontWeight: FontWeight.bold))),
-        DataColumn(label: Text('ACCIONES', style: TextStyle(fontWeight: FontWeight.bold))),
+        DataColumn(
+            label:
+                Text('CÓDIGO', style: TextStyle(fontWeight: FontWeight.bold))),
+        DataColumn(
+            label: Text('NOMBRE DEL EVENTO',
+                style: TextStyle(fontWeight: FontWeight.bold))),
+        DataColumn(
+            label: Text('ACCIONES',
+                style: TextStyle(fontWeight: FontWeight.bold))),
       ],
       rows: eventosAsync.when(
         data: (lista) {
           debugPrint('Datos cargados exitosamente: ${lista.length} items');
-          return lista.map((e) => DataRow(cells: [
-            DataCell(Text(e.codigo)),
-            DataCell(Text(e.nombre)),
-            DataCell(_buildActionButtons(
-              context,
-              onEdit: () => _showSideForm(context, ref, evento: e),
-              onDelete: () => ref.read(tiposEventoProvider.notifier).eliminar(e.id!),
-            )),
-          ])).toList();
+          return lista
+              .map((e) => DataRow(cells: [
+                    DataCell(Text(e.codigo)),
+                    DataCell(Text(e.nombre)),
+                    DataCell(_buildActionButtons(
+                      context,
+                      onEdit: () => _showSideForm(context, ref, evento: e),
+                      onDelete: () => ref
+                          .read(tiposEventoProvider.notifier)
+                          .eliminar(e.id!),
+                    )),
+                  ]))
+              .toList();
         },
         error: (err, stack) {
-          // LOG CRÍTICO: Aquí verás por qué no funciona
           debugPrint('--- ERROR EN PROVIDER EVENTOS ---');
           debugPrint('Error: $err');
           debugPrint('Stacktrace: $stack');
-          
+
           return [
             DataRow(cells: [
               const DataCell(Icon(Icons.error, color: Colors.red)),
@@ -92,7 +102,10 @@ class TipoEventoScreen extends ConsumerWidget {
         },
         loading: () => [
           const DataRow(cells: [
-            DataCell(SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
+            DataCell(SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2))),
             DataCell(Text('Cargando datos de Odoo...')),
             DataCell(Text('...')),
           ])
@@ -187,7 +200,6 @@ class _EventoFormContentState extends ConsumerState<_EventoFormContent> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    // Ejemplo de seguridad si tuvieras un Dropdown de Grupos (basado en tu error 3)
     final gruposAsync = ref.watch(gruposProveedorProvider);
 
     return Column(children: [
@@ -203,16 +215,6 @@ class _EventoFormContentState extends ConsumerState<_EventoFormContent> {
                     const SizedBox(height: 25),
                     _buildField("NOMBRE DEL EVENTO", nomCtrl,
                         "Nombre del evento", colors),
-
-                    // --- AQUÍ UN EJEMPLO DE DROPDOWN SEGURO SI LO NECESITARAS ---
-                    /*
-                    gruposAsync.when(
-                      data: (lista) => _buildDropdownField("GRUPO", lista, colors),
-                      loading: () => const CircularProgressIndicator(),
-                      error: (_,__) => const Text("Error al cargar grupos"),
-                    ),
-                    */
-
                     const SizedBox(height: 50),
                     _buildColorPicker(colors),
                     const SizedBox(height: 50),
@@ -221,7 +223,6 @@ class _EventoFormContentState extends ConsumerState<_EventoFormContent> {
     ]);
   }
 
-  // MÉTODO PARA EVITAR EL ERROR "VALUE: 3 NOT FOUND"
   Widget _buildDropdownField(
       String label, List<dynamic> opciones, ColorScheme colors) {
     // CORRECCIÓN LÓGICA: Validamos si el ID 3 existe en la lista de opciones

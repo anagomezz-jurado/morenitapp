@@ -1,7 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:morenitapp/config/constants/environment.dart';
-import 'package:morenitapp/features/auth/domain/entities/user.dart';
-import 'package:morenitapp/features/auth/infrastructure/mappers/user_mapper.dart';
 import 'package:morenitapp/features/panel-gestion/configuracion/domain/datasources/configuracion_datasources.dart';
 import 'package:morenitapp/features/panel-gestion/configuracion/domain/entities/grupo_proveedor.dart';
 import 'package:morenitapp/features/panel-gestion/configuracion/domain/entities/notificacion_tipo.dart';
@@ -11,7 +9,6 @@ import 'package:morenitapp/features/panel-gestion/configuracion/domain/entities/
 import 'package:morenitapp/features/panel-gestion/configuracion/domain/entities/tipo_rol.dart';
 
 class ConfiguracionDatasourceImpl extends ConfiguracionDatasource {
-  
   final Dio dio = Dio(BaseOptions(
     baseUrl: Environment.apiUrl,
     connectTimeout: const Duration(seconds: 10),
@@ -21,8 +18,6 @@ class ConfiguracionDatasourceImpl extends ConfiguracionDatasource {
       'Accept': 'application/json',
     },
   ));
-
-  // --- MÉTODOS BASE PARA LLAMADAS REST ---
 
   Future<dynamic> _get(String path) async {
     try {
@@ -61,7 +56,7 @@ class ConfiguracionDatasourceImpl extends ConfiguracionDatasource {
   }
 
   // --- IMPLEMENTACIÓN DE LOS MÉTODOS ---
-
+  // --- EVENTOS TIPOS ---
   @override
   Future<List<TipoEvento>> getTiposEvento() async {
     final result = await _get('/configuracion/tipoevento');
@@ -87,7 +82,7 @@ class ConfiguracionDatasourceImpl extends ConfiguracionDatasource {
     return result['status'] == 'deleted';
   }
 
-  // --- CARGOS ---
+  // --- CARGOS TIPO ---
   @override
   Future<List<TipoCargo>> getTiposCargo() async {
     final result = await _get('/configuracion/tipocargo');
@@ -95,7 +90,7 @@ class ConfiguracionDatasourceImpl extends ConfiguracionDatasource {
     return data.map((json) => TipoCargo.fromJson(json)).toList();
   }
 
-@override
+  @override
   Future<bool> crearTipoCargo(Map<String, dynamic> datos) async {
     // Cambiado de '/configuracion/...' a '/api/configuracion/...'
     final result = await _post('/configuracion/tipocargo', datos);
@@ -115,7 +110,7 @@ class ConfiguracionDatasourceImpl extends ConfiguracionDatasource {
     return result['status'] == 'deleted';
   }
 
-  // --- AUTORIDADES ---
+  // --- AUTORIDADES TIPO ---
   @override
   Future<List<TipoAutoridad>> getTiposAutoridad() async {
     final result = await _get('/configuracion/tipoautoridad');
@@ -141,7 +136,7 @@ class ConfiguracionDatasourceImpl extends ConfiguracionDatasource {
     return result['status'] == 'deleted';
   }
 
-  // --- ROLES ---
+  // --- ROLES  ---
   @override
   Future<List<Rol>> getRoles() async {
     final result = await _get('/configuracion/rol');
@@ -192,29 +187,31 @@ class ConfiguracionDatasourceImpl extends ConfiguracionDatasource {
     final result = await _delete('/configuracion/grupoproveedor/$id');
     return result['status'] == 'deleted';
   }
-// --- NOTIFICACIONES TIPO ---
-@override
-Future<List<NotificacionTipo>> getNotificacionTipos() async {
-  final result = await _get('/configuracion/tiponotificacion');
-  final List data = result is List ? result : [];
-  return data.map((json) => NotificacionTipo.fromJson(json)).toList();
-}
 
-@override
-Future<bool> crearNotificacionTipo(Map<String, dynamic> datos) async {
-  final result = await _post('/configuracion/tiponotificacion', datos);
-  return result['id'] != null;
-}
+  // --- NOTIFICACIONES TIPO ---
+  @override
+  Future<List<NotificacionTipo>> getNotificacionTipos() async {
+    final result = await _get('/configuracion/tiponotificacion');
+    final List data = result is List ? result : [];
+    return data.map((json) => NotificacionTipo.fromJson(json)).toList();
+  }
 
-@override
-Future<bool> editarNotificacionTipo(int id, Map<String, dynamic> datos) async {
-  final result = await _put('/configuracion/tiponotificacion/$id', datos);
-  return result['status'] == 'updated';
-}
+  @override
+  Future<bool> crearNotificacionTipo(Map<String, dynamic> datos) async {
+    final result = await _post('/configuracion/tiponotificacion', datos);
+    return result['id'] != null;
+  }
 
-@override
-Future<bool> eliminarNotificacionTipo(int id) async {
-  final result = await _delete('/configuracion/tiponotificacion/$id');
-  return result['status'] == 'deleted';
-}
+  @override
+  Future<bool> editarNotificacionTipo(
+      int id, Map<String, dynamic> datos) async {
+    final result = await _put('/configuracion/tiponotificacion/$id', datos);
+    return result['status'] == 'updated';
+  }
+
+  @override
+  Future<bool> eliminarNotificacionTipo(int id) async {
+    final result = await _delete('/configuracion/tiponotificacion/$id');
+    return result['status'] == 'deleted';
+  }
 }

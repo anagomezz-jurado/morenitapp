@@ -159,22 +159,18 @@
               parent="menu_morenitapp_root"
               sequence="100"/>
 
-    <menuitem id="menu_usuarios_app"
-              name="Usuarios de la App"
-              parent="menu_seguridad_root"
-              action="action_morenitapp_usuario"
-              sequence="10"/>
+     <menuitem id="menu_morenitapp_usuario_item" 
+          name="Usuarios de la App" 
+          parent="menu_seguridad_root" 
+          action="action_morenitapp_usuario" 
+          sequence="10"/>
 
-    <menuitem id="menu_roles_usuarios"
-              name="Roles de Usuarios"
-              parent="menu_seguridad_root"
-              action="action_morenitapp_rol"
-              sequence="20"/>
+<menuitem id="menu_morenitapp_rol_item"
+          name="Roles de Usuario"
+          parent="menu_seguridad_root"
+          action="action_morenitapp_rol"
+          sequence="11"/>
 
-    <menuitem id="menu_grupos_permisos"
-              name="Grupos de Permisos"
-              parent="menu_seguridad_root"
-              action="action_morenitapp_grupo"
-              sequence="30"/>
+
 
 </odoo>

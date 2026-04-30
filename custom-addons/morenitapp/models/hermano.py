@@ -27,15 +27,12 @@ class Hermano(models.Model):
         ('baja', 'Baja')
     ], string="Estado", default='activo', store=True)
 
-    calle_id = fields.Many2one('morenitapp.calle', string="Calle", required=True)
+   
     
-    responsable = fields.Boolean(string="Es Cobrador/Responsable", default=False)
-    calles_responsable_ids = fields.One2many(
-        'morenitapp.calle', 
-        'responsable_id', 
-        string="Calles Asignadas"
-    )
+    bautizado = fields.Boolean(string="Es Bautizado", default=False)
 
+    #Direccion
+    calle_id = fields.Many2one('morenitapp.calle', string="Calle", required=True)
     # Campos relacionados (automáticos)
     localidad_id = fields.Many2one('morenitapp.localidad', related='calle_id.localidad_id', string="Localidad", store=True, readonly=True)
     codPostal_id = fields.Many2one('morenitapp.codigopostal', related='calle_id.codPostal_id', string="C.P.", store=True, readonly=True)
@@ -43,6 +40,12 @@ class Hermano(models.Model):
 
     puerta = fields.Char(string="Puerta")
     piso = fields.Char(string="Piso")
+    numero = fields.Char(string="Número")
+    bloque = fields.Char(string="Bloque")
+    escalera = fields.Char(string="Escalera")
+    portal = fields.Char(string="Portal")
+
+
     fecha_alta = fields.Date(string="Fecha Alta", required=True, default=lambda self: fields.Date.today())
     metodo_pago = fields.Selection([
         ('metalico','Metálico'),

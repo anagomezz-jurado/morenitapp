@@ -1,6 +1,7 @@
 import 'libro_anunciante.dart';
 import 'libro_adjunto.dart';
 
+
 class Libro {
   final int id;
   final String codLibro;
@@ -12,7 +13,7 @@ class Libro {
   final int? tipoeventoId;
   final double totalAnunciantes;
   final List<LibroAnunciante> anunciantes;
-  final List<LibroAdjunto> archivos; 
+  final List<LibroAdjunto> archivos;
   final String? textoReciboEvento;
   final String? textoAnunciante;
 
@@ -40,13 +41,11 @@ class Libro {
       anio: json['anio'] ?? 0,
       descripcion: json['descripcion'] ?? '',
       importe: (json['importe'] ?? 0.0).toDouble(),
-      // Sincronizado con los nombres de Odoo (snake_case)
-      fechaRecibo: json['fecha_recibo'], 
+      fechaRecibo: json['fecha_recibo'],
       textoReciboEvento: json['texto_recibo_evento'],
       textoAnunciante: json['texto_anunciante'],
       tipoeventoId: json['tipoevento_id'],
       totalAnunciantes: (json['total_anunciantes'] ?? 0.0).toDouble(),
-      // Mapeo de sub-listas
       anunciantes: (json['anunciantes'] as List? ?? [])
           .map((a) => LibroAnunciante.fromJson(a))
           .toList(),

@@ -3,7 +3,8 @@ class DestinatarioInfo {
   final String nombre;
   final String email;
 
-  DestinatarioInfo({required this.id, required this.nombre, required this.email});
+  DestinatarioInfo(
+      {required this.id, required this.nombre, required this.email});
 
   factory DestinatarioInfo.fromJson(Map<String, dynamic> json) {
     return DestinatarioInfo(
@@ -43,9 +44,8 @@ class Notificacion {
       tipoId: json['tipoid'],
       tipoNombre: json['tiponombre'] ?? 'Sin tipo',
       fechaRegistro: json['fecharegistro'],
-      usuarioIds: json['usuarioids'] != null
-          ? List<int>.from(json['usuarioids'])
-          : [],
+      usuarioIds:
+          json['usuarioids'] != null ? List<int>.from(json['usuarioids']) : [],
       destinatarios: json['destinatarios'] != null
           ? (json['destinatarios'] as List)
               .map((d) => DestinatarioInfo.fromJson(d))
@@ -55,10 +55,10 @@ class Notificacion {
   }
 
   Map<String, dynamic> toJson() => {
-    'asunto': asunto,
-    'mensaje': mensaje,
-    'tipoid': tipoId,
-    'usuarioids': usuarioIds,
-    'enviarahora': true,
-  };
+        'asunto': asunto,
+        'mensaje': mensaje,
+        'tipoid': tipoId,
+        'usuarioids': usuarioIds,
+        'enviarahora': true,
+      };
 }

@@ -12,7 +12,6 @@ class LibroDatasourceImpl extends LibroDatasource {
   @override
   Future<List<Libro>> getLibros() async {
     try {
-      // Agregamos /api/ para que coincida con la ruta del controlador
       final response = await dio.get('/libros');
       final List data = response.data;
       return data.map((l) => Libro.fromJson(l)).toList();
@@ -24,7 +23,6 @@ class LibroDatasourceImpl extends LibroDatasource {
   @override
   Future<bool> crearLibro(Map<String, dynamic> datos) async {
     try {
-      // Odoo prefiere POST para casi todo
       final response = await dio.post('/libros', data: datos);
       return response.data['success'] == true;
     } catch (e) {
@@ -35,12 +33,10 @@ class LibroDatasourceImpl extends LibroDatasource {
   @override
   Future<bool> editarLibro(int id, Map<String, dynamic> datos) async {
     try {
-      // ENVIAMOS EL ID DENTRO DEL MAPA DE DATOS para asegurar que el controlador lo reciba
       final datosConId = {
         ...datos,
-        'id': id, 
+        'id': id,
       };
-      // Usamos POST en lugar de PUT para evitar problemas de CORS y compatibilidad con Odoo
       final response = await dio.post('/libros/$id', data: datosConId);
       return response.data != null && response.data['success'] == true;
     } catch (e) {

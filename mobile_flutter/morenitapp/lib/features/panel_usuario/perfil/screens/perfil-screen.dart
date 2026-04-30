@@ -16,7 +16,6 @@ class PerfilScreen extends ConsumerStatefulWidget {
 class _PerfilScreenState extends ConsumerState<PerfilScreen> {
   bool _isProcessing = false;
 
-  // --- MÉTODOS DE LÓGICA ---
 
   Future<void> _refreshData() async {
     setState(() => _isProcessing = true);
@@ -42,9 +41,8 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
     setState(() => _isProcessing = true);
 
     try {
-      final success = await ref
-          .read(usuariosListadoProvider.notifier)
-          .editar(userId, data);
+      final success =
+          await ref.read(usuariosListadoProvider.notifier).editar(userId, data);
 
       if (success) {
         await Future.delayed(const Duration(milliseconds: 500));
@@ -62,8 +60,6 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
       if (mounted) setState(() => _isProcessing = false);
     }
   }
-
-  // --- DIÁLOGOS ---
 
   void _showEditDialog(
       BuildContext context, String field, String initialValue, String label) {
@@ -219,8 +215,7 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
                                     {'hermano_id': hermanoIdEncontrado});
 
                             if (exito) {
-                              await Future.delayed(
-                                  const Duration(seconds: 1));
+                              await Future.delayed(const Duration(seconds: 1));
                               await ref
                                   .read(authProvider.notifier)
                                   .checkAuthStatus();
@@ -238,8 +233,7 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
                               );
                             }
                           } finally {
-                            if (mounted)
-                              setState(() => _isProcessing = false);
+                            if (mounted) setState(() => _isProcessing = false);
                           }
                         },
                   child: const Text('Vincular'),
@@ -266,14 +260,13 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
       backgroundColor: primaryColor,
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: Colors.white),
-         onPressed: () => context.canPop() ? context.pop() : context.go('/panel-usuario'),
-
+          icon:
+              const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+          onPressed: () =>
+              context.canPop() ? context.pop() : context.go('/panel-usuario'),
         ),
         title: const Text('Mi Perfil',
-            style:
-                TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
@@ -299,8 +292,7 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
           onRefresh: _refreshData,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding:
-                const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             child: Column(
               children: [
                 _ProfileSection(
@@ -309,9 +301,8 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
                     _ProfileTile(
                       icon: Icons.person_outline,
                       label: 'Nombre',
-                      value: user.nombre.isNotEmpty
-                          ? user.nombre
-                          : 'No definido',
+                      value:
+                          user.nombre.isNotEmpty ? user.nombre : 'No definido',
                       onTap: () => _showEditDialog(
                           context, 'nombre', user.nombre, 'Nombre'),
                     ),
@@ -339,8 +330,8 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
                       value: user.telefono.isNotEmpty
                           ? user.telefono
                           : 'No definido',
-                      onTap: () => _showEditDialog(context, 'telefono',
-                          user.telefono, 'Teléfono'),
+                      onTap: () => _showEditDialog(
+                          context, 'telefono', user.telefono, 'Teléfono'),
                     ),
                   ],
                 ),
@@ -369,8 +360,7 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
                   title: 'Preferencias',
                   children: [
                     SwitchListTile(
-                      secondary: Icon(
-                          Icons.notifications_active_outlined,
+                      secondary: Icon(Icons.notifications_active_outlined,
                           color: colors.primary),
                       title: const Text('Notificaciones Email',
                           style: TextStyle(fontSize: 15)),
@@ -378,14 +368,11 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
                       value: user.recibirNotiEmail,
                       onChanged: _isProcessing
                           ? null
-                          : (val) =>
-                              _updateData({'recibirNotiEmail': val}),
+                          : (val) => _updateData({'recibirNotiEmail': val}),
                     ),
-                    
                   ],
                 ),
                 const SizedBox(height: 25),
-                // Número de hermano — fuera de sección para destacarlo
                 _ProfileSection(
                   title: 'Hermandad',
                   children: [
@@ -410,8 +397,6 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
     );
   }
 }
-
-// --- COMPONENTES VISUALES ---
 
 class _ProfileSection extends StatelessWidget {
   final String title;
@@ -472,15 +457,14 @@ class _ProfileTile extends StatelessWidget {
         backgroundColor: primaryColor.withOpacity(0.1),
         child: Icon(icon, color: primaryColor, size: 20),
       ),
-      title: Text(label,
-          style: const TextStyle(fontSize: 12, color: Colors.grey)),
+      title:
+          Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
       subtitle: Text(value,
           style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.bold,
               color: Colors.black87)),
-      trailing:
-          const Icon(Icons.chevron_right_rounded, color: Colors.grey),
+      trailing: const Icon(Icons.chevron_right_rounded, color: Colors.grey),
     );
   }
 }

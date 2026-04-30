@@ -106,15 +106,24 @@ class SecretariaController(http.Controller):
             "codAutoridad": r.codAutoridad or "",
             "nombreAutoridad": r.nombreAutoridad or "",
             "nombreSaluda": r.nombreSaluda or "",
+            "tipoautoridad_id": r.tipoautoridad_id.id if r.tipoautoridad_id else None,
+            "tipoautoridad_name": r.tipoautoridad_id.display_name if r.tipoautoridad_id else "",
             "cargo": r.cargo or "",
-            "direccion": r.direccion or "",
+            "direccion": {
+            "calle_id": r.calle_id.id if r.calle_id else None,
+            "calle_name": r.calle_id.display_name if r.calle_id else "",
+
+            "numero": r.numero or "",
+            "escalera": r.escalera or "",
+            "bloque": r.bloque or "",
+            "portal": r.portal or "",
+            "piso": r.piso or "",
+            "puerta": r.puerta or "",
+        },
             "telefono": r.telefono or "",
             "correoElectronico": r.correoElectronico or "",
             "observaciones": r.observaciones or "",
-            "tipoautoridad_id": r.tipoautoridad_id.id if r.tipoautoridad_id else None,
-            "tipoautoridad_name": r.tipoautoridad_id.display_name if r.tipoautoridad_id else "",
-            "localidad_id": r.localidad_id.id if r.localidad_id else None,
-            "localidad_name": r.localidad_id.display_name if r.localidad_id else "",
+      
         }
         return self._handle_request('morenitapp.autoridad', record_id, mapper)
 
@@ -128,12 +137,17 @@ class SecretariaController(http.Controller):
             "tipocargo_name": r.tipocargo_id.display_name if r.tipocargo_id else "",
             "fechaInicioCargo": str(r.fechaInicioCargo) if r.fechaInicioCargo else "",
             "fechaFinCargo": str(r.fechaFinCargo) if r.fechaFinCargo else None,
-            "direccion": r.direccion.id if r.direccion else None,
-            "direccion_name": r.direccion.display_name if r.direccion else "",
-            "puerta": r.puerta or "",
+        "direccion": {
+            "calle_id": r.calle_id.id if r.calle_id else None,
+            "calle_name": r.calle_id.display_name if r.calle_id else "",
+
+            "numero": r.numero or "",
+            "escalera": r.escalera or "",
+            "bloque": r.bloque or "",
+            "portal": r.portal or "",
             "piso": r.piso or "",
-            "localidad_id": r.localidad_id.id if r.localidad_id else None,
-            "codPostal_id": r.codPostal_id.id if r.codPostal_id else None,
+            "puerta": r.puerta or "",
+        },
             "telefono": r.telefono or "",
             "observaciones": r.observaciones or "",
             "motivo": r.motivo or "",
@@ -152,10 +166,16 @@ class SecretariaController(http.Controller):
             "telefonoCofradia": r.telefonoCofradia or "",
             "paginaWeb": r.paginaWeb or "",
             "observaciones": r.observaciones or "",
-            "direccion_id": r.direccionCofradia.id if r.direccionCofradia else None,
-            "direccion_name": r.direccionCofradia.display_name if r.direccionCofradia else "",
-            "puerta": r.puerta or "",
+        "direccion": {
+            "calle_id": r.calle_id.id if r.calle_id else None,
+            "calle_name": r.calle_id.display_name if r.calle_id else "",
+
+            "numero": r.numero or "",
+            "escalera": r.escalera or "",
+            "bloque": r.bloque or "",
+            "portal": r.portal or "",
             "piso": r.piso or "",
-            "localidad_id": r.localidad_id.id if r.localidad_id else None,
+            "puerta": r.puerta or "",
+        },
         }
         return self._handle_request('morenitapp.cofradia', record_id, mapper)

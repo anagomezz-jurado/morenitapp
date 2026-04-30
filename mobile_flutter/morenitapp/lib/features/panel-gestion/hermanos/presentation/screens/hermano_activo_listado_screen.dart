@@ -8,7 +8,6 @@ import 'package:morenitapp/shared/excel/excel_Service.dart';
 import 'package:morenitapp/shared/widgets/plantilla_ventanas.dart';
 import 'package:morenitapp/shared/widgets/disenio_informes.dart';
 
-// --- PLANTILLA DEL CONTENEDOR DE FILTROS ---
 class FiltroContenedorTemplate extends StatelessWidget {
   final Widget child;
   final String label;
@@ -79,7 +78,6 @@ class FiltroContenedorTemplate extends StatelessWidget {
   }
 }
 
-// --- PANTALLA PRINCIPAL ---
 class HermanoActivoListadoScreen extends ConsumerWidget {
   const HermanoActivoListadoScreen({super.key});
 
@@ -145,9 +143,28 @@ class HermanoActivoListadoScreen extends ConsumerWidget {
           fields: const [
             {'id': 'nombre', 'name': 'Nombre', 'type': 'string'},
             {'id': 'apellido1', 'name': 'Primer Apellido', 'type': 'string'},
+            {'id': 'apellido2', 'name': 'Segundo Apellido', 'type': 'string'},
             {'id': 'dni', 'name': 'DNI', 'type': 'string'},
-            {'id': 'codigo_hermano', 'name': 'Nº Hermano', 'type': 'number'},
-            {'id': 'fecha_alta', 'name': 'Fecha de Alta', 'type': 'date'},
+            {
+              'id': 'codigoHermano',
+              'name': 'Nº Hermano',
+              'type': 'number'
+            },
+            {
+              'id': 'fechaAlta',
+              'name': 'Fecha de Alta',
+              'type': 'date'
+            }, 
+            {
+              'id': 'fechaNacimiento',
+              'name': 'Fecha de Nacimiento',
+              'type': 'date'
+            },
+            {
+              'id': 'bautizado',
+              'name': ' Bautizado',
+              'type': 'boolean'
+            },
           ],
           onFiltersChanged: (nuevosFiltros) {
             ref
@@ -179,7 +196,15 @@ class HermanoActivoListadoScreen extends ConsumerWidget {
                 style: TextStyle(
                     color: primaryColor, fontWeight: FontWeight.bold))),
         DataColumn(
+            label: Text('EMAIL',
+                style: TextStyle(
+                    color: primaryColor, fontWeight: FontWeight.bold))),
+        DataColumn(
             label: Text('FECHA ALTA',
+                style: TextStyle(
+                    color: primaryColor, fontWeight: FontWeight.bold))),
+        DataColumn(
+            label: Text('FECHA REACTIVACIÓN',
                 style: TextStyle(
                     color: primaryColor, fontWeight: FontWeight.bold))),
         DataColumn(
@@ -195,7 +220,9 @@ class HermanoActivoListadoScreen extends ConsumerWidget {
                         style: const TextStyle(fontWeight: FontWeight.bold))),
                     DataCell(Text('${h.nombre} ${h.apellido1}')),
                     DataCell(Text(h.dni ?? '-')),
+                    DataCell(Text(h.email ?? '-')),
                     DataCell(Text(h.fechaAlta ?? '-')),
+                    DataCell(Text(h.fechaReactivacion ?? '-')),
                     DataCell(Row(
                       children: [
                         IconButton(
@@ -229,7 +256,6 @@ class HermanoActivoListadoScreen extends ConsumerWidget {
     );
   }
 
-  // --- LÓGICA DE DIÁLOGOS CON COLOR CORREGIDO ---
   void _confirmarBaja(BuildContext context, WidgetRef ref, Hermano h) {
     final motivoController = TextEditingController();
     final fechaController = TextEditingController(
@@ -289,12 +315,10 @@ class HermanoActivoListadoScreen extends ConsumerWidget {
                 };
 
                 try {
-                  // 1. Enviamos la actualización al servidor
                   await ref
                       .read(hermanosListadoProvider.notifier)
                       .updateHermano(h.id!, datosBaja);
 
-                  // SOLUCIÓN: Limpiamos la caché de los proveedores
                   ref.invalidate(hermanosListadoProvider);
                   ref.invalidate(hermanosActivosFiltradosProvider);
 

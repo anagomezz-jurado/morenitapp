@@ -8,9 +8,9 @@ class GrupoProveedor {
     required this.codigo,
     required this.nombre,
   });
-factory GrupoProveedor.fromJson(Map<String, dynamic> json) => GrupoProveedor(
-      id: json["id"], 
-      codigo: json["codigo"] ?? '', 
-      nombre: json["nombre"] ?? '', 
-    );
+  factory GrupoProveedor.fromJson(Map<String, dynamic> json) => GrupoProveedor(
+        id: json["id"],
+        codigo: json["codigo"] ?? '',
+        nombre: json["nombre"] ?? '',
+      );
 }

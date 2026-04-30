@@ -1,4 +1,3 @@
-import 'dart:developer' as dev;
 import 'package:dio/dio.dart';
 import 'package:morenitapp/config/constants/environment.dart';
 import 'package:morenitapp/features/auth/infrastructure/errors/auth_errors.dart';
@@ -28,21 +27,21 @@ class SecretariaDatasourceImpl {
       return _processResponse(response);
     } on DioException catch (e) {
       if (e.type == DioExceptionType.connectionError) {
-        throw CustomError('No se pudo conectar al servidor. Revisa tu conexión o el CORS.');
+        throw CustomError(
+            'No se pudo conectar al servidor. Revisa tu conexión o el CORS.');
       }
-      throw CustomError('Error en el servidor: ${e.response?.statusCode ?? 'Desconocido'}');
+      throw CustomError(
+          'Error en el servidor: ${e.response?.statusCode ?? 'Desconocido'}');
     }
   }
 
   dynamic _processResponse(Response response) {
     if (response.data == null) throw CustomError('Sin respuesta del servidor');
     final data = response.data;
-    // Odoo suele envolver la respuesta en un objeto 'result'
     if (data is Map && data.containsKey('result')) return data['result'];
     return data;
   }
 
-  // --- GETTERS ---
   Future<List<Autoridad>> getAutoridades() async {
     final data = await _handleRequest('GET', '/autoridades');
     return (data as List).map((json) => Autoridad.fromJson(json)).toList();
@@ -58,10 +57,9 @@ class SecretariaDatasourceImpl {
     return (data as List).map((json) => Cofradia.fromJson(json)).toList();
   }
 
-  // --- UPSERTS GENÉRICOS ---
-  Future<Map<String, dynamic>> _upsert(String endpoint, Map<String, dynamic> data) async {
+  Future<Map<String, dynamic>> _upsert(
+      String endpoint, Map<String, dynamic> data) async {
     final id = data['id'];
-    // Validar si es nuevo o edición (id != 0 y no nulo)
     final bool isEdit = (id != null && id != 0 && id.toString() != "0");
     final path = isEdit ? '/$endpoint/$id' : '/$endpoint';
     final method = isEdit ? 'PUT' : 'POST';
@@ -70,11 +68,13 @@ class SecretariaDatasourceImpl {
     return Map<String, dynamic>.from(result);
   }
 
-  Future<Map<String, dynamic>> upsertAutoridad(Map<String, dynamic> data) => _upsert('autoridades', data);
-  Future<Map<String, dynamic>> upsertCargo(Map<String, dynamic> data) => _upsert('cargos', data);
-  Future<Map<String, dynamic>> upsertCofradia(Map<String, dynamic> data) => _upsert('cofradias', data);
+  Future<Map<String, dynamic>> upsertAutoridad(Map<String, dynamic> data) =>
+      _upsert('autoridades', data);
+  Future<Map<String, dynamic>> upsertCargo(Map<String, dynamic> data) =>
+      _upsert('cargos', data);
+  Future<Map<String, dynamic>> upsertCofradia(Map<String, dynamic> data) =>
+      _upsert('cofradias', data);
 
-  // --- AUXILIARES ---
   Future<List<Map<String, dynamic>>> getTiposCargos() async {
     final data = await _handleRequest('GET', '/configuracion/tipocargo');
     return List<Map<String, dynamic>>.from(data as List);
@@ -86,9 +86,11 @@ class SecretariaDatasourceImpl {
   }
 
   Future<Map<String, dynamic>> deleteRegistro(String modelo, int id) async {
-    String endpoint = modelo.contains('cargo') ? 'cargos' 
-                    : modelo.contains('autoridad') ? 'autoridades' 
-                    : 'cofradias';
+    String endpoint = modelo.contains('cargo')
+        ? 'cargos'
+        : modelo.contains('autoridad')
+            ? 'autoridades'
+            : 'cofradias';
     final result = await _handleRequest('DELETE', '/$endpoint/$id');
     return Map<String, dynamic>.from(result);
   }

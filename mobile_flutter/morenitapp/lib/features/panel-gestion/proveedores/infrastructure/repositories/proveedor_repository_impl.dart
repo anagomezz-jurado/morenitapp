@@ -11,10 +11,12 @@ class ProveedorRepositoryImpl extends ProveedorRepository {
   Future<List<Proveedor>> getProveedores() => datasource.getProveedores();
 
   @override
-  Future<bool> crearProveedor(Map<String, dynamic> datos) => datasource.crearProveedor(datos);
+  Future<bool> crearProveedor(Map<String, dynamic> datos) =>
+      datasource.crearProveedor(datos);
 
   @override
-  Future<bool> editarProveedor(int id, Map<String, dynamic> datos) => datasource.editarProveedor(id, datos);
+  Future<bool> editarProveedor(int id, Map<String, dynamic> datos) =>
+      datasource.editarProveedor(id, datos);
 
   @override
   Future<bool> eliminarProveedor(int id) => datasource.eliminarProveedor(id);

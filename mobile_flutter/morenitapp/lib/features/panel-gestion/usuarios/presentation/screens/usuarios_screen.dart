@@ -8,11 +8,11 @@ import 'package:morenitapp/shared/widgets/plantilla_ventanas.dart';
 import 'package:morenitapp/shared/excel/excel_Service.dart';
 import 'package:morenitapp/shared/widgets/disenio_informes.dart';
 
-// --- TEMPLATE DEL CONTENEDOR DE FILTROS ---
 class FiltroContenedorTemplate extends StatelessWidget {
   final Widget child;
   final String label;
-  const FiltroContenedorTemplate({super.key, required this.child, this.label = "Filtros"});
+  const FiltroContenedorTemplate(
+      {super.key, required this.child, this.label = "Filtros"});
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +53,8 @@ class FiltroContenedorTemplate extends StatelessWidget {
               ],
             ),
           ),
-          Padding(padding: const EdgeInsets.fromLTRB(8, 0, 8, 12), child: child),
+          Padding(
+              padding: const EdgeInsets.fromLTRB(8, 0, 8, 12), child: child),
         ],
       ),
     );
@@ -70,11 +71,13 @@ class UsuariosScreen extends ConsumerWidget {
     final primaryColor = Theme.of(context).primaryColor;
 
     List<List<String>> prepararDatosExport(List<User> lista) {
-      return lista.map((u) => [
-            u.fullName,
-            u.email,
-            u.rolId == 1 ? 'Administrador' : 'Estándar',
-          ]).toList();
+      return lista
+          .map((u) => [
+                u.fullName,
+                u.email,
+                u.rolId == 1 ? 'Administrador' : 'Estándar',
+              ])
+          .toList();
     }
 
     return PlantillaVentanas(
@@ -108,19 +111,32 @@ class UsuariosScreen extends ConsumerWidget {
           );
         });
       },
-      
-      onNuevo: (currentUser?.isAdmin ?? false) ? () => _showUserForm(context) : null,
+      onNuevo:
+          (currentUser?.isAdmin ?? false) ? () => _showUserForm(context) : null,
       columns: [
-        DataColumn(label: Text('NOMBRE', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold))),
-        DataColumn(label: Text('EMAIL', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold))),
-        DataColumn(label: Text('ROL', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold))),
-        DataColumn(label: Text('ACCIONES', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold))),
+        DataColumn(
+            label: Text('NOMBRE',
+                style: TextStyle(
+                    color: primaryColor, fontWeight: FontWeight.bold))),
+        DataColumn(
+            label: Text('EMAIL',
+                style: TextStyle(
+                    color: primaryColor, fontWeight: FontWeight.bold))),
+        DataColumn(
+            label: Text('ROL',
+                style: TextStyle(
+                    color: primaryColor, fontWeight: FontWeight.bold))),
+        DataColumn(
+            label: Text('ACCIONES',
+                style: TextStyle(
+                    color: primaryColor, fontWeight: FontWeight.bold))),
       ],
       rows: usuariosAsync.when(
         data: (usuarios) => usuarios.map((u) {
           final isMe = currentUser?.id == u.id;
           return DataRow(cells: [
-            DataCell(Text(u.fullName, style: const TextStyle(fontWeight: FontWeight.w500))),
+            DataCell(Text(u.fullName,
+                style: const TextStyle(fontWeight: FontWeight.w500))),
             DataCell(Text(u.email)),
             DataCell(_buildRolBadge(u.rolId)),
             DataCell(_buildActions(context, ref, u, currentUser, isMe)),
@@ -143,12 +159,15 @@ class UsuariosScreen extends ConsumerWidget {
         border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Text(isAdmin ? 'Administrador' : 'Estándar',
-          style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 10)),
+          style: TextStyle(
+              color: color, fontWeight: FontWeight.bold, fontSize: 10)),
     );
   }
 
-  Widget _buildActions(BuildContext context, WidgetRef ref, User user, User? currentUser, bool isMe) {
-    if (currentUser?.isAdmin != true) return const Icon(Icons.lock_outline, color: Colors.grey, size: 18);
+  Widget _buildActions(BuildContext context, WidgetRef ref, User user,
+      User? currentUser, bool isMe) {
+    if (currentUser?.isAdmin != true)
+      return const Icon(Icons.lock_outline, color: Colors.grey, size: 18);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -186,12 +205,15 @@ class UsuariosScreen extends ConsumerWidget {
         title: const Text('Confirmar borrado'),
         content: Text('¿Deseas eliminar permanentemente a ${user.fullName}?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancelar')),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () {
               final id = int.tryParse(user.id);
-              if (id != null) ref.read(usuariosListadoProvider.notifier).eliminar(id);
+              if (id != null)
+                ref.read(usuariosListadoProvider.notifier).eliminar(id);
               Navigator.pop(ctx);
             },
             child: const Text('Eliminar'),
@@ -268,27 +290,38 @@ class _UserFormState extends ConsumerState<_UserForm> {
               children: [
                 Text(widget.user == null ? 'Nuevo Usuario' : 'Editar Usuario',
                     style: Theme.of(context).textTheme.titleLarge),
-                IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+                IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close)),
               ],
             ),
             const Divider(),
             const SizedBox(height: 10),
             TextFormField(
               controller: nombre,
-              decoration: const InputDecoration(labelText: 'Nombre Completo', border: OutlineInputBorder(), prefixIcon: Icon(Icons.person)),
+              decoration: const InputDecoration(
+                  labelText: 'Nombre Completo',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.person)),
               validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
             ),
             const SizedBox(height: 15),
             TextFormField(
               controller: email,
-              decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder(), prefixIcon: Icon(Icons.email)),
+              decoration: const InputDecoration(
+                  labelText: 'Email',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.email)),
               validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
               keyboardType: TextInputType.emailAddress,
             ),
             const SizedBox(height: 15),
             DropdownButtonFormField<int>(
               value: rol,
-              decoration: const InputDecoration(labelText: 'Permisos del Sistema', border: OutlineInputBorder(), prefixIcon: Icon(Icons.security)),
+              decoration: const InputDecoration(
+                  labelText: 'Permisos del Sistema',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.security)),
               items: const [
                 DropdownMenuItem(value: 1, child: Text('Administrador')),
                 DropdownMenuItem(value: 2, child: Text('Usuario Estándar')),
@@ -300,19 +333,28 @@ class _UserFormState extends ConsumerState<_UserForm> {
               controller: pass,
               obscureText: true,
               decoration: InputDecoration(
-                labelText: widget.user == null ? 'Contraseña' : 'Cambiar Contraseña (opcional)',
+                labelText: widget.user == null
+                    ? 'Contraseña'
+                    : 'Cambiar Contraseña (opcional)',
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.lock),
-                helperText: widget.user == null ? 'Mínimo 6 caracteres' : 'Dejar en blanco para no cambiar',
+                helperText: widget.user == null
+                    ? 'Mínimo 6 caracteres'
+                    : 'Dejar en blanco para no cambiar',
               ),
-              validator: (v) => (widget.user == null && (v == null || v.isEmpty)) ? 'Requerido' : null,
+              validator: (v) =>
+                  (widget.user == null && (v == null || v.isEmpty))
+                      ? 'Requerido'
+                      : null,
             ),
             const SizedBox(height: 25),
             FilledButton.icon(
               onPressed: _guardar,
               icon: const Icon(Icons.save),
-              label: Text(widget.user == null ? 'Crear Usuario' : 'Guardar Cambios'),
-              style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 15)),
+              label: Text(
+                  widget.user == null ? 'Crear Usuario' : 'Guardar Cambios'),
+              style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 15)),
             ),
           ],
         ),

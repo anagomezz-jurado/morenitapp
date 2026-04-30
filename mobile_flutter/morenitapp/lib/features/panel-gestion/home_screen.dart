@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Entidades
 import 'package:morenitapp/features/auth/domain/entities/user.dart';
+import 'package:morenitapp/features/panel-gestion/activity_log.dart';
+import 'package:morenitapp/features/panel-gestion/activity_log_provider.dart';
 import 'package:morenitapp/features/panel-gestion/hermanos/domain/entities/hermano.dart';
 import 'package:morenitapp/features/panel-gestion/eventos-cultos/domain/entities/evento.dart';
 
@@ -10,28 +12,30 @@ import 'package:morenitapp/features/panel-gestion/eventos-cultos/domain/entities
 import 'package:morenitapp/features/auth/presentation/providers/auth_provider.dart';
 import 'package:morenitapp/features/panel-gestion/hermanos/presentation/providers/hermanos_provider.dart';
 import 'package:morenitapp/features/panel-gestion/eventos-cultos/presentation/providers/evento_culto_provider.dart';
-// Importante para que el contador de anunciantes sea real
 import 'package:morenitapp/features/panel-gestion/proveedores/presentation/providers/proveedor_providers.dart';
 
 // Widgets
 import 'package:morenitapp/shared/widgets/side_menu.dart';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart'; 
+
+
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
-  static final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  static final GlobalKey<ScaffoldState> _scaffoldKey =
+      GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = Theme.of(context).colorScheme;
 
-    // Escuchamos los providers
     final authState = ref.watch(authProvider);
     final user = authState.user;
     final hermanosAsync = ref.watch(hermanosListadoProvider);
     final eventosAsync = ref.watch(eventosProvider);
-    
-    // Vinculación real con la lista de anunciantes
     final anunciantesData = ref.watch(listaSoloAnunciantes);
 
     return Scaffold(
@@ -47,7 +51,8 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 }
-class _MainContent extends StatelessWidget {
+
+class _MainContent extends ConsumerWidget {
   final ColorScheme colors;
   final User? user;
   final AsyncValue<List<Hermano>> hermanosAsync;
@@ -62,9 +67,18 @@ class _MainContent extends StatelessWidget {
     required this.totalAnunciantes,
   });
 
+  String _formatTime(DateTime date) {
+    final now = DateTime.now();
+    final diff = now.difference(date);
+    if (diff.inMinutes < 60) return 'Hace ${diff.inMinutes} min';
+    if (diff.inHours < 24) return 'Hace ${diff.inHours} horas';
+    return DateFormat('dd/MM HH:mm').format(date);
+  }
+
   @override
-  Widget build(BuildContext context) {
-    // --- LÓGICA DE FILTRADO PARA LOS CONTADORES ---
+  Widget build(BuildContext context, WidgetRef ref) {
+    final logs = ref.watch(activityLogProvider);
+
     final statsHermanos = hermanosAsync.when(
       data: (list) {
         final activos = list.where((h) => h.estado == 'activo').length;
@@ -78,14 +92,14 @@ class _MainContent extends StatelessWidget {
     return SafeArea(
       child: Column(
         children: [
-          // --- BOTÓN DE MENÚ ---
           Align(
             alignment: Alignment.topLeft,
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: IconButton(
                 icon: const Icon(Icons.menu, color: Colors.black87, size: 30),
-                onPressed: () => HomeScreen._scaffoldKey.currentState?.openDrawer(),
+                onPressed: () =>
+                    HomeScreen._scaffoldKey.currentState?.openDrawer(),
               ),
             ),
           ),
@@ -97,39 +111,29 @@ class _MainContent extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // --- BANNER DE BIENVENIDA ---
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: colors.primary,
                       borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: colors.primary.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        )
-                      ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Bienvenido de nuevo,',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.white.withOpacity(0.7),
-                          ),
-                        ),
+                        Text('Bienvenido de nuevo,',
+                            style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white.withOpacity(0.7))),
                         const SizedBox(height: 4),
                         Text(
-                          (user != null) ? '${user!.nombre} ${user!.apellido1}' : 'Admin',
+                          (user != null)
+                              ? '${user!.nombre} ${user!.apellido1}'
+                              : 'Admin',
                           style: const TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white),
                         ),
                       ],
                     ),
@@ -137,62 +141,75 @@ class _MainContent extends StatelessWidget {
 
                   const SizedBox(height: 30),
 
-                  // --- ESTADÍSTICAS ACTUALIZADAS (3 TARJETAS) ---
-                  _buildStatCards(
-                    statsHermanos['activos']!, 
-                    statsHermanos['bajas']!, 
-                    totalAnunciantes
-                  ),
+                  _buildStatCards(statsHermanos['activos']!,
+                      statsHermanos['bajas']!, totalAnunciantes),
 
                   const SizedBox(height: 25),
                   const _SectionTitle(title: 'Resumen de actividad'),
-                  
-                  // --- ACTIVIDAD DINÁMICA ---
-                  hermanosAsync.when(
-                    data: (list) {
-                      if (list.isEmpty) return const _ActivityCard(description: 'No hay registros recientes', time: '-');
-                      // Mostramos el último independientemente de si es alta o baja
-                      final ultimo = list.last;
-                      final esBaja = ultimo.estado == 'baja';
-                      return _ActivityCard(
-                        description: esBaja 
-                          ? 'Se tramitó la baja de: ${ultimo.nombre} ${ultimo.apellido1}'
-                          : 'Nuevo hermano activo: ${ultimo.nombre} ${ultimo.apellido1}',
-                        time: 'Recientemente',
-                      );
-                    },
-                    loading: () => const LinearProgressIndicator(),
-                    error: (_, __) => const _ActivityCard(description: 'Error al cargar actividad', time: 'Error'),
-                  ),
+
+                  if (logs.isEmpty)
+                    const _ActivityCard(
+                        description: 'Sin actividad reciente', time: '-')
+                  else
+                    ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: logs.length > 5 ? 5 : logs.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      itemBuilder: (context, index) {
+                        final log = logs[index];
+                        return _ActivityCard(
+                          description:
+                              '${log.userName} ${_actionText(log.action)} ${log.entityName}',
+                          time: _formatTime(log.createdAt),
+                        );
+                      },
+                    ),
 
                   const SizedBox(height: 25),
                   const _SectionTitle(title: 'Próximos eventos'),
 
-                  // --- LÓGICA DE EVENTOS ---
                   eventosAsync.when(
                     data: (eventos) {
-                      final ahora = DateTime.now();
-                      final hoy = DateTime(ahora.year, ahora.month, ahora.day);
-                      final proximosEventos = eventos.where((e) {
-                        final fechaEvento = DateTime(e.fechaInicio.year, e.fechaInicio.month, e.fechaInicio.day);
-                        return fechaEvento.isAtSameMomentAs(hoy) || fechaEvento.isAfter(hoy);
-                      }).toList();
+                      final hoy = DateTime.now();
 
-                      proximosEventos.sort((a, b) => a.fechaInicio.compareTo(b.fechaInicio));
+                      final proximosEventos = eventos
+                          .where((e) =>
+                              e.fechaInicio.isAfter(hoy) ||
+                              (e.fechaInicio.year == hoy.year &&
+                                  e.fechaInicio.month == hoy.month &&
+                                  e.fechaInicio.day == hoy.day))
+                          .toList();
 
-                      if (proximosEventos.isEmpty) return const _NoEventsWidget();
+                      proximosEventos.sort(
+                          (a, b) => a.fechaInicio.compareTo(b.fechaInicio));
 
-                      final proximo = proximosEventos.first;
-                      return _EventTile(
-                        title: proximo.nombre,
-                        date: proximo.fechaInicio.toString().substring(0, 10),
-                        icon: Icons.calendar_month,
+                      if (proximosEventos.isEmpty)
+                        return const _NoEventsWidget();
+
+                      final listaReducida = proximosEventos.take(3).toList();
+
+                      return Column(
+                        children: listaReducida.map((evento) {
+                          return Padding(
+                            padding: const EdgeInsets.only(
+                                bottom: 12), 
+                            child: _EventTile(
+                              title: evento.nombre,
+                              date: DateFormat('dd/MM/yyyy HH:mm')
+                                  .format(evento.fechaInicio),
+                              icon: Icons.calendar_month,
+                              color: evento.colorVisual,
+                            ),
+                          );
+                        }).toList(),
                       );
                     },
-                    loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (err, stack) => const Text('Error al conectar con Odoo'),
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (err, stack) =>
+                        const Text('Error al conectar con Odoo'),
                   ),
-
                   const SizedBox(height: 30),
                 ],
               ),
@@ -203,79 +220,45 @@ class _MainContent extends StatelessWidget {
     );
   }
 
-  // --- GRID DE 3 TARJETAS ---
+  String _actionText(ActionType action) {
+    switch (action) {
+      case ActionType.create:
+        return 'creó';
+      case ActionType.update:
+        return 'actualizó';
+      case ActionType.delete:
+        return 'eliminó';
+    }
+  }
+
   Widget _buildStatCards(String activos, String bajas, String totalA) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return GridView(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: 200, // Ajustado para que quepan 3 o se reorganicen
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            childAspectRatio: 1.1,
-          ),
-          children: [
-            _StatCard(
-              title: 'Activos',
-              value: activos,
-              icon: Icons.person_add_alt_1_rounded,
-              color: Colors.green,
-            ),
-            _StatCard(
-              title: 'Bajas',
-              value: bajas,
-              icon: Icons.person_off_rounded,
-              color: Colors.green,
-            ),
-            _StatCard(
-              title: 'Anunciantes',
-              value: totalA,
-              icon: Icons.ads_click,
-              color: Colors.green,
-            ),
-          ],
-        );
-      },
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 3,
+      mainAxisSpacing: 8,
+      crossAxisSpacing: 8,
+      childAspectRatio: 1.5,
+      children: [
+        _StatCard(
+            title: 'Activos',
+            value: activos,
+            icon: Icons.person_add,
+            color: Colors.green),
+        _StatCard(
+            title: 'Bajas',
+            value: bajas,
+            icon: Icons.person_off,
+            color: Colors.green),
+        _StatCard(
+            title: 'Anunciantes',
+            value: totalA,
+            icon: Icons.ads_click,
+            color: Colors.green),
+      ],
     );
   }
 }
-
-  Widget _buildStatCards(String totalH, String totalA) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        bool isMobile = constraints.maxWidth < 600;
-        return GridView(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: isMobile ? (constraints.maxWidth / 2) - 5 : 300,
-            mainAxisSpacing: 15,
-            crossAxisSpacing: 15,
-            childAspectRatio: isMobile ? 1.0 : 1.5,
-          ),
-          children: [
-            _StatCard(
-              title: 'Total Hermanos',
-              value: totalH,
-              icon: Icons.people_alt_rounded,
-              color: Colors.green,
-            ),
-            _StatCard(
-              title: 'Anunciantes',
-              value: totalA, // Vinculado a la lógica de proveedores
-              icon: Icons.ads_click,
-              color: Colors.green,
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-
-// --- SUB-WIDGETS (CON TU DISEÑO ORIGINAL) ---
 
 class _NoEventsWidget extends StatelessWidget {
   const _NoEventsWidget();
@@ -298,6 +281,7 @@ class _NoEventsWidget extends StatelessWidget {
     );
   }
 }
+
 class _StatCard extends StatelessWidget {
   final String title;
   final String value;
@@ -316,16 +300,16 @@ class _StatCard extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colors.outline.withOpacity(0.15)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.outline.withOpacity(0.12)),
         boxShadow: [
           BoxShadow(
-            color: colors.shadow.withOpacity(0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: colors.shadow.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           )
         ],
       ),
@@ -333,28 +317,32 @@ class _StatCard extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(14),
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: color, size: 26),
+            child: Icon(icon,
+                color: color, size: 20), 
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 6), 
           Text(
             value,
             style: TextStyle(
-              fontSize: 26,
+              fontSize: 22, 
               fontWeight: FontWeight.bold,
               color: colors.onSurface,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(
             title,
             textAlign: TextAlign.center,
+            maxLines:
+                1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 11, 
               color: colors.onSurface.withOpacity(0.6),
               fontWeight: FontWeight.w500,
             ),
@@ -375,6 +363,7 @@ class _SectionTitle extends StatelessWidget {
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
       );
 }
+
 class _ActivityCard extends StatelessWidget {
   final String description;
   final String time;
@@ -440,15 +429,18 @@ class _ActivityCard extends StatelessWidget {
     );
   }
 }
+
 class _EventTile extends StatelessWidget {
   final String title;
   final String date;
   final IconData icon;
+  final Color color;
 
   const _EventTile({
     required this.title,
     required this.date,
     required this.icon,
+    required this.color,
   });
 
   @override
@@ -458,8 +450,9 @@ class _EventTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: colors.primaryContainer,
+        color: color.withOpacity(0.12),
         borderRadius: BorderRadius.circular(18),
+        border: Border(left: BorderSide(color: color, width: 5)),
         boxShadow: [
           BoxShadow(
             color: colors.shadow.withOpacity(0.12),
@@ -470,7 +463,7 @@ class _EventTile extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, color: colors.onPrimaryContainer, size: 26),
+          Icon(icon, color: color, size: 26),
           const SizedBox(width: 18),
           Expanded(
             child: Column(

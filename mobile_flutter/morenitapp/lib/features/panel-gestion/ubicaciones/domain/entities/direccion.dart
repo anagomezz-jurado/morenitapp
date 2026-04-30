@@ -6,11 +6,11 @@ class Direccion {
   final int localidadId;
   final int cpId;
 
-  Direccion({
-    required this.id, 
-    required this.calle, 
-    required this.numero, 
-    required this.provinciaId, 
-    required this.localidadId, 
-    required this.cpId
-  });}
+  Direccion(
+      {required this.id,
+      required this.calle,
+      required this.numero,
+      required this.provinciaId,
+      required this.localidadId,
+      required this.cpId});
+}

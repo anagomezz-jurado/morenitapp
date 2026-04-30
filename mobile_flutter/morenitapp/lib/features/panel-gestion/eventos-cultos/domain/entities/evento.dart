@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 class Evento {
   final int id;
   final String codEvento;
@@ -8,7 +10,7 @@ class Evento {
   final String? lugar;
   final int? anio;
   final int? organizadorId;
-  final String? organizadorNombre; // Añadido para la UI
+  final String? organizadorNombre; 
   final int? tipoEventoId;
   final String color;
   final String tipoNombre;
@@ -29,6 +31,12 @@ class Evento {
     this.tipoEventoId,
   });
 
+  Color get colorVisual {
+    String hex = color.replaceAll('#', '');
+    if (hex.length == 6) hex = 'FF$hex';
+    return Color(int.parse(hex, radix: 16));
+  }
+
   factory Evento.fromJson(Map<String, dynamic> json) {
     return Evento(
       id: json['id'] ?? 0,
@@ -36,15 +44,20 @@ class Evento {
       nombre: json['nombre'] ?? 'Sin nombre',
       descripcion: json['descripcion'],
       fechaInicio: DateTime.parse(json['fecha_inicio'].replaceFirst(' ', 'T')),
-fechaFin: DateTime.parse(json['fecha_fin'].replaceFirst(' ', 'T')),
+      fechaFin: DateTime.parse(json['fecha_fin'].replaceFirst(' ', 'T')),
       lugar: json['lugar'],
-      anio: json['anio'] is int ? json['anio'] : int.tryParse(json['anio'].toString()) ?? 0,
+      anio: json['anio'] is int
+          ? json['anio']
+          : int.tryParse(json['anio'].toString()) ?? 0,
       color: json['color'] ?? "#3498db",
       tipoNombre: json['tipo_nombre'] ?? "General",
-      // Manejo de Many2one de Odoo [id, "nombre"]
-      organizadorId: (json['organizador_id'] is List) ? json['organizador_id'][0] : null,
-      organizadorNombre: (json['organizador_id'] is List) ? json['organizador_id'][1] : 'Propio',
-      tipoEventoId: (json['tipoevento_id'] is List) ? json['tipoevento_id'][0] : null,
+      organizadorId:
+          (json['organizador_id'] is List) ? json['organizador_id'][0] : null,
+      organizadorNombre: (json['organizador_id'] is List)
+          ? json['organizador_id'][1]
+          : 'Propio',
+      tipoEventoId:
+          (json['tipoevento_id'] is List) ? json['tipoevento_id'][0] : null,
     );
   }
 }

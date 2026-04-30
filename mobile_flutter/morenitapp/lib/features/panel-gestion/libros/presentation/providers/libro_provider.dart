@@ -4,11 +4,11 @@ import 'package:morenitapp/features/panel-gestion/libros/domain/entities/libro.d
 import 'package:morenitapp/features/panel-gestion/libros/infrastructure/datasources/libro_datasource_impl.dart';
 import 'package:morenitapp/features/panel-gestion/libros/infrastructure/repositories/libro_repository_impl.dart';
 
-// Definición del Notifier
 class LibrosNotifier extends StateNotifier<AsyncValue<List<Libro>>> {
   final LibroRepositoryImpl repository;
 
-  LibrosNotifier({required this.repository}) : super(const AsyncValue.loading()) {
+  LibrosNotifier({required this.repository})
+      : super(const AsyncValue.loading()) {
     cargarLibros();
   }
 
@@ -33,17 +33,16 @@ class LibrosNotifier extends StateNotifier<AsyncValue<List<Libro>>> {
   }
 
   Future<bool> actualizarLibro(int id, Map<String, dynamic> datos) async {
-  final success = await repository.editarLibro(id, datos);
-  if (success) {
-    await cargarLibros(); // Esto refresca la lista global
+    final success = await repository.editarLibro(id, datos);
+    if (success) {
+      await cargarLibros(); 
+    }
+    return success;
   }
-  return success;
-}
 
   Future<bool> borrarLibro(int id) async {
     final success = await repository.eliminarLibro(id);
     if (success) {
-      // Optimización: eliminamos localmente el registro del estado para feedback instantáneo
       state.whenData((libros) {
         state = AsyncValue.data(libros.where((l) => l.id != id).toList());
       });
@@ -52,14 +51,14 @@ class LibrosNotifier extends StateNotifier<AsyncValue<List<Libro>>> {
   }
 }
 
-// Providers
-// Usamos un solo datasource compartido para el repositorio
+
 final libroRepositoryProvider = Provider((ref) {
   final datasource = LibroDatasourceImpl();
   return LibroRepositoryImpl(datasource);
 });
 
-final librosProvider = StateNotifierProvider<LibrosNotifier, AsyncValue<List<Libro>>>((ref) {
+final librosProvider =
+    StateNotifierProvider<LibrosNotifier, AsyncValue<List<Libro>>>((ref) {
   final repo = ref.watch(libroRepositoryProvider);
   return LibrosNotifier(repository: repo);
 });

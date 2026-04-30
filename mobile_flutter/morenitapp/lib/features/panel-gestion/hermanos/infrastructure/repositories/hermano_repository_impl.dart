@@ -14,7 +14,8 @@ class HermanoRepositoryImpl extends HermanoRepository {
       dataSource.getHermanos(limit: limit, offset: offset);
 
   @override
-  Future<Hermano> anadirHermano(Hermano hermano) => dataSource.anadirHermano(hermano);
+  Future<Hermano> anadirHermano(Hermano hermano) =>
+      dataSource.anadirHermano(hermano);
 
   @override
   Future<void> updateHermano(int id, Map<String, dynamic> datos) =>
@@ -27,5 +28,6 @@ class HermanoRepositoryImpl extends HermanoRepository {
   Future<bool> bajaHermano(int id) => dataSource.bajaHermano(id);
 
   @override
-  Future<Hermano> getHermanoByDni(String dni) => dataSource.getHermanoByDni(dni);
+  Future<Hermano> getHermanoByDni(String dni) =>
+      dataSource.getHermanoByDni(dni);
 }

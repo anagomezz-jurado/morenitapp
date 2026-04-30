@@ -1,38 +1,38 @@
 import 'package:flutter/material.dart';
 
-// ----------------------------------------------------------------------------
-// 1. CONFIGURACIÓN DEL TEMA (AppTheme)
-// ----------------------------------------------------------------------------
+// CONFIGURACIÓN DEL TEMA
 class AppTheme {
   ThemeData getTheme() => ThemeData(
         useMaterial3: true,
         fontFamily: 'Palatino', // Asegúrate de tener esta fuente en pubspec.yaml
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color.fromARGB(255, 5, 25, 6),
-        ).copyWith(
-          primary: const Color.fromARGB(255, 9, 57, 12),
-          secondary: const Color.fromARGB(255, 59, 103, 61),
-        ),
         
+        // Configuración de Colores
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF051906),
+        ).copyWith(
+          primary: const Color(0xFF09390C),
+          secondary: const Color(0xFF3B673D),
+        ),
+
         // Configuración global de AppBar y Títulos
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.transparent,
           elevation: 0,
           centerTitle: true,
-          iconTheme: IconThemeData(color: Color.fromARGB(255, 43, 41, 41), size: 28),
+          iconTheme: IconThemeData(
+            color: Color(0xFF2B2929), 
+            size: 28
+          ),
           titleTextStyle: TextStyle(
-            color: Color.fromARGB(255, 255, 255, 255),
+            color: Colors.white,
             fontSize: 22,
             fontWeight: FontWeight.bold,
-            
           ),
         ),
       );
 }
 
-// ----------------------------------------------------------------------------
-// 2. COMPONENTE DE FONDO (MainBackground)
-// ----------------------------------------------------------------------------
+// COMPONENTE DE FONDO REUTILIZABLE (MainBackground)
 class MainBackground extends StatelessWidget {
   final Widget child;
   final String? title;
@@ -47,15 +47,15 @@ class MainBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
     final colors = Theme.of(context).colorScheme;
     final textStyle = Theme.of(context).appBarTheme.titleTextStyle;
-    final size = MediaQuery.of(context).size;
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // Fondo Verde Dinámico (35% de la altura)
+          // --- CAPA 1: Fondo Verde de Cabecera (35% de altura) ---
           Container(
             width: double.infinity,
             height: size.height * 0.35,
@@ -68,7 +68,7 @@ class MainBackground extends StatelessWidget {
             ),
           ),
 
-          // Contenido con Scroll para evitar el error de "Overflow"
+          // --- CAPA 2: Contenido con Scroll ---
           SafeArea(
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(),
@@ -77,30 +77,26 @@ class MainBackground extends StatelessWidget {
                   hasScrollBody: false,
                   child: Column(
                     children: [
-                      // Título
+                      const SizedBox(height: 15),
+
+                      // Título de la vista
                       if (title != null)
                         Padding(
-                          padding: const EdgeInsets.only(top: 15),
-                          child: Text(title!, style: textStyle, textAlign: TextAlign.center),
-                        ),
-
-                      // Icono en Círculo
-                      if (headerIcon != null)
-                        Container(
-                          margin: const EdgeInsets.only(top: 15),
-                          padding: const EdgeInsets.all(15),
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Text(
+                            title!, 
+                            style: textStyle, 
+                            textAlign: TextAlign.center
                           ),
-                          child: headerIcon,
                         ),
 
-                      // Espacio flexible que empuja la frase fuera del verde
+                      // Icono Flotante en Círculo
+                      if (headerIcon != null)
+                        _HeaderCircleIcon(child: headerIcon!),
+
                       const SizedBox(height: 30),
 
-                      // El resto del contenido (Frase + Formulario)
+                      // Panel Blanco Inferior (Cuerpo de la vista)
                       Expanded(
                         child: Container(
                           width: double.infinity,
@@ -122,6 +118,33 @@ class MainBackground extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// SUB-WIDGETS INTERNOS
+class _HeaderCircleIcon extends StatelessWidget {
+  final Widget child;
+
+  const _HeaderCircleIcon({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: 15),
+      padding: const EdgeInsets.all(15),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12, 
+            blurRadius: 10,
+            offset: Offset(0, 5),
+          )
+        ],
+      ),
+      child: child,
     );
   }
 }

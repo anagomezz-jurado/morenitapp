@@ -11,11 +11,13 @@ class LibroRepositoryImpl extends LibroRepository {
   Future<List<Libro>> getLibros() => datasource.getLibros();
 
   @override
-  Future<bool> crearLibro(Map<String, dynamic> datos) => datasource.crearLibro(datos);
+  Future<bool> crearLibro(Map<String, dynamic> datos) =>
+      datasource.crearLibro(datos);
 
   @override
   Future<bool> eliminarLibro(int id) => datasource.eliminarLibro(id);
-  
+
   @override
-  Future<bool> editarLibro(int id, Map<String, dynamic> datos) => datasource.editarLibro(id, datos);
+  Future<bool> editarLibro(int id, Map<String, dynamic> datos) =>
+      datasource.editarLibro(id, datos);
 }

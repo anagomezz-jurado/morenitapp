@@ -1,5 +1,4 @@
 import 'package:morenitapp/features/auth/domain/datasources/auth_datasource.dart';
-import 'package:morenitapp/features/panel-gestion/usuarios/domain/entities/grupo_user.dart';
 import 'package:morenitapp/features/auth/domain/entities/user.dart';
 import 'package:morenitapp/features/auth/domain/repositories/auth_repository.dart';
 import 'package:morenitapp/features/auth/infrastructure/datasources/auth_datasource_impl.dart';
@@ -45,6 +44,4 @@ class AuthRepositoryImpl extends AuthRepository {
       recibirNotiEmail: recibirNotiEmail,
     );
   }
-
-
 }

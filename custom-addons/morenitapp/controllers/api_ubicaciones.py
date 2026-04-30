@@ -116,7 +116,6 @@ class UbicacionesAPI(http.Controller):
                     res_data.update({
                         'nombreCalle': getattr(nuevo, 'nombreCalle', nuevo.display_name),
                         'localidad_id': nuevo.localidad_id.id if nuevo.localidad_id else 0,
-                        # Asegúrate que aquí coincida con lo que pusiste en el cleanId de Flutter
                         'codPostal_id': nuevo.codPostal_id.id if nuevo.codPostal_id else 0,
                     })
 

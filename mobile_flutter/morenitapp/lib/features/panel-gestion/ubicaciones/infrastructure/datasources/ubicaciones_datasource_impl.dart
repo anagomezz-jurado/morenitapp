@@ -7,8 +7,6 @@ import 'package:morenitapp/features/panel-gestion/ubicaciones/domain/entities/lo
 import 'package:morenitapp/features/panel-gestion/ubicaciones/domain/entities/provincia.dart';
 
 class UbicacionDataSourceImpl extends UbicacionDatasource {
-  
-  // Usar una instancia de Dio configurada de forma más robusta
   final dio = Dio(BaseOptions(
     baseUrl: Environment.apiUrl,
     connectTimeout: const Duration(seconds: 10),
@@ -19,27 +17,25 @@ class UbicacionDataSourceImpl extends UbicacionDatasource {
     },
   ));
 
-  // --- MÉTODOS GENÉRICOS ---
 
-Future<List<T>> _getList<T>(
+  Future<List<T>> _getList<T>(
       String path, T Function(Map<String, dynamic>) fromJson) async {
     try {
       final response = await dio.get(path);
-      
-      // Si Odoo devuelve un error estructurado dentro del 'result'
+
       if (response.data is Map && response.data['error'] != null) {
         throw Exception(response.data['error']['message'] ?? 'Error de Odoo');
       }
 
-      final dynamic rawData = response.data is Map && response.data.containsKey('result') 
-          ? response.data['result'] 
-          : response.data;
+      final dynamic rawData =
+          response.data is Map && response.data.containsKey('result')
+              ? response.data['result']
+              : response.data;
 
       if (rawData == null || rawData == false) return [];
-      
+
       final List<dynamic> dataList = rawData is List ? rawData : [];
-      
-      // Aquí es donde ocurría tu error de 'Null is not a subtype of int'
+
       return dataList.map((item) => fromJson(item)).toList();
     } catch (e) {
       print("FALLO EN $path: $e");
@@ -51,11 +47,11 @@ Future<List<T>> _getList<T>(
       T Function(Map<String, dynamic>) fromJson) async {
     try {
       final response = await dio.post(path, data: data);
-      
-      // Manejo de la respuesta de Odoo (result)
-      final responseData = (response.data is Map && response.data.containsKey('result'))
-          ? response.data['result']
-          : response.data;
+
+      final responseData =
+          (response.data is Map && response.data.containsKey('result'))
+              ? response.data['result']
+              : response.data;
 
       if (responseData == null || responseData == false) {
         throw Exception('El servidor no devolvió datos válidos al crear');
@@ -69,7 +65,6 @@ Future<List<T>> _getList<T>(
 
   Future<bool> _update(String path, Map<String, dynamic> data) async {
     try {
-      // Algunos backends de Odoo prefieren POST para emular PUT si no está habilitado
       final response = await dio.put(path, data: data);
       return response.statusCode == 200;
     } catch (e) {
@@ -88,15 +83,15 @@ Future<List<T>> _getList<T>(
     }
   }
 
-  // --- IMPLEMENTACIÓN ESPECÍFICA ---
-
   @override
   Future<List<Provincia>> getProvincias() async =>
       _getList('/ubicacion/provincias', (json) => Provincia.fromJson(json));
 
   @override
-  Future<Provincia> crearProvincia(Provincia provincia) async => 
-      _create('/ubicacion/provincias', provincia.toJson(), (json) => Provincia.fromJson(json));
+  Future<Provincia> crearProvincia(Provincia provincia) async => _create(
+      '/ubicacion/provincias',
+      provincia.toJson(),
+      (json) => Provincia.fromJson(json));
 
   @override
   Future<bool> editarProvincia(int id, Map<String, dynamic> datos) async =>
@@ -138,12 +133,12 @@ Future<List<T>> _getList<T>(
 
   @override
   Future<CodigoPostal> crearCodigoPostal(CodigoPostal cp) async {
-    // Es mejor usar el toJson de la entidad si está disponible para mantener consistencia
     final data = {
       'name': cp.name,
       'localidad_id': cp.localidadId,
     };
-    return _create('/ubicacion/cp', data, (json) => CodigoPostal.fromJson(json));
+    return _create(
+        '/ubicacion/cp', data, (json) => CodigoPostal.fromJson(json));
   }
 
   @override
@@ -158,12 +153,8 @@ Future<List<T>> _getList<T>(
   Future<List<Calle>> getCalles() async =>
       _getList('/ubicacion/calles', (json) => Calle.fromJson(json));
 
- @override
+  @override
   Future<Calle> crearCalle(Calle calle) async {
-    // Opción A: Usar el toJson directo (ahora que ya existe)
-    // return _create('/ubicacion/calles', calle.toJson(), (json) => Calle.fromJson(json));
-
-    // Opción B: Mapeo manual si el backend espera nombres distintos a la entidad
     final data = {
       'nombreCalle': calle.nombreCalle,
       'localidad_id': calle.localidadId,
@@ -178,6 +169,5 @@ Future<List<T>> _getList<T>(
       _update('/ubicacion/calles/$id', datos);
 
   @override
-  Future<bool> eliminarCalle(int id) async => 
-      _delete('/ubicacion/calles/$id');
+  Future<bool> eliminarCalle(int id) async => _delete('/ubicacion/calles/$id');
 }

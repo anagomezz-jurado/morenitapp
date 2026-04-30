@@ -209,7 +209,6 @@ class _RolFormContentState extends ConsumerState<_RolFormContent> {
         onPressed: () {
           if (!formKey.currentState!.validate()) return;
 
-          // Convertimos el código de String a int de forma segura
           final int code = int.tryParse(codCtrl.text) ?? 0;
           final notifier = ref.read(rolesProvider.notifier);
 

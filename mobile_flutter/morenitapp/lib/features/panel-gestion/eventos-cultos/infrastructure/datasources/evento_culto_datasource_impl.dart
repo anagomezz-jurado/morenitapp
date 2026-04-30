@@ -6,9 +6,8 @@ import '../../domain/entities/evento.dart';
 import '../../domain/entities/organizador.dart';
 
 class EventoCultoDatasourceImpl extends EventoCultoDatasource {
-  // Configuración de Dio
   final dio = Dio(BaseOptions(
-    baseUrl: Environment.apiUrl, // Ejemplo: http://192.168.1.XX:8069/api
+    baseUrl: Environment.apiUrl,
     connectTimeout: const Duration(seconds: 7),
     receiveTimeout: const Duration(seconds: 5),
     headers: {
@@ -17,27 +16,18 @@ class EventoCultoDatasourceImpl extends EventoCultoDatasource {
     },
   ));
 
-  // --- MÉTODOS BASE ---
-
   Future<dynamic> _get(String path) async {
     final response = await dio.get(path);
     return response.data;
   }
 
   // --- EVENTOS ---
-
   @override
   Future<List<Evento>> getEventos() async {
     try {
-      print('*** Iniciando petición a: ${dio.options.baseUrl}/eventos ***');
 
       final response = await dio.get('/eventos');
-
-      print('*** Respuesta recibida: ${response.statusCode} ***');
-      print('*** Datos brutos: ${response.data} ***');
-
       if (response.data == null) {
-        print('*** OJO: Odoo devolvió null ***');
         return [];
       }
 
@@ -48,20 +38,15 @@ class EventoCultoDatasourceImpl extends EventoCultoDatasource {
             try {
               return Evento.fromJson(json);
             } catch (e) {
-              // Esto te dirá si falta algún campo como 'nombre' o 'fecha'
-              print("!!! Error parseando evento ID ${json['id']}: $e");
               return null;
             }
           })
           .whereType<Evento>()
           .toList();
 
-      print('*** Total eventos procesados: ${lista.length} ***');
       return lista;
     } on DioException catch (e) {
-      print('!!! ERROR DE DIO: ${e.type}');
-      print('!!! Mensaje: ${e.message}');
-      print('!!! Error del server: ${e.response?.data}');
+      print('DioError getEventos: ${e.requestOptions.uri}');
       rethrow;
     } catch (e) {
       print('!!! ERROR INESPERADO: $e');
@@ -103,7 +88,6 @@ class EventoCultoDatasourceImpl extends EventoCultoDatasource {
   }
 
   // --- ORGANIZADORES ---
-
   @override
   Future<List<Organizador>> getOrganizadores() async {
     try {
@@ -151,18 +135,15 @@ class EventoCultoDatasourceImpl extends EventoCultoDatasource {
       return false;
     }
   }
- // --- NOTIFICACIONES ---
+
+  // --- NOTIFICACIONES ---
   @override
   Future<List<Notificacion>> getNotificaciones() async {
     try {
       final response = await dio.get('/notificaciones');
-      // Odoo con type='json' devuelve: {"jsonrpc":"2.0","result": [...]}
-      // Dio lo parsea y response.data ya es el mapa completo
       final dynamic raw = response.data;
-          print('*** URL notificaciones: ${dio.options.baseUrl}/notificaciones ***');
-
-      
-      // Maneja ambos casos: lista directa o envuelta en 'result'
+      print(
+          '*** URL notificaciones: ${dio.options.baseUrl}/notificaciones ***');
       List<dynamic> data;
       if (raw is List) {
         data = raw;
@@ -200,31 +181,33 @@ class EventoCultoDatasourceImpl extends EventoCultoDatasource {
       return false;
     }
   }
-@override
-Future<List<DestinatarioInfo>> getUsuariosConEmail() async {
-  try {
-    final response = await dio.post('/usuarios', data: {"params": {}});
 
-    final res = response.data['result'];
-    if (res == null || res['success'] == false) return [];
+  @override
+  Future<List<DestinatarioInfo>> getUsuariosConEmail() async {
+    try {
+      final response = await dio.post('/usuarios', data: {"params": {}});
 
-    final List list = res['usuarios'] ?? [];
+      final res = response.data['result'];
+      if (res == null || res['success'] == false) return [];
 
-    // Filtramos en Flutter los que tienen recibirNotiEmail=true y email válido
-    return list
-        .where((u) =>
-            u['recibirNotiEmail'] == true &&
-            u['email'] != null &&
-            u['email'].toString().isNotEmpty)
-        .map((u) => DestinatarioInfo(
-              id: u['id'] is int ? u['id'] : int.tryParse(u['id'].toString()) ?? 0,
-              nombre: u['nombre'] ?? '',
-              email: u['email'] ?? '',
-            ))
-        .toList();
-  } catch (e) {
-    print('Error getUsuariosConEmail: $e');
-    return [];
+      final List list = res['usuarios'] ?? [];
+
+      return list
+          .where((u) =>
+              u['recibirNotiEmail'] == true &&
+              u['email'] != null &&
+              u['email'].toString().isNotEmpty)
+          .map((u) => DestinatarioInfo(
+                id: u['id'] is int
+                    ? u['id']
+                    : int.tryParse(u['id'].toString()) ?? 0,
+                nombre: u['nombre'] ?? '',
+                email: u['email'] ?? '',
+              ))
+          .toList();
+    } catch (e) {
+      print('Error getUsuariosConEmail: $e');
+      return [];
+    }
   }
-}
 }

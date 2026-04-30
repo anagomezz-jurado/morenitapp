@@ -10,8 +10,7 @@ abstract class SecretariaRepository {
   Future<void> upsertCargo(Map<String, dynamic> data);
   Future<void> upsertCofradia(Map<String, dynamic> data);
   Future<void> deleteRegistro(String modelo, int id);
-  
-  // Nuevos métodos para los selectores
+
   Future<List<Map<String, dynamic>>> getTiposCargos();
   Future<List<Map<String, dynamic>>> getCalles();
 }

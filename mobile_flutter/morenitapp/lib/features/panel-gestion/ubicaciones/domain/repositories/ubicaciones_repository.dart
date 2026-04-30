@@ -5,9 +5,6 @@ import '../entities/codigo_postal.dart';
 
 abstract class UbicacionRepository {
 
-  // El repositorio suele replicar los métodos del datasource
-  // pero es donde podrías manejar lógica de fallos o mapeos extra.
-
   // Provincias
   Future<List<Provincia>> getProvincias();
   Future<Provincia> crearProvincia(Provincia provincia);
@@ -23,7 +20,8 @@ abstract class UbicacionRepository {
   // Códigos Postales
   Future<List<CodigoPostal>> getCodigosPostales({int? localidadId});
   Future<CodigoPostal> crearCodigoPostal(CodigoPostal cp);
- Future<bool> editarCodigoPostal(int id, Map<String, dynamic> datos); // Añade esto
+  Future<bool> editarCodigoPostal(
+      int id, Map<String, dynamic> datos); // Añade esto
   Future<bool> eliminarCodigoPostal(int id);
 
   // Calles
@@ -31,5 +29,4 @@ abstract class UbicacionRepository {
   Future<Calle> crearCalle(Calle calle);
   Future<bool> eliminarCalle(int id);
   Future<bool> editarCalle(int id, Map<String, dynamic> datos);
-
 }

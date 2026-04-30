@@ -4,8 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:morenitapp/config/theme/app_theme.dart';
 import 'package:morenitapp/features/auth/presentation/providers/auth_provider.dart';
 import 'package:morenitapp/features/auth/presentation/providers/login_form_provider.dart';
-// Asegúrate de importar MainBackground si es un widget personalizado
-// import 'package:morenitapp/shared/widgets/main_background.dart';
 
 class LoginScreen extends ConsumerWidget {
   const LoginScreen({super.key});
@@ -18,25 +16,19 @@ class LoginScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // --- LÓGICA DE REDIRECCIÓN POR ROLES ---
     ref.listen(authProvider, (previous, next) {
-  if (next.errorMessage.isNotEmpty) {
-    showSnackbar(context, next.errorMessage);
-  }
+      if (next.errorMessage.isNotEmpty) {
+        showSnackbar(context, next.errorMessage);
+      }
 
-      // 2. Si el estado cambia a autenticado, verificamos el rol
       if (next.authStatus == AuthStatus.authenticated && next.user != null) {
-        final rolId =
-            next.user!.rolId; // Asumiendo que tu entidad User tiene rolId
+        final rolId = next.user!.rolId;
 
         if (rolId == 1) {
-          // Admin o Rol 1 -> Dashboard Principal
           context.go('/');
         } else if (rolId == 2) {
-          // Usuario o Rol 2 -> Panel de Usuario
           context.go('/panel-usuario');
         } else {
-          // Opcional: Manejo de otros roles o error
           context.go('/panel-usuario');
         }
       }
@@ -82,7 +74,7 @@ class _LoginHeader extends StatelessWidget {
             image: AssetImage('assets/icono.png'),
             width: 80,
             height: 80,
-            errorBuilder: null, // Evita que explote si no existe la imagen aún
+            errorBuilder: null,
           ),
         ),
         const SizedBox(height: 15),
@@ -156,7 +148,6 @@ class _LoginFormCard extends ConsumerWidget {
             child: OutlinedButton.icon(
               onPressed: () async {
                 await ref.read(authProvider.notifier).loginAsGuest();
-                
               },
               icon: const Icon(Icons.person_search_outlined),
               label: const Text('Continuar como invitado'),

@@ -1,15 +1,18 @@
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+
 import 'package:morenitapp/shared/widgets/calle_search_delegate.dart';
 import 'package:morenitapp/shared/widgets/plantilla_formularios.dart';
+
 import 'package:morenitapp/features/panel-gestion/eventos-cultos/domain/entities/organizador.dart';
 import 'package:morenitapp/features/panel-gestion/eventos-cultos/presentation/providers/evento_culto_provider.dart';
+
 import 'package:morenitapp/features/panel-gestion/ubicaciones/domain/entities/calle.dart';
 import 'package:morenitapp/features/panel-gestion/ubicaciones/presentation/providers/ubicaciones_provider.dart';
+
 
 class NuevoOrganizador extends ConsumerStatefulWidget {
   final Organizador? organizadorAEditar;
@@ -32,10 +35,14 @@ class _NuevoOrganizadorState extends ConsumerState<NuevoOrganizador> {
       telefonoCtrl,
       emailCtrl,
       calleCtrl,
+      numeroCtrl,
       pisoCtrl,
-      puertaCtrl;
+      puertaCtrl,
+      escaleraCtrl,
+      bloqueCtrl,
+      portalCtrl;
 
-  // Imágenes (Base64 strings para Odoo)
+  // Imágenes Base64
   String? logoB64, firmaPresiB64, firmaSecB64, firmaTesB64;
 
   @override
@@ -47,11 +54,15 @@ class _NuevoOrganizadorState extends ConsumerState<NuevoOrganizador> {
     nombreCtrl = TextEditingController(text: o?.nombre ?? '');
     telefonoCtrl = TextEditingController(text: o?.telefono ?? '');
     emailCtrl = TextEditingController(text: o?.email ?? '');
-    calleCtrl = TextEditingController(text: o?.direccionName ?? '');
+
+    calleCtrl = TextEditingController(text: o?.calleName ?? '');
+    numeroCtrl = TextEditingController(text: o?.numero ?? '');
     pisoCtrl = TextEditingController(text: o?.piso ?? '');
     puertaCtrl = TextEditingController(text: o?.puerta ?? '');
-    
-    // Inicializar imágenes si existen
+    escaleraCtrl = TextEditingController(text: o?.escalera ?? '');
+    bloqueCtrl = TextEditingController(text: o?.bloque ?? '');
+    portalCtrl = TextEditingController(text: o?.portal ?? '');
+
     logoB64 = o?.logo;
     firmaPresiB64 = o?.firmaPresidente;
     firmaSecB64 = o?.firmaSecretario;
@@ -62,76 +73,95 @@ class _NuevoOrganizadorState extends ConsumerState<NuevoOrganizador> {
       await ref.read(localidadesProvider.notifier).cargarLocalidades();
       await ref.read(codigosPostalesProvider.notifier).cargarCodigosPostales();
 
-      if (o != null && o.direccionId != null) {
-        setState(() => calleSeleccionadaId = o.direccionId);
-        _inicializarUbicacionEdicion(o.direccionId!);
+      if (o != null && o.calleId != null) {
+        calleSeleccionadaId = o.calleId;
+        _inicializarUbicacionEdicion(o.calleId!);
       }
     });
   }
 
-  // --- LÓGICA DE IMÁGENES ---
+  // -----------------------
+  // Imagen base64
+  // -----------------------
   Future<void> _pickImage(String tipo) async {
     final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 50);
-    
-    if (image != null) {
-      final bytes = await image.readAsBytes();
-      final String base64Image = base64Encode(bytes);
-      setState(() {
-        if (tipo == 'logo') logoB64 = base64Image;
-        if (tipo == 'presi') firmaPresiB64 = base64Image;
-        if (tipo == 'sec') firmaSecB64 = base64Image;
-        if (tipo == 'tes') firmaTesB64 = base64Image;
-      });
-    }
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 60);
+
+    if (image == null) return;
+
+    final bytes = await image.readAsBytes();
+    final base64Img = base64Encode(bytes);
+
+    setState(() {
+      if (tipo == 'logo') logoB64 = base64Img;
+      if (tipo == 'presi') firmaPresiB64 = base64Img;
+      if (tipo == 'sec') firmaSecB64 = base64Img;
+      if (tipo == 'tes') firmaTesB64 = base64Img;
+    });
   }
 
-  // --- LÓGICA DE UBICACIÓN (Igual a NuevoHermano) ---
+  // -----------------------
+  // Selector de calle
+  // -----------------------
   void _abrirSelectorCalle() async {
     final resultado = await showSearch(context: context, delegate: CalleSearchDelegate(ref: ref));
     if (resultado is Calle) _autocompletarDesdeCalle(resultado);
   }
 
   void _autocompletarDesdeCalle(Calle calle) {
-    final listaCPs = ref.read(codigosPostalesProvider).value ?? [];
-    final listaLocs = ref.read(localidadesProvider).value ?? [];
+    final locs = ref.read(localidadesProvider).value ?? [];
+    final cps = ref.read(codigosPostalesProvider).value ?? [];
+
     try {
-      final cp = listaCPs.firstWhere((c) => c.id == calle.codPostalId);
-      final loc = listaLocs.firstWhere((l) => l.id == calle.localidadId);
+      final loc = locs.firstWhere((l) => l.id == calle.localidadId);
+      final cp = cps.firstWhere((c) => c.id == calle.codPostalId);
+
       setState(() {
         calleSeleccionadaId = calle.id;
         calleCtrl.text = calle.nombreCalle;
+
         provinciaId = loc.codProvinciaId;
         localidadId = loc.id;
         cpId = cp.id;
       });
     } catch (_) {
-      setState(() {
-        calleSeleccionadaId = calle.id;
-        calleCtrl.text = calle.nombreCalle;
-      });
+      calleSeleccionadaId = calle.id;
+      calleCtrl.text = calle.nombreCalle;
     }
   }
 
   void _inicializarUbicacionEdicion(int id) {
     final calles = ref.read(callesProvider).value ?? [];
-    final calle = calles.firstWhere((c) => c.id == id, orElse: () => Calle(id: 0, nombreCalle: '', localidadId: 0, codPostalId: 0));
+    final calle = calles.firstWhere(
+      (c) => c.id == id,
+      orElse: () => Calle(id: 0, nombreCalle: '', localidadId: 0, nombreLocalidad: '', codPostalId: 0, nombreCP: '', responsableId: null),
+    );
     if (calle.id != 0) _autocompletarDesdeCalle(calle);
   }
 
+  // -----------------------
+  // Guardar
+  // -----------------------
   void _onSave() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() => _isLoading = true);
 
     try {
-      final Map<String, dynamic> datos = {
+      final data = {
         "cif": cifCtrl.text.trim(),
         "nombre": nombreCtrl.text.trim(),
         "telefono": telefonoCtrl.text.trim(),
         "email": emailCtrl.text.trim(),
-        "direccion_id": calleSeleccionadaId,
+
+        "calle_id": calleSeleccionadaId,
+        "numero": numeroCtrl.text.trim(),
         "piso": pisoCtrl.text.trim(),
         "puerta": puertaCtrl.text.trim(),
+        "escalera": escaleraCtrl.text.trim(),
+        "bloque": bloqueCtrl.text.trim(),
+        "portal": portalCtrl.text.trim(),
+
         "logo": logoB64,
         "firma_presidente": firmaPresiB64,
         "firma_secretario": firmaSecB64,
@@ -139,217 +169,255 @@ class _NuevoOrganizadorState extends ConsumerState<NuevoOrganizador> {
       };
 
       if (widget.organizadorAEditar == null) {
-        await ref.read(organizadoresProvider.notifier).crear(datos);
+        await ref.read(organizadoresProvider.notifier).crear(data);
       } else {
-        await ref.read(organizadoresProvider.notifier).editar(widget.organizadorAEditar!.id, datos);
+        await ref.read(organizadoresProvider.notifier)
+            .editar(widget.organizadorAEditar!.id, data);
       }
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ Guardado correctamente'), backgroundColor: Colors.green));
-        context.pop();
-      }
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("✔ Organizador guardado correctamente"),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      context.pop();
     } catch (e) {
-      setState(() => _isLoading = false);
+      if (!mounted) return;
       _showErrorDialog(e.toString());
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _showErrorDialog(String error) {
-    showDialog(context: context, builder: (ctx) => AlertDialog(title: const Text('Error'), content: Text(error), actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Ok'))]));
+  void _showErrorDialog(String msg) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Error"),
+        content: Text(msg),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cerrar"))
+        ],
+      ),
+    );
   }
 
+  // -----------------------
+  // UI
+  // -----------------------
   @override
   Widget build(BuildContext context) {
-    final Color primary = Theme.of(context).primaryColor;
-
     return PlantillaWrapper(
       isLoading: _isLoading,
-      title: widget.organizadorAEditar != null ? 'Editar Organizador' : 'Nuevo Organizador',
+      title: widget.organizadorAEditar == null
+          ? "Nuevo Organizador"
+          : "Editar Organizador",
       onSave: _onSave,
       child: Form(
         key: _formKey,
-        child: Column(
-          children: [
-            _buildCard(title: 'IDENTIFICACIÓN Y CONTACTO', children: [
-              _buildRow('Logo Entidad', _imagePickerBox(logoB64, () => _pickImage('logo'), isCircle: true)),
-              _buildRow('CIF', _textFormField(cifCtrl, required: true)),
-              _buildRow('Nombre', _textFormField(nombreCtrl, required: true)),
-              _buildRow('Teléfono', _textFormField(telefonoCtrl, isNumber: true)),
-              _buildRow('Email', _textFormField(emailCtrl, isEmail: true)),
-            ]),
+        child: Column(children: [
+          _buildCard(title: "IDENTIFICACIÓN", children: [
+            _buildRow("Logo", _imagePickerBox(logoB64, () => _pickImage('logo'), circle: true)),
+            _buildRow("CIF *", _tf(cifCtrl, required: true)),
+            _buildRow("Nombre *", _tf(nombreCtrl, required: true)),
+            _buildRow("Teléfono", _tf(telefonoCtrl, isNumber: true)),
+            _buildRow("Email", _tf(emailCtrl, isEmail: true)),
+          ]),
 
-            _buildCard(title: 'UBICACIÓN', children: [
-              _buildRow('Calle', _calleSelectorField()),
-              const Divider(),
-              _buildRow('Provincia', _provinciaDropdown()),
-              if (provinciaId != null) _buildRow('Localidad', _localidadDropdown()),
-              if (localidadId != null) _buildRow('C.P.', _cpDropdown()),
-              _buildRow('Piso/Puerta', Row(children: [
-                Expanded(child: _textFormField(pisoCtrl, hint: 'Piso')),
-                const SizedBox(width: 10),
-                Expanded(child: _textFormField(puertaCtrl, hint: 'Puerta')),
-              ])),
-            ]),
+          _buildCard(title: "UBICACIÓN", children: [
+            _buildRow("Calle *", _calleSelectorField()),
 
-            _buildCard(title: 'FIRMAS AUTORIZADAS', children: [
-              const Text('Presidencia y Secretaría', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _signatureBox('Firma Presidente', firmaPresiB64, () => _pickImage('presi')),
-                  _signatureBox('Firma Secretario', firmaSecB64, () => _pickImage('sec')),
-                ],
-              ),
-              const Divider(height: 30),
-              const Text('Tesorería', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
-              const SizedBox(height: 10),
-              Center(child: _signatureBox('Firma Tesorero', firmaTesB64, () => _pickImage('tes'))),
-            ]),
+            const Divider(),
 
-            const SizedBox(height: 24),
-            _buildSubmitButton(primary, widget.organizadorAEditar != null),
-          ],
-        ),
+            _buildRow("Provincia", _provinciaDD()),
+            if (provinciaId != null) _buildRow("Localidad", _localidadDD()),
+            if (localidadId != null) _buildRow("C.P.", _cpDD()),
+
+            _buildRow("Número", _tf(numeroCtrl)),
+            _buildRow("Piso", _tf(pisoCtrl)),
+            _buildRow("Puerta", _tf(puertaCtrl)),
+            _buildRow("Escalera", _tf(escaleraCtrl)),
+            _buildRow("Bloque", _tf(bloqueCtrl)),
+            _buildRow("Portal", _tf(portalCtrl)),
+          ]),
+
+          _buildCard(title: "FIRMAS", children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _signature("Presidente", firmaPresiB64, () => _pickImage('presi')),
+                _signature("Secretario", firmaSecB64, () => _pickImage('sec')),
+              ],
+            ),
+            const Divider(),
+            Center(
+              child: _signature("Tesorero", firmaTesB64, () => _pickImage('tes')),
+            )
+          ]),
+
+          const SizedBox(height: 30),
+        ]),
       ),
     );
   }
 
-  // --- WIDGETS DE IMAGEN ---
+  // -----------------------
+  // Widgets auxiliares
+  // -----------------------
 
-  Widget _imagePickerBox(String? b64, VoidCallback onTap, {bool isCircle = false}) {
+  Widget _buildCard({required String title, required List<Widget> children}) {
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child:
+            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(title,
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+          const Divider(),
+          ...children
+        ]),
+      ),
+    );
+  }
+  Widget _buildRow(String label, Widget child) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(children: [
+        Expanded(
+            flex: 2,
+            child: Text(label,
+                style: const TextStyle(color: Colors.black54, fontSize: 13))),
+        Expanded(flex: 5, child: child)
+      ]),
+    );
+  }
+  Widget _tf(TextEditingController c,
+      {bool required = false, bool isNumber = false, bool isEmail = false}) {
+    return TextFormField(
+      controller: c,
+      validator: (v) => required && (v == null || v.isEmpty) ? "Obligatorio" : null,
+      keyboardType: isEmail
+          ? TextInputType.emailAddress
+          : (isNumber ? TextInputType.number : TextInputType.text),
+      decoration: const InputDecoration(
+        isDense: true,
+        border: OutlineInputBorder(),
+      ),
+    );
+  }
+
+  Widget _imagePickerBox(String? b64, VoidCallback onTap, {bool circle = false}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 80, width: 80,
+        width: 80,
+        height: 80,
         decoration: BoxDecoration(
-          color: Colors.grey[100],
-          borderRadius: isCircle ? null : BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.shade300)
+          color: Colors.grey[200],
+          borderRadius: BorderRadius.circular(circle ? 100 : 8),
+          border: Border.all(color: Colors.grey.shade300),
         ),
-        child: b64 != null 
-          ? ClipRRect(
-              borderRadius: BorderRadius.circular(isCircle ? 100 : 8),
-              child: Image.memory(base64Decode(b64), fit: BoxFit.cover))
-          : const Icon(Icons.add_a_photo_outlined, color: Colors.grey),
+        child: b64 != null
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(circle ? 100 : 8),
+                child: Image.memory(base64Decode(b64), fit: BoxFit.cover),
+              )
+            : const Icon(Icons.add_a_photo_outlined),
       ),
     );
   }
 
-  Widget _signatureBox(String label, String? b64, VoidCallback onTap) {
+  Widget _signature(String label, String? b64, VoidCallback onTap) {
     return Column(
       children: [
-        Text(label, style: const TextStyle(fontSize: 11)),
-        const SizedBox(height: 5),
+        Text(label),
+        const SizedBox(height: 4),
         GestureDetector(
           onTap: onTap,
           child: Container(
-            height: 100, width: 140,
+            width: 140,
+            height: 90,
             decoration: BoxDecoration(
-              color: Colors.white,
               border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(8)
+              borderRadius: BorderRadius.circular(8),
+              color: Colors.grey[100],
             ),
-            child: b64 != null 
-              ? Image.memory(base64Decode(b64), fit: BoxFit.contain)
-              : const Icon(Icons.gesture, color: Colors.grey),
+            child: b64 == null
+                ? const Icon(Icons.border_color)
+                : Image.memory(base64Decode(b64), fit: BoxFit.contain),
           ),
         ),
       ],
     );
   }
 
-  // --- REUTILIZACIÓN DE COMPONENTES DE TU PLANTILLA ---
-
-  Widget _buildCard({required String title, required List<Widget> children}) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 0, color: Colors.white,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey, fontSize: 11)),
-          const Divider(), ...children
-        ]),
+  Widget _calleSelectorField() {
+    return TextFormField(
+      controller: calleCtrl,
+      readOnly: true,
+      validator: (v) => (v == null || v.isEmpty) ? "Seleccione una calle" : null,
+      onTap: _abrirSelectorCalle,
+      decoration: const InputDecoration(
+        suffixIcon: Icon(Icons.search),
+        isDense: true,
+        border: OutlineInputBorder(),
       ),
     );
   }
 
-  Widget _buildRow(String label, Widget child) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(children: [
-        Expanded(flex: 2, child: Text(label, style: const TextStyle(fontSize: 13, color: Colors.black54))),
-        Expanded(flex: 5, child: child),
-      ]),
-    );
-  }
-
-  Widget _textFormField(TextEditingController ctrl, {bool required = false, bool isNumber = false, bool isEmail = false, String? hint}) {
-    return TextFormField(
-      controller: ctrl,
-      keyboardType: isEmail ? TextInputType.emailAddress : (isNumber ? TextInputType.number : TextInputType.text),
-      validator: (val) => (required && (val == null || val.isEmpty)) ? 'Obligatorio' : null,
-      decoration: InputDecoration(hintText: hint, isDense: true, border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
-    );
-  }
-
-  Widget _calleSelectorField() {
-    return TextFormField(
-      controller: calleCtrl, readOnly: true, onTap: _abrirSelectorCalle,
-      validator: (val) => (val == null || val.isEmpty) ? 'Obligatorio' : null,
-      decoration: InputDecoration(suffixIcon: const Icon(Icons.search), hintText: 'Buscar calle...', isDense: true, border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
-    );
-  }
-
-  // Los dropdowns de provincia/localidad/cp se mantienen igual que en NuevoHermano...
-  Widget _provinciaDropdown() => ref.watch(provinciasProvider).when(
-    data: (list) => DropdownButtonFormField<int>(
-      value: provinciaId,
-      items: list.map((p) => DropdownMenuItem(value: p.id, child: Text(p.nombreProvincia))).toList(),
-      onChanged: (v) => setState(() { provinciaId = v; localidadId = null; cpId = null; }),
-      decoration: const InputDecoration(labelText: 'Provincia', isDense: true, border: OutlineInputBorder()),
-    ),
-    loading: () => const LinearProgressIndicator(),
-    error: (_, __) => const Text('Error'),
-  );
-
-  Widget _localidadDropdown() => ref.watch(localidadesProvider).when(
-    data: (list) {
-      final filtradas = list.where((l) => l.codProvinciaId == provinciaId).toList();
-      return DropdownButtonFormField<int>(
-        value: filtradas.any((l) => l.id == localidadId) ? localidadId : null,
-        items: filtradas.map((l) => DropdownMenuItem(value: l.id, child: Text(l.nombreLocalidad, overflow: TextOverflow.ellipsis))).toList(),
-        onChanged: (v) => setState(() { localidadId = v; cpId = null; }),
-        decoration: const InputDecoration(labelText: 'Localidad', isDense: true, border: OutlineInputBorder()),
+  Widget _provinciaDD() => ref.watch(provinciasProvider).when(
+        data: (list) => DropdownButtonFormField<int>(
+          value: provinciaId,
+          decoration: const InputDecoration(isDense: true, border: OutlineInputBorder()),
+          items: list.map((p) => DropdownMenuItem(value: p.id, child: Text(p.nombreProvincia))).toList(),
+          onChanged: (v) => setState(() {
+            provinciaId = v;
+            localidadId = null;
+            cpId = null;
+          }),
+        ),
+        loading: () => const LinearProgressIndicator(),
+        error: (_, __) => const Text("Error provincias"),
       );
-    },
-    loading: () => const LinearProgressIndicator(),
-    error: (_, __) => const Text('Error'),
-  );
 
-  Widget _cpDropdown() => ref.watch(codigosPostalesProvider).when(
-    data: (list) {
-      final filtrados = list.where((c) => c.localidadId == localidadId).toList();
-      return DropdownButtonFormField<int>(
-        value: filtrados.any((c) => c.id == cpId) ? cpId : null,
-        items: filtrados.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))).toList(),
-        onChanged: (v) => setState(() => cpId = v),
-        decoration: const InputDecoration(labelText: 'C.P.', isDense: true, border: OutlineInputBorder()),
+  Widget _localidadDD() => ref.watch(localidadesProvider).when(
+        data: (list) {
+          final filtradas = list.where((l) => l.codProvinciaId == provinciaId).toList();
+
+          return DropdownButtonFormField<int>(
+            value: filtradas.any((l) => l.id == localidadId) ? localidadId : null,
+            decoration: const InputDecoration(isDense: true, border: OutlineInputBorder()),
+            items: filtradas.map((l) => DropdownMenuItem(value: l.id, child: Text(l.nombreLocalidad))).toList(),
+            onChanged: (v) => setState(() {
+              localidadId = v;
+              cpId = null;
+            }),
+          );
+        },
+        loading: () => const LinearProgressIndicator(),
+        error: (_, __) => const Text("Error localidades"),
       );
-    },
-    loading: () => const LinearProgressIndicator(),
-    error: (_, __) => const Text('Error'),
-  );
 
-  Widget _buildSubmitButton(Color color, bool esEdicion) {
-    return SizedBox(
-      width: double.infinity, height: 50,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(backgroundColor: color, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-        onPressed: _isLoading ? null : _onSave,
-        child: Text(esEdicion ? 'GUARDAR CAMBIOS' : 'REGISTRAR ORGANIZADOR', style: const TextStyle(color: Colors.white)),
-      ));
-  }
+  Widget _cpDD() => ref.watch(codigosPostalesProvider).when(
+        data: (list) {
+          final filtrados = list.where((c) => c.localidadId == localidadId).toList();
+
+          return DropdownButtonFormField<int>(
+            value: filtrados.any((c) => c.id == cpId) ? cpId : null,
+            decoration: const InputDecoration(isDense: true, border: OutlineInputBorder()),
+            items: filtrados.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))).toList(),
+            onChanged: (v) => setState(() => cpId = v),
+          );
+        },
+        loading: () => const LinearProgressIndicator(),
+        error: (_, __) => const Text("Error CP"),
+      );
 }

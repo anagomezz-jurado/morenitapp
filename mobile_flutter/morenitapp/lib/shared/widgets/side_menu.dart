@@ -123,7 +123,7 @@ class SideMenuState extends ConsumerState<SideMenu> {
                 label: 'Tipo de evento',
                 isSubItem: true,
                 onTap: () => _navigate('/tipo-evento')),
-                MenuTile(
+            MenuTile(
                 icon: Icons.category_rounded,
                 label: 'Tipo de notificacion',
                 isSubItem: true,
@@ -143,49 +143,30 @@ class SideMenuState extends ConsumerState<SideMenu> {
                 label: 'Tipos de cargos',
                 isSubItem: true,
                 onTap: () => _navigate('/tipo-cargos')),
-           
           ],
         ),
         const SectionHeader(title: 'Ubicaciones'),
         MenuExpansionGroup(
-          icon: Icons.menu_book_rounded,
-          title: 'Provincias',
+          icon: Icons.settings_suggest_rounded,
+          title: 'Configurar ubicaciones',
           children: [
             MenuTile(
-                icon: Icons.book_rounded,
+                icon: Icons.category_rounded,
                 label: 'Provincias',
                 isSubItem: true,
                 onTap: () => _navigate('/provincia')),
-          ],
-        ),
-        MenuExpansionGroup(
-          icon: Icons.menu_book_rounded,
-          title: 'Localidades',
-          children: [
             MenuTile(
-                icon: Icons.book_rounded,
+                icon: Icons.category_rounded,
                 label: 'Localidades',
                 isSubItem: true,
                 onTap: () => _navigate('/localidad')),
-          ],
-        ),
-        MenuExpansionGroup(
-          icon: Icons.menu_book_rounded,
-          title: 'Códigos postales',
-          children: [
             MenuTile(
-                icon: Icons.book_rounded,
-                label: 'Códigos postales',
+                icon: Icons.admin_panel_settings_rounded,
+                label: 'Código postal',
                 isSubItem: true,
                 onTap: () => _navigate('/codigo-postal')),
-          ],
-        ),
-        MenuExpansionGroup(
-          icon: Icons.menu_book_rounded,
-          title: 'Calles',
-          children: [
             MenuTile(
-                icon: Icons.book_rounded,
+                icon: Icons.admin_panel_settings_rounded,
                 label: 'Calles',
                 isSubItem: true,
                 onTap: () => _navigate('/calle')),
@@ -229,7 +210,7 @@ class SideMenuState extends ConsumerState<SideMenu> {
                 label: 'Usuarios de la App',
                 isSubItem: true,
                 onTap: () => _navigate('/usuarios')),
-             MenuTile(
+            MenuTile(
                 icon: Icons.admin_panel_settings_rounded,
                 label: 'Gestión de Roles',
                 isSubItem: true,

@@ -14,7 +14,6 @@ final ubicacionesRepositoryProvider = Provider<UbicacionRepository>((ref) {
   return UbicacionRepositoryImpl();
 });
 
-// En tu UbicacionesProvider o similar
 
 // --- DIRECCIONES ---
 
@@ -56,22 +55,18 @@ class DireccionesNotifier extends StateNotifier<AsyncValue<List<Direccion>>> {
   }
 }
 
-// -------------------------------------------------------------------------
-// --- SECCIÓN DE PROVINCIAS ---
-// -------------------------------------------------------------------------
-
 final provinciasProvider =
     StateNotifierProvider<ProvinciasNotifier, AsyncValue<List<Provincia>>>(
         (ref) {
   final repository = ref.watch(ubicacionesRepositoryProvider);
-  return ProvinciasNotifier(repository: repository, ref: ref); // Pasamos ref
+  return ProvinciasNotifier(repository: repository, ref: ref); 
 });
 
 final provinciaFiltroSeleccionadaProvider = StateProvider<int?>((ref) => null);
 
 class ProvinciasNotifier extends StateNotifier<AsyncValue<List<Provincia>>> {
   final UbicacionRepository repository;
-  final Ref ref; // Necesario para acceder a otros providers
+  final Ref ref; 
 
   ProvinciasNotifier({required this.repository, required this.ref})
       : super(const AsyncValue.loading()) {
@@ -85,11 +80,13 @@ class ProvinciasNotifier extends StateNotifier<AsyncValue<List<Provincia>>> {
 
   Future<void> agregarProvincia(String codigo, String nombre) async {
     try {
-      // Enviamos nombres de campos que Odoo espera
-      final nueva = Provincia(id: 0, codProvincia: codigo, nombreProvincia: nombre);
+      final nueva =
+          Provincia(id: 0, codProvincia: codigo, nombreProvincia: nombre);
       final creada = await repository.crearProvincia(nueva);
       state.whenData((lista) => state = AsyncValue.data([...lista, creada]));
-    } catch (e) { rethrow; }
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<void> editarProvincia(int id, String nombre, String codigo) async {
@@ -114,7 +111,6 @@ class ProvinciasNotifier extends StateNotifier<AsyncValue<List<Provincia>>> {
 
   Future<void> borrarProvincia(int id) async {
     try {
-      // VALIDACIÓN: Verificamos si existen localidades vinculadas
       final localidades = ref.read(localidadesProvider).value ?? [];
       final tieneDependencias =
           localidades.any((loc) => loc.codProvinciaId == id);
@@ -133,10 +129,6 @@ class ProvinciasNotifier extends StateNotifier<AsyncValue<List<Provincia>>> {
     }
   }
 }
-
-// -------------------------------------------------------------------------
-// --- SECCIÓN DE LOCALIDADES ---
-// -------------------------------------------------------------------------
 
 final localidadesProvider =
     StateNotifierProvider<LocalidadesNotifier, AsyncValue<List<Localidad>>>(
@@ -216,7 +208,6 @@ class LocalidadesNotifier extends StateNotifier<AsyncValue<List<Localidad>>> {
 
   Future<void> borrarLocalidad(int id) async {
     try {
-      // VALIDACIÓN: Verificamos si existen CPs vinculados
       final cps = ref.read(codigosPostalesProvider).value ?? [];
       final tieneDependencias = cps.any((cp) => cp.localidadId == id);
 
@@ -234,10 +225,6 @@ class LocalidadesNotifier extends StateNotifier<AsyncValue<List<Localidad>>> {
     }
   }
 }
-
-// -------------------------------------------------------------------------
-// --- SECCIÓN DE CÓDIGOS POSTALES ---
-// -------------------------------------------------------------------------
 
 final codigosPostalesProvider = StateNotifierProvider<CodigosPostalesNotifier,
     AsyncValue<List<CodigoPostal>>>((ref) {
@@ -298,13 +285,10 @@ class CodigosPostalesNotifier
 
   Future<void> borrarCodigoPostal(int id) async {
     try {
-      // 1. Validación local (Preventiva)
       final calles = ref.read(callesProvider).value ?? [];
       if (calles.any((c) => c.codPostalId == id)) {
         throw 'No eliminar: tiene calles vinculadas a este código postal.';
       }
-
-      // 2. Intento de borrado en servidor
       final success = await repository.eliminarCodigoPostal(id);
 
       if (success) {
@@ -312,7 +296,6 @@ class CodigosPostalesNotifier
             state = AsyncValue.data(lista.where((cp) => cp.id != id).toList()));
       }
     } on DioException catch (e) {
-      // 3. Captura específica del error 500 que mencionas
       if (e.response?.statusCode == 500) {
         throw 'Error del servidor: Es posible que este CP todavía tenga registros asociados en la base de datos.';
       }
@@ -322,10 +305,6 @@ class CodigosPostalesNotifier
     }
   }
 }
-
-// -------------------------------------------------------------------------
-// --- SECCIÓN DE CALLES ---
-// -------------------------------------------------------------------------
 
 final callesProvider =
     StateNotifierProvider<CallesNotifier, AsyncValue<List<Calle>>>((ref) {
@@ -347,26 +326,25 @@ class CallesNotifier extends StateNotifier<AsyncValue<List<Calle>>> {
   }
 
   Future<void> agregarCalle(String nombre, int localidadId, int cpId) async {
-  final nueva = Calle(
-      id: 0,
-      nombreCalle: nombre,
-      localidadId: localidadId,
-      codPostalId: cpId);
-  try {
-    // 1. Enviamos a Odoo
-    final creada = await repository.crearCalle(nueva);
-    
-    // 2. Actualizamos el estado local con la calle que Odoo nos devuelve (ya trae su ID real)
-    state.whenData((lista) {
-      state = AsyncValue.data([...lista, creada]);
-    });
-    
-    // 3. (Opcional) Recargar todo para estar seguros
-    await cargarCalles();
-  } catch (e) {
-    rethrow;
+    final nueva = Calle(
+        id: 0,
+        nombreCalle: nombre,
+        localidadId: localidadId,
+        codPostalId: cpId,
+        nombreLocalidad: '',
+        nombreCP: '');
+    try {
+      final creada = await repository.crearCalle(nueva);
+
+      state.whenData((lista) {
+        state = AsyncValue.data([...lista, creada]);
+      });
+
+      await cargarCalles();
+    } catch (e) {
+      rethrow;
+    }
   }
-}
 
   Future<void> actualizarCalle(
       int id, String nombre, int localidadId, int cpId) async {
@@ -386,7 +364,9 @@ class CallesNotifier extends StateNotifier<AsyncValue<List<Calle>>> {
                     id: id,
                     nombreCalle: nombre,
                     localidadId: localidadId,
-                    codPostalId: cpId)
+                    codPostalId: cpId,
+                    nombreLocalidad: '',
+                    nombreCP: '')
               else
                 c
           ]);

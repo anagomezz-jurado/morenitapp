@@ -22,7 +22,6 @@ class Dni extends FormzInput<String, DniError> {
   }
 }
 
-// iban_account.dart (Para la cuenta de 10 dígitos)
 enum AccountError { empty, length }
 
 class BankAccount extends FormzInput<String, AccountError> {

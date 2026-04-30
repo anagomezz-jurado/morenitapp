@@ -13,10 +13,12 @@ class EventoCultoRepositoryImpl extends EventoCultoRepository {
   Future<List<Evento>> getEventos() => datasource.getEventos();
 
   @override
-  Future<bool> crearEvento(Map<String, dynamic> datos) => datasource.crearEvento(datos);
+  Future<bool> crearEvento(Map<String, dynamic> datos) =>
+      datasource.crearEvento(datos);
 
   @override
-  Future<bool> editarEvento(int id, Map<String, dynamic> datos) => datasource.editarEvento(id, datos);
+  Future<bool> editarEvento(int id, Map<String, dynamic> datos) =>
+      datasource.editarEvento(id, datos);
 
   @override
   Future<bool> eliminarEvento(int id) => datasource.eliminarEvento(id);
@@ -25,23 +27,30 @@ class EventoCultoRepositoryImpl extends EventoCultoRepository {
   Future<List<Organizador>> getOrganizadores() => datasource.getOrganizadores();
 
   @override
-  Future<bool> crearOrganizador(Map<String, dynamic> datos) => datasource.crearOrganizador(datos);
+  Future<bool> crearOrganizador(Map<String, dynamic> datos) =>
+      datasource.crearOrganizador(datos);
 
   @override
-  Future<bool> editarOrganizador(int id, Map<String, dynamic> datos) => datasource.editarOrganizador(id, datos);
+  Future<bool> editarOrganizador(int id, Map<String, dynamic> datos) =>
+      datasource.editarOrganizador(id, datos);
 
   @override
-  Future<bool> eliminarOrganizador(int id) => datasource.eliminarOrganizador(id);
+  Future<bool> eliminarOrganizador(int id) =>
+      datasource.eliminarOrganizador(id);
 
   @override
-  Future<List<Notificacion>> getNotificaciones() => datasource.getNotificaciones();
+  Future<List<Notificacion>> getNotificaciones() =>
+      datasource.getNotificaciones();
 
   @override
-  Future<bool> crearNotificacion(Notificacion noti) => datasource.crearNotificacion(noti);
+  Future<bool> crearNotificacion(Notificacion noti) =>
+      datasource.crearNotificacion(noti);
 
   @override
-  Future<bool> eliminarNotificacion(int id) => datasource.eliminarNotificacion(id);
+  Future<bool> eliminarNotificacion(int id) =>
+      datasource.eliminarNotificacion(id);
 
   @override
-  Future<List<DestinatarioInfo>> getUsuariosConEmail() => datasource.getUsuariosConEmail();
+  Future<List<DestinatarioInfo>> getUsuariosConEmail() =>
+      datasource.getUsuariosConEmail();
 }

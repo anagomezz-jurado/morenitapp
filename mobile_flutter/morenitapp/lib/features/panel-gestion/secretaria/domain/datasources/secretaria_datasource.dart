@@ -10,6 +10,6 @@ abstract class SecretariaDatasource {
   Future<Map<String, dynamic>> upsertAutoridad(Map<String, dynamic> data);
   Future<Map<String, dynamic>> upsertCargo(Map<String, dynamic> data);
   Future<Map<String, dynamic>> upsertCofradia(Map<String, dynamic> data);
-  
+
   Future<Map<String, dynamic>> deleteRegistro(String modelo, int id);
 }

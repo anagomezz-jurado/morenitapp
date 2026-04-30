@@ -18,10 +18,9 @@ access_banco_admin,morenitapp.banco.admin,model_morenitapp_banco,base.group_syst
 access_tipoevento_admin,morenitapp.tipoevento.admin,model_morenitapp_tipoevento,base.group_system,1,1,1,1
 access_grupoproveedor_admin,morenitapp.grupoproveedor.admin,model_morenitapp_grupoproveedor,base.group_system,1,1,1,1
 access_libroanunciante_admin,morenitapp.libroanunciante.admin,model_morenitapp_libroanunciante,base.group_system,1,1,1,1
-access_grupo_admin,morenitapp.grupo.admin,model_morenitapp_grupo,base.group_system,1,1,1,1
-access_grupo_permiso_admin,morenitapp.grupo.permiso.admin,model_morenitapp_grupo_permiso,base.group_system,1,1,1,1
-access_rol_public,morenitapp.rol.public,model_morenitapp_rol,,1,0,0,0
-access_usuario_public,morenitapp.usuario.public,model_morenitapp_usuario,,1,0,1,0
-access_roles,roles_access,model_morenitapp_rol,base.group_user,1,1,1,1
+
 access_notificacion_admin,morenitapp.notificacion.admin,model_morenitapp_notificacion,base.group_system,1,1,1,1
 access_notificacion_tipo_admin,morenitapp.notificacion.tipo.admin,model_morenitapp_notificacion_tipo,base.group_system,1,1,1,1
+
+access_rol_admin,morenitapp.rol.admin,model_morenitapp_rol,base.group_system,1,1,1,1
+access_rol_user,morenitapp.rol.user,model_morenitapp_rol,base.group_user,1,0,0,0

@@ -19,6 +19,13 @@ class Evento(models.Model):
     organizador_id = fields.Many2one('morenitapp.organizador', string="Organizador")
     tipoevento_id = fields.Many2one('morenitapp.tipoevento', string="Tipo de Evento")
 
+    color = fields.Char(
+        related='tipoevento_id.color', 
+        string="Color del Evento", 
+        store=True, # store=True permite que el color se guarde y sea accesible rápidamente
+        readonly=True
+    )
+
     @api.depends('fecha_inicio')
     def _compute_anio(self):
         for record in self:

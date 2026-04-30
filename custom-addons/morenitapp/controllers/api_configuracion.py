@@ -67,7 +67,7 @@ class ConfiguracionController(http.Controller):
                         row.update({
                             'codigo': getattr(r, 'cod_tipo_evento', ''),
                             'nombre': getattr(r, 'nombre_tipo_evento', ''),
-                            'color': getattr(r, 'color', '#3498db'),
+                            'color': getattr(r, 'color', ''),
                         })
                     elif tipo == 'tipocargo':
                         row.update({

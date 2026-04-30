@@ -2,61 +2,167 @@ class Cargo {
   final String id;
   final String codCargo;
   final String nombreCargo;
+
+  final int? tipoCargoId;
+  final String tipoCargoName;
+
   final DateTime fechaInicio;
   final DateTime? fechaFin;
-  final int? tipoCargoId;
-  final String? tipoCargoName;
-  final int? direccionId;
-  final String? direccionName;
-  final String? puerta;
-  final String? piso;
-  final String? telefono;
-  final String? observaciones;
-  final String? motivo;
-  final String? textoSaludo;
-  final int? localidadId;
+
+  final int? calleId;
+  final String calleNombre;
+
+  final String numero;
+  final String piso;
+  final String puerta;
+  final String bloque;
+  final String escalera;
+  final String portal;
+
+  final String telefono;
+  final String observaciones;
+  final String motivo;
+  final String textoSaludo;
 
   Cargo({
     required this.id,
     required this.codCargo,
     required this.nombreCargo,
+    required this.tipoCargoId,
+    required this.tipoCargoName,
     required this.fechaInicio,
-    this.fechaFin,
-    this.tipoCargoId,
-    this.tipoCargoName,
-    this.direccionId,
-    this.direccionName,
-    this.puerta,
-    this.piso,
-    this.telefono,
-    this.observaciones,
-    this.motivo,
-    this.textoSaludo,
-    this.localidadId,
+    required this.fechaFin,
+    required this.calleId,
+    required this.calleNombre,
+    required this.numero,
+    required this.piso,
+    required this.puerta,
+    required this.bloque,
+    required this.escalera,
+    required this.portal,
+    required this.telefono,
+    required this.observaciones,
+    required this.motivo,
+    required this.textoSaludo,
   });
 
+  static String clean(v) =>
+      (v == null || v == "" || v == false) ? "" : v.toString();
+
+
+  String get fechaInicioStr => fechaInicio.toString().split(" ")[0];
+
+  String get fechaFinStr => fechaFin?.toString().split(" ")[0] ?? "";
+
+  String get direccionCompleta {
+    final base = "$calleNombre $numero";
+    final extras = [
+      if (piso.isNotEmpty) "Piso $piso",
+      if (puerta.isNotEmpty) "Puerta $puerta",
+      if (bloque.isNotEmpty) "Bloque $bloque",
+      if (escalera.isNotEmpty) "Esc. $escalera",
+      if (portal.isNotEmpty) "Portal $portal",
+    ];
+    final extrasStr = extras.isEmpty ? "" : " (${extras.join(", ")})";
+    return base + extrasStr;
+  }
+
   factory Cargo.fromJson(Map<String, dynamic> json) {
+    final dir = json["direccion"] ?? {};
+
     return Cargo(
-      id: json['id']?.toString() ?? '',
-      codCargo: json['codCargo']?.toString() ?? '',
-      nombreCargo: json['nombreCargo']?.toString() ?? '',
-      fechaInicio: (json['fechaInicioCargo'] != null && json['fechaInicioCargo'] != "")
-          ? DateTime.parse(json['fechaInicioCargo'])
-          : DateTime.now(),
-      fechaFin: (json['fechaFinCargo'] != null && json['fechaFinCargo'] != "")
-          ? DateTime.parse(json['fechaFinCargo'])
+      id: clean(json["id"]),
+      codCargo: clean(json["codCargo"]),
+      nombreCargo: clean(json["nombreCargo"]),
+      tipoCargoId: json["tipocargo_id"],
+      tipoCargoName: clean(json["tipocargo_name"]),
+      fechaInicio:
+          DateTime.tryParse(clean(json["fechaInicioCargo"])) ?? DateTime.now(),
+      fechaFin: json["fechaFinCargo"] != null
+          ? DateTime.tryParse(json["fechaFinCargo"])
           : null,
-      tipoCargoId: json['tipocargo_id'] is List ? json['tipocargo_id'][0] : (json['tipocargo_id'] is int ? json['tipocargo_id'] : null),
-      tipoCargoName: json['tipocargo_name']?.toString() ?? (json['tipocargo_id'] is List ? json['tipocargo_id'][1] : null),
-      direccionId: json['direccion'] is List ? json['direccion'][0] : (json['direccion'] is int ? json['direccion'] : null),
-      direccionName: json['direccion_name']?.toString() ?? (json['direccion'] is List ? json['direccion'][1] : null),
-      puerta: json['puerta']?.toString() ?? '',
-      piso: json['piso']?.toString() ?? '',
-      telefono: json['telefono']?.toString() ?? '',
-      observaciones: json['observaciones']?.toString() ?? '',
-      motivo: json['motivo']?.toString() ?? '',
-      textoSaludo: json['textoSaludo']?.toString() ?? '',
-      localidadId: json['localidad_id'] is List ? json['localidad_id'][0] : (json['localidad_id'] is int ? json['localidad_id'] : null),
+      calleId: dir["calle_id"],
+      calleNombre: clean(dir["calle_name"]),
+      numero: clean(dir["numero"]),
+      piso: clean(dir["piso"]),
+      puerta: clean(dir["puerta"]),
+      bloque: clean(dir["bloque"]),
+      escalera: clean(dir["escalera"]),
+      portal: clean(dir["portal"]),
+      telefono: clean(json["telefono"]),
+      observaciones: clean(json["observaciones"]),
+      motivo: clean(json["motivo"]),
+      textoSaludo: clean(json["textoSaludo"]),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "codCargo": codCargo,
+      "nombreCargo": nombreCargo,
+      "tipocargo_id": tipoCargoId,
+      "fechaInicioCargo": fechaInicioStr,
+      "fechaFinCargo": fechaFinStr.isEmpty ? null : fechaFinStr,
+      "calle_id": calleId,
+      "numero": numero,
+      "piso": piso,
+      "puerta": puerta,
+      "bloque": bloque,
+      "escalera": escalera,
+      "portal": portal,
+      "telefono": telefono,
+      "observaciones": observaciones,
+      "motivo": motivo,
+      "textoSaludo": textoSaludo,
+    };
+  }
+
+  Cargo copyWith({
+    String? id,
+    String? codCargo,
+    String? nombreCargo,
+    int? tipoCargoId,
+    String? tipoCargoName,
+    DateTime? fechaInicio,
+    DateTime? fechaFin,
+    int? calleId,
+    String? calleNombre,
+    String? numero,
+    String? piso,
+    String? puerta,
+    String? bloque,
+    String? escalera,
+    String? portal,
+    String? telefono,
+    String? observaciones,
+    String? motivo,
+    String? textoSaludo,
+  }) {
+    return Cargo(
+      id: id ?? this.id,
+      codCargo: codCargo ?? this.codCargo,
+      nombreCargo: nombreCargo ?? this.nombreCargo,
+      tipoCargoId: tipoCargoId ?? this.tipoCargoId,
+      tipoCargoName: tipoCargoName ?? this.tipoCargoName,
+      fechaInicio: fechaInicio ?? this.fechaInicio,
+      fechaFin: fechaFin ?? this.fechaFin,
+      calleId: calleId ?? this.calleId,
+      calleNombre: calleNombre ?? this.calleNombre,
+      numero: numero ?? this.numero,
+      piso: piso ?? this.piso,
+      puerta: puerta ?? this.puerta,
+      bloque: bloque ?? this.bloque,
+      escalera: escalera ?? this.escalera,
+      portal: portal ?? this.portal,
+      telefono: telefono ?? this.telefono,
+      observaciones: observaciones ?? this.observaciones,
+      motivo: motivo ?? this.motivo,
+      textoSaludo: textoSaludo ?? this.textoSaludo,
+    );
+  }
+
+  @override
+  String toString() {
+    return "Cargo($codCargo - $nombreCargo, tipo=$tipoCargoName, fechaInicio=$fechaInicioStr)";
   }
 }

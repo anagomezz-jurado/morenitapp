@@ -38,7 +38,8 @@ class SecretariaRepositoryImpl implements SecretariaRepository {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> getTiposCargos() => datasource.getTiposCargos();
+  Future<List<Map<String, dynamic>>> getTiposCargos() =>
+      datasource.getTiposCargos();
 
   @override
   Future<List<Map<String, dynamic>>> getCalles() => datasource.getCalles();

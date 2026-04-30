@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:morenitapp/features/auth/domain/entities/user.dart';
 import 'package:morenitapp/features/panel-gestion/configuracion/domain/entities/grupo_proveedor.dart';
 import 'package:morenitapp/features/panel-gestion/configuracion/domain/entities/notificacion_tipo.dart';
 import 'package:morenitapp/features/panel-gestion/configuracion/domain/entities/tipo_autoridad.dart';
@@ -12,40 +11,53 @@ import 'package:morenitapp/features/panel-gestion/configuracion/infrastructure/r
 import '../../infrastructure/datasources/configuracion_datasource_impl.dart';
 
 // --- REPOSITORY PROVIDER ---
-final configuracionRepositoryProvider = Provider<ConfiguracionRepository>((ref) {
+final configuracionRepositoryProvider =
+    Provider<ConfiguracionRepository>((ref) {
   final datasource = ConfiguracionDatasourceImpl();
   return ConfiguracionRepositoryImpl(datasource);
 });
 
 // --- LISTADO PROVIDERS (AsyncNotifier) ---
-
-final tiposEventoProvider = AsyncNotifierProvider<TiposEventoNotifier, List<TipoEvento>>(TiposEventoNotifier.new);
-final tiposCargoProvider = AsyncNotifierProvider<TiposCargoNotifier, List<TipoCargo>>(TiposCargoNotifier.new);
-final tiposAutoridadProvider = AsyncNotifierProvider<TiposAutoridadNotifier, List<TipoAutoridad>>(TiposAutoridadNotifier.new);
-final rolesProvider = AsyncNotifierProvider<RolesNotifier, List<Rol>>(RolesNotifier.new);
-final gruposProveedorProvider = AsyncNotifierProvider<GruposProveedorNotifier, List<GrupoProveedor>>(GruposProveedorNotifier.new);
+final tiposEventoProvider =
+    AsyncNotifierProvider<TiposEventoNotifier, List<TipoEvento>>(
+        TiposEventoNotifier.new);
+final tiposCargoProvider =
+    AsyncNotifierProvider<TiposCargoNotifier, List<TipoCargo>>(
+        TiposCargoNotifier.new);
+final tiposAutoridadProvider =
+    AsyncNotifierProvider<TiposAutoridadNotifier, List<TipoAutoridad>>(
+        TiposAutoridadNotifier.new);
+final rolesProvider =
+    AsyncNotifierProvider<RolesNotifier, List<Rol>>(RolesNotifier.new);
+final gruposProveedorProvider =
+    AsyncNotifierProvider<GruposProveedorNotifier, List<GrupoProveedor>>(
+        GruposProveedorNotifier.new);
 
 // --- NOTIFIER PARA EVENTOS ---
 class TiposEventoNotifier extends AsyncNotifier<List<TipoEvento>> {
- @override
+  @override
   Future<List<TipoEvento>> build() async {
-    // IMPORTANTE: Asegúrate de que este método devuelva la lista de Odoo
     return await ref.read(configuracionRepositoryProvider).getTiposEvento();
   }
 
   Future<void> crear(String codigo, String nombre, String color) async {
     state = const AsyncValue.loading();
     try {
-      await ref.read(configuracionRepositoryProvider).crearTipoEvento(codigo, nombre, color);
-      ref.invalidateSelf(); 
+      await ref
+          .read(configuracionRepositoryProvider)
+          .crearTipoEvento(codigo, nombre, color);
+      ref.invalidateSelf();
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
     }
   }
-  // Añadimos el parámetro String color
-  Future<void> editar(int id, String codigo, String nombre, String color) async {
+
+  Future<void> editar(
+      int id, String codigo, String nombre, String color) async {
     state = const AsyncValue.loading();
-    await ref.read(configuracionRepositoryProvider).editarTipoEvento(id, codigo, nombre, color);
+    await ref
+        .read(configuracionRepositoryProvider)
+        .editarTipoEvento(id, codigo, nombre, color);
     ref.invalidateSelf();
   }
 
@@ -65,13 +77,18 @@ class TiposCargoNotifier extends AsyncNotifier<List<TipoCargo>> {
 
   Future<void> crear(String codigo, String nombre, String observaciones) async {
     state = const AsyncValue.loading();
-    await ref.read(configuracionRepositoryProvider).crearTipoCargo(codigo, nombre, observaciones);
+    await ref
+        .read(configuracionRepositoryProvider)
+        .crearTipoCargo(codigo, nombre, observaciones);
     ref.invalidateSelf();
   }
 
-  Future<void> editar(int id, String codigo, String nombre, String observaciones) async {
+  Future<void> editar(
+      int id, String codigo, String nombre, String observaciones) async {
     state = const AsyncValue.loading();
-    await ref.read(configuracionRepositoryProvider).editarTipoCargo(id, codigo, nombre, observaciones);
+    await ref
+        .read(configuracionRepositoryProvider)
+        .editarTipoCargo(id, codigo, nombre, observaciones);
     ref.invalidateSelf();
   }
 
@@ -91,13 +108,17 @@ class TiposAutoridadNotifier extends AsyncNotifier<List<TipoAutoridad>> {
 
   Future<void> crear(String codigo, String nombre) async {
     state = const AsyncValue.loading();
-    await ref.read(configuracionRepositoryProvider).crearTipoAutoridad(codigo, nombre);
+    await ref
+        .read(configuracionRepositoryProvider)
+        .crearTipoAutoridad(codigo, nombre);
     ref.invalidateSelf();
   }
 
   Future<void> editar(int id, String codigo, String nombre) async {
     state = const AsyncValue.loading();
-    await ref.read(configuracionRepositoryProvider).editarTipoAutoridad(id, codigo, nombre);
+    await ref
+        .read(configuracionRepositoryProvider)
+        .editarTipoAutoridad(id, codigo, nombre);
     ref.invalidateSelf();
   }
 
@@ -123,7 +144,9 @@ class RolesNotifier extends AsyncNotifier<List<Rol>> {
 
   Future<void> editar(int id, int codigo, String nombre) async {
     state = const AsyncValue.loading();
-    await ref.read(configuracionRepositoryProvider).editarRol(id, codigo, nombre);
+    await ref
+        .read(configuracionRepositoryProvider)
+        .editarRol(id, codigo, nombre);
     ref.invalidateSelf();
   }
 
@@ -143,13 +166,17 @@ class GruposProveedorNotifier extends AsyncNotifier<List<GrupoProveedor>> {
 
   Future<void> crear(String codigo, String nombre) async {
     state = const AsyncValue.loading();
-    await ref.read(configuracionRepositoryProvider).crearGrupoProveedor(codigo, nombre);
+    await ref
+        .read(configuracionRepositoryProvider)
+        .crearGrupoProveedor(codigo, nombre);
     ref.invalidateSelf();
   }
 
   Future<void> editar(int id, String codigo, String nombre) async {
     state = const AsyncValue.loading();
-    await ref.read(configuracionRepositoryProvider).editarGrupoProveedor(id, codigo, nombre);
+    await ref
+        .read(configuracionRepositoryProvider)
+        .editarGrupoProveedor(id, codigo, nombre);
     ref.invalidateSelf();
   }
 
@@ -158,54 +185,57 @@ class GruposProveedorNotifier extends AsyncNotifier<List<GrupoProveedor>> {
     await ref.read(configuracionRepositoryProvider).eliminarGrupoProveedor(id);
     ref.invalidateSelf();
   }
-
-  
 }
-final notificacionTiposProvider = AsyncNotifierProvider<NotificacionTiposNotifier, List<NotificacionTipo>>(
+
+final notificacionTiposProvider =
+    AsyncNotifierProvider<NotificacionTiposNotifier, List<NotificacionTipo>>(
   NotificacionTiposNotifier.new,
 );
 
 class NotificacionTiposNotifier extends AsyncNotifier<List<NotificacionTipo>> {
-  
   @override
   Future<List<NotificacionTipo>> build() async {
-    // Usamos watch para mantener la reactividad
     return ref.watch(configuracionRepositoryProvider).getNotificacionTipos();
   }
 
   Future<bool> crear(String nombre) async {
     try {
-      await ref.read(configuracionRepositoryProvider).crearNotificacionTipo(nombre);
-      ref.invalidateSelf(); // Refresca la lista
-      return true; // <--- AGREGAR ESTO
+      await ref
+          .read(configuracionRepositoryProvider)
+          .crearNotificacionTipo(nombre);
+      ref.invalidateSelf();
+      return true; 
     } catch (e) {
       debugPrint('Error al crear: $e');
-      return false; // <--- AGREGAR ESTO
+      return false;
     }
   }
 
   Future<bool> editar(int id, String nombre) async {
     try {
-      await ref.read(configuracionRepositoryProvider).editarNotificacionTipo(id, nombre);
-      ref.invalidateSelf(); // Refresca la lista
-      return true; // <--- AGREGAR ESTO
+      await ref
+          .read(configuracionRepositoryProvider)
+          .editarNotificacionTipo(id, nombre);
+      ref.invalidateSelf(); 
+      return true; 
     } catch (e) {
       debugPrint('Error al editar: $e');
-      return false; // <--- AGREGAR ESTO
+      return false; 
     }
   }
-Future<bool> eliminar(int id) async {
-  try {
-    // IMPORTANTE: Asegúrate de tener el await aquí
-    await ref.read(configuracionRepositoryProvider).eliminarNotificacionTipo(id);
-    
-    // Refrescamos el estado para que desaparezca de la lista
-    ref.invalidateSelf();
-    
-    return true; // Operación exitosa
-  } catch (e) {
-    debugPrint('Error al eliminar: $e');
-    return false; // Algo salió mal
+
+  Future<bool> eliminar(int id) async {
+    try {
+      await ref
+          .read(configuracionRepositoryProvider)
+          .eliminarNotificacionTipo(id);
+
+      ref.invalidateSelf();
+
+      return true; 
+    } catch (e) {
+      debugPrint('Error al eliminar: $e');
+      return false; 
+    }
   }
-}
 }

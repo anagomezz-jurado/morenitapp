@@ -32,7 +32,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     checkAuthStatus();
   }
 
-  // Limpiar mensajes de error manualmente si es necesario
   void clearErrorMessage() {
     state = state.copyWith(errorMessage: '');
   }
@@ -56,7 +55,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String telefono,
     bool recibirNotiEmail = true,
   }) async {
-    // Resetear estado de error antes de intentar
     state = state.copyWith(authStatus: AuthStatus.checking, errorMessage: '');
 
     try {
@@ -72,10 +70,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       _setLoggedUser(user);
     } on CustomError catch (e) {
-      // Aquí es donde capturamos el error "Email already exists" del Repositorio
       state = state.copyWith(
         authStatus: AuthStatus.notAuthenticated,
-        errorMessage: e.message, // Ejemplo: "El correo ya está en uso"
+        errorMessage: e.message,
       );
     } catch (e) {
       state = state.copyWith(
@@ -85,28 +82,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  // Dentro de tu AuthNotifier
-Future<void> checkAuthStatus() async {
-  final token = await keyValueStorageService.getValue<String>('token');
-  if (token == null) return logout();
+  Future<void> checkAuthStatus() async {
+    final token = await keyValueStorageService.getValue<String>('token');
+    if (token == null) return logout();
 
-  try {
-    final user = await authRepository.checkAuthStatus(token);
-    // ESTO ES LO QUE ACTUALIZA LA UI
-    state = state.copyWith(
-      user: user,
-      authStatus: AuthStatus.authenticated,
-    );
-  } catch (e) {
-    logout();
+    try {
+      final user = await authRepository.checkAuthStatus(token);
+      state = state.copyWith(
+        user: user,
+        authStatus: AuthStatus.authenticated,
+      );
+    } catch (e) {
+      logout();
+    }
   }
-}
- // ✅ ESTE MÉTODO DEBE ESTAR AQUÍ (FUERA DE OTROS MÉTODOS)
+
   Future<void> loginAsGuest() async {
     state = state.copyWith(
       authStatus: AuthStatus.authenticated,
       user: User(
-        id: '0', 
+        id: '0',
         nombre: 'Invitado',
         apellido1: '',
         apellido2: '',
@@ -116,26 +111,21 @@ Future<void> checkAuthStatus() async {
         rolName: 'Invitado',
         grupoName: '',
         recibirNotiEmail: false,
-        token: '', 
+        token: '',
       ),
     );
   }
-// --- Dentro de la clase AuthNotifier ---
 
   Future<void> _setLoggedUser(User user) async {
     try {
-      // 1. Guardamos el token en el almacenamiento local (SharedPreferences)
-      // Usamos await para garantizar que se escriba antes de cambiar el estado de la UI
       await keyValueStorageService.setKey<String>('token', user.token);
 
-      // 2. Actualizamos el estado para que la UI reaccione y navegue al Home
       state = state.copyWith(
         user: user,
         authStatus: AuthStatus.authenticated,
         errorMessage: '',
       );
     } catch (e) {
-      // Si por algo falla el almacenamiento físico, cerramos sesión por seguridad
       logout('Error al guardar la sesión en el dispositivo');
     }
   }
@@ -159,7 +149,7 @@ class AuthState {
 
   AuthState(
       {this.authStatus =
-          AuthStatus.checking, // Estado inicial siempre es checking
+          AuthStatus.checking, 
       this.user,
       this.errorMessage = ''});
 
@@ -170,4 +160,3 @@ class AuthState {
           user: user ?? this.user,
           errorMessage: errorMessage ?? this.errorMessage);
 }
-

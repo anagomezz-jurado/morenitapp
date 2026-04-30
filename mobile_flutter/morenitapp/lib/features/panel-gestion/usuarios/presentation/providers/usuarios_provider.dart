@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:morenitapp/features/panel-gestion/usuarios/domain/entities/grupo_user.dart';
 import 'package:morenitapp/features/auth/domain/entities/user.dart';
 import 'package:morenitapp/features/panel-gestion/usuarios/domain/repositories/usuario_repository.dart';
 import 'package:morenitapp/features/panel-gestion/usuarios/infrastructure/repositories/usuario_repository_impl.dart';
@@ -33,21 +32,20 @@ class UsuariosNotifier extends AsyncNotifier<List<User>> {
     }
   }
 
-Future<bool> editar(int id, Map<String, dynamic> datos) async {
-  try {
-    // 1. Enviamos la actualización a Odoo
-    await ref.read(usuarioRepositoryProvider).editarUsuario(id, datos);
-    
-    // 2. En lugar de invalidar (que rompe la UI), actualizamos los datos manualmente
-    final listaActualizada = await ref.read(usuarioRepositoryProvider).getUsuarios();
-    state = AsyncValue.data(listaActualizada); 
+  Future<bool> editar(int id, Map<String, dynamic> datos) async {
+    try {
+      await ref.read(usuarioRepositoryProvider).editarUsuario(id, datos);
 
-    return true;
-  } catch (e) {
-    debugPrint('Error en editarUsuario: $e');
-    return false;
+      final listaActualizada =
+          await ref.read(usuarioRepositoryProvider).getUsuarios();
+      state = AsyncValue.data(listaActualizada);
+
+      return true;
+    } catch (e) {
+      debugPrint('Error en editarUsuario: $e');
+      return false;
+    }
   }
-}
 
   Future<bool> eliminar(int id) async {
     try {
@@ -60,8 +58,6 @@ Future<bool> editar(int id, Map<String, dynamic> datos) async {
     }
   }
 }
-
-// --- FILTROS ---
 
 final usuariosFiltersProvider = StateProvider<Map<String, dynamic>>((ref) => {
       'query': '',
@@ -81,48 +77,3 @@ final usuariosFiltradosProvider = Provider<AsyncValue<List<User>>>((ref) {
     }).toList();
   });
 });
-
-// --- GRUPOS ---
-
-final gruposProvider =
-    AsyncNotifierProvider<GruposNotifier, List<Grupo>>(GruposNotifier.new);
-
-class GruposNotifier extends AsyncNotifier<List<Grupo>> {
-  @override
-  Future<List<Grupo>> build() async {
-    return ref.watch(usuarioRepositoryProvider).getGrupos();
-  }
-
-  Future<bool> crear(String nombre) async {
-    try {
-      await ref.read(usuarioRepositoryProvider).crearGrupo(nombre);
-      ref.invalidateSelf();
-      return true;
-    } catch (e) {
-      debugPrint('Error en crearGrupo: $e');
-      return false;
-    }
-  }
-
-  Future<bool> editar(int id, String nombre) async {
-    try {
-      await ref.read(usuarioRepositoryProvider).editarGrupo(id, nombre);
-      ref.invalidateSelf();
-      return true;
-    } catch (e) {
-      debugPrint('Error en editarGrupo: $e');
-      return false;
-    }
-  }
-
-  Future<bool> eliminar(int id) async {
-    try {
-      await ref.read(usuarioRepositoryProvider).eliminarGrupo(id);
-      ref.invalidateSelf();
-      return true;
-    } catch (e) {
-      debugPrint('Error en eliminarGrupo: $e');
-      return false;
-    }
-  }
-}

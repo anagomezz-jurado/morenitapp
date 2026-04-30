@@ -15,10 +15,9 @@ class GrupoProveedorScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final gruposAsync = ref.watch(gruposProveedorProvider);
-    // Accedemos a los colores del AppTheme
     final colors = Theme.of(context).colorScheme;
 
-     List<List<String>> prepararDatos(List<GrupoProveedor> lista) {
+    List<List<String>> prepararDatos(List<GrupoProveedor> lista) {
       return lista
           .map((h) => [
                 (h.codigo ?? 'S/N').toString(),
@@ -62,29 +61,41 @@ class GrupoProveedorScreen extends ConsumerWidget {
         );
       },
       onRefresh: () => ref.refresh(gruposProveedorProvider),
-      onNuevo: () => _showSideForm(context, ref), 
+      onNuevo: () => _showSideForm(context, ref),
       columns: const [
-        DataColumn(label: Text('CÓDIGO', style: TextStyle(fontWeight: FontWeight.bold))),
-        DataColumn(label: Text('NOMBRE DEL GRUPO', style: TextStyle(fontWeight: FontWeight.bold))),
-        DataColumn(label: Text('ACCIONES', style: TextStyle(fontWeight: FontWeight.bold))),
+        DataColumn(
+            label:
+                Text('CÓDIGO', style: TextStyle(fontWeight: FontWeight.bold))),
+        DataColumn(
+            label: Text('NOMBRE DEL GRUPO',
+                style: TextStyle(fontWeight: FontWeight.bold))),
+        DataColumn(
+            label: Text('ACCIONES',
+                style: TextStyle(fontWeight: FontWeight.bold))),
       ],
       rows: gruposAsync.when(
-        data: (grupos) => grupos.map((g) => DataRow(cells: [
-          DataCell(Text(g.codigo)),
-          DataCell(Text(g.nombre, style: const TextStyle(fontWeight: FontWeight.w500))),
-          DataCell(_buildActionButtons(
-            context,
-            onEdit: () => _showSideForm(context, ref, grupo: g),
-            onDelete: () => ref.read(gruposProveedorProvider.notifier).eliminar(g.id!),
-          )),
-        ])).toList(),
+        data: (grupos) => grupos
+            .map((g) => DataRow(cells: [
+                  DataCell(Text(g.codigo)),
+                  DataCell(Text(g.nombre,
+                      style: const TextStyle(fontWeight: FontWeight.w500))),
+                  DataCell(_buildActionButtons(
+                    context,
+                    onEdit: () => _showSideForm(context, ref, grupo: g),
+                    onDelete: () => ref
+                        .read(gruposProveedorProvider.notifier)
+                        .eliminar(g.id!),
+                  )),
+                ]))
+            .toList(),
         error: (_, __) => [],
         loading: () => [],
       ),
     );
   }
 
-  void _showSideForm(BuildContext context, WidgetRef ref, {GrupoProveedor? grupo}) {
+  void _showSideForm(BuildContext context, WidgetRef ref,
+      {GrupoProveedor? grupo}) {
     final colors = Theme.of(context).colorScheme;
 
     showGeneralDialog(
@@ -97,18 +108,24 @@ class GrupoProveedorScreen extends ConsumerWidget {
         return Align(
           alignment: Alignment.centerRight,
           child: Container(
-            width: MediaQuery.of(context).size.width * 0.5, // 50% de la pantalla
+            width:
+                MediaQuery.of(context).size.width * 0.5, 
             height: double.infinity,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: const BorderRadius.only(topLeft: Radius.circular(30), bottomLeft: Radius.circular(30)),
+              borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(30),
+                  bottomLeft: Radius.circular(30)),
               border: Border(
-                left: BorderSide(color: colors.primary.withOpacity(0.5), width: 2),
+                left: BorderSide(
+                    color: colors.primary.withOpacity(0.5), width: 2),
               ),
             ),
             child: Material(
               color: Colors.white,
-              borderRadius: const BorderRadius.only(topLeft: Radius.circular(30), bottomLeft: Radius.circular(30)),
+              borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(30),
+                  bottomLeft: Radius.circular(30)),
               child: _GrupoFormContent(grupo: grupo),
             ),
           ),
@@ -116,26 +133,27 @@ class GrupoProveedorScreen extends ConsumerWidget {
       },
       transitionBuilder: (context, anim1, anim2, child) {
         return SlideTransition(
-          position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero).animate(anim1),
+          position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
+              .animate(anim1),
           child: child,
         );
       },
     );
   }
 
-  Widget _buildActionButtons(BuildContext context, {required VoidCallback onEdit, required VoidCallback onDelete}) {
+  Widget _buildActionButtons(BuildContext context,
+      {required VoidCallback onEdit, required VoidCallback onDelete}) {
     final colors = Theme.of(context).colorScheme;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
-          icon: Icon(Icons.edit_note, color: colors.primary, size: 24), 
-          onPressed: onEdit
-        ),
+            icon: Icon(Icons.edit_note, color: colors.primary, size: 24),
+            onPressed: onEdit),
         IconButton(
-          icon: const Icon(Icons.delete_sweep_outlined, color: Colors.redAccent, size: 24), 
-          onPressed: onDelete
-        ),
+            icon: const Icon(Icons.delete_sweep_outlined,
+                color: Colors.redAccent, size: 24),
+            onPressed: onDelete),
       ],
     );
   }
@@ -163,12 +181,10 @@ class _GrupoFormContentState extends ConsumerState<_GrupoFormContent> {
 
   @override
   Widget build(BuildContext context) {
-    // Llamada a los colores del tema definido en AppTheme
     final colors = Theme.of(context).colorScheme;
 
     return Column(
       children: [
-        // Cabecera usando el color Primario del tema
         Container(
           padding: const EdgeInsets.fromLTRB(24, 40, 16, 20),
           decoration: BoxDecoration(
@@ -177,19 +193,22 @@ class _GrupoFormContentState extends ConsumerState<_GrupoFormContent> {
           ),
           child: Row(
             children: [
-              Icon(widget.grupo == null ? Icons.add_business : Icons.edit_note, color: colors.primary),
+              Icon(widget.grupo == null ? Icons.add_business : Icons.edit_note,
+                  color: colors.primary),
               const SizedBox(width: 12),
               Text(
                 widget.grupo == null ? 'Nuevo Grupo' : 'Editar Grupo',
                 style: TextStyle(
-                  fontSize: 20, 
-                  fontWeight: FontWeight.bold, 
-                  color: colors.primary,
-                  fontFamily: 'Palatino' // Uso de la fuente del tema
-                ),
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: colors.primary,
+                    fontFamily: 'Palatino'
+                    ),
               ),
               const Spacer(),
-              IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+              IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close)),
             ],
           ),
         ),
@@ -202,13 +221,14 @@ class _GrupoFormContentState extends ConsumerState<_GrupoFormContent> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildField("CÓDIGO DEL GRUPO", codCtrl, "Ej: PROV-001", colors),
+                  _buildField(
+                      "CÓDIGO DEL GRUPO", codCtrl, "Ej: PROV-001", colors),
                   const SizedBox(height: 25),
-                  _buildField("NOMBRE DEL GRUPO", nomCtrl, "Nombre del sector o tipo", colors),
-                  
+                  _buildField("NOMBRE DEL GRUPO", nomCtrl,
+                      "Nombre del sector o tipo", colors),
+
                   const SizedBox(height: 50),
-                  
-                  // Botón usando colores del tema
+
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -216,12 +236,16 @@ class _GrupoFormContentState extends ConsumerState<_GrupoFormContent> {
                       style: FilledButton.styleFrom(
                         backgroundColor: colors.primary,
                         foregroundColor: colors.onPrimary,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15)),
                       ),
                       onPressed: _save,
                       child: Text(
-                        widget.grupo == null ? 'GUARDAR GRUPO' : 'ACTUALIZAR GRUPO',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        widget.grupo == null
+                            ? 'GUARDAR GRUPO'
+                            : 'ACTUALIZAR GRUPO',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                     ),
                   ),
@@ -234,11 +258,17 @@ class _GrupoFormContentState extends ConsumerState<_GrupoFormContent> {
     );
   }
 
-  Widget _buildField(String label, TextEditingController ctrl, String hint, ColorScheme colors) {
+  Widget _buildField(String label, TextEditingController ctrl, String hint,
+      ColorScheme colors) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: colors.primary, letterSpacing: 1.1)),
+        Text(label,
+            style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                color: colors.primary,
+                letterSpacing: 1.1)),
         const SizedBox(height: 8),
         TextFormField(
           controller: ctrl,
@@ -246,10 +276,17 @@ class _GrupoFormContentState extends ConsumerState<_GrupoFormContent> {
             hintText: hint,
             filled: true,
             fillColor: colors.primary.withOpacity(0.02),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade200)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: colors.primary, width: 2)),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300)),
+            enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade200)),
+            focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colors.primary, width: 2)),
           ),
           validator: (v) => v!.isEmpty ? 'Requerido' : null,
         ),

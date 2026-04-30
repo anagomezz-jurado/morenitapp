@@ -1,5 +1,4 @@
 import 'package:morenitapp/features/panel-gestion/configuracion/domain/entities/notificacion_tipo.dart';
-import 'package:morenitapp/features/panel-gestion/usuarios/domain/entities/grupo_user.dart';
 import 'package:morenitapp/features/auth/domain/entities/user.dart';
 import 'package:morenitapp/features/panel-gestion/configuracion/domain/entities/grupo_proveedor.dart';
 import 'package:morenitapp/features/panel-gestion/configuracion/domain/entities/tipo_autoridad.dart';
@@ -10,7 +9,8 @@ import 'package:morenitapp/features/panel-gestion/configuracion/domain/entities/
 abstract class ConfiguracionRepository {
   // --- TIPOS DE EVENTO ---
   Future<void> crearTipoEvento(String codigo, String nombre, String color);
-Future<void> editarTipoEvento(int id, String codigo, String nombre, String color);
+  Future<void> editarTipoEvento(
+      int id, String codigo, String nombre, String color);
   Future<bool> eliminarTipoEvento(int id);
   Future<List<TipoEvento>> getTiposEvento();
 
@@ -34,13 +34,15 @@ Future<void> editarTipoEvento(int id, String codigo, String nombre, String color
   Future<bool> editarRol(int id, int codigo, String nombre);
   Future<bool> eliminarRol(int id);
 
+  // --- GRUPOS DE PROVEEDORES ---
   Future<List<GrupoProveedor>> getGruposProveedor();
   Future<bool> crearGrupoProveedor(String codigo, String nombre);
   Future<bool> editarGrupoProveedor(int id, String codigo, String nombre);
   Future<bool> eliminarGrupoProveedor(int id);
-// --- NOTIFICACIONES TIPO ---
+
+  // --- NOTIFICACIONES TIPO ---
   Future<List<NotificacionTipo>> getNotificacionTipos();
-  Future<bool> crearNotificacionTipo(String nombre); 
-  Future<bool> editarNotificacionTipo(int id, String nombre); 
+  Future<bool> crearNotificacionTipo(String nombre);
+  Future<bool> editarNotificacionTipo(int id, String nombre);
   Future<bool> eliminarNotificacionTipo(int id);
 }

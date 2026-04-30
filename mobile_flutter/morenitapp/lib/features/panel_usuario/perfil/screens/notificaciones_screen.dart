@@ -9,67 +9,78 @@ class NotificacionesUsuarioScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notisAsync = ref.watch(notificacionesProvider);
-    final colors = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final primaryColor = theme.primaryColor;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notificaciones'),
-        centerTitle: true,
-        backgroundColor: colors.primary,
-        foregroundColor: Colors.white, 
-        iconTheme: const IconThemeData(
-            color: Colors.white), 
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => ref.refresh(notificacionesProvider),
-            color: Colors.white,
-          ),
-        ],
-      ),
-      body: notisAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.error_outline, size: 48, color: colors.error),
-              const SizedBox(height: 12),
-              Text('Error al cargar notificaciones',
-                  style: TextStyle(color: colors.error)),
-              const SizedBox(height: 8),
-              FilledButton.tonal(
+      backgroundColor: const Color(0xFFF8F9FA),
+      body: CustomScrollView(
+        slivers: [
+          // AppBar consistente con Libros
+          SliverAppBar(
+            expandedHeight: 120.0,
+            floating: false,
+            pinned: true,
+            elevation: 0,
+            backgroundColor: primaryColor,
+            iconTheme: const IconThemeData(color: Colors.white),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.refresh_rounded),
                 onPressed: () => ref.refresh(notificacionesProvider),
-                child: const Text('Reintentar'),
               ),
             ],
-          ),
-        ),
-        data: (notis) {
-          if (notis.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.notifications_off_outlined,
-                      size: 64, color: colors.outline),
-                  const SizedBox(height: 16),
-                  Text('No hay notificaciones',
-                      style: TextStyle(
-                          fontSize: 16,
-                          color: colors.outline,
-                          fontWeight: FontWeight.w500)),
-                ],
+            flexibleSpace: FlexibleSpaceBar(
+              titlePadding:
+                  const EdgeInsetsDirectional.only(start: 50, bottom: 16),
+              title: const Text(
+                "Notificaciones",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
               ),
-            );
-          }
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: notis.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
-            itemBuilder: (context, i) => _NotificacionCard(noti: notis[i]),
-          );
-        },
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [primaryColor, primaryColor.withOpacity(0.8)],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          SliverToBoxAdapter(
+            child: Container(
+              padding: const EdgeInsets.only(top: 20),
+              child: notisAsync.when(
+                loading: () => const SizedBox(
+                  height: 400,
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+                error: (e, _) => _ErrorState(
+                    onRetry: () => ref.refresh(notificacionesProvider)),
+                data: (notis) {
+                  if (notis.isEmpty) {
+                    return const _EmptyState();
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: notis.length,
+                    itemBuilder: (context, index) =>
+                        _NotificacionCard(noti: notis[index]),
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -81,84 +92,98 @@ class _NotificacionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Cabecera: tipo + fecha
-            Row(
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () => _showDetalle(context, noti),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: colors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
+                // Badge de tipo y Fecha
+                Row(
+                  children: [
+                    _TypeBadge(label: noti.tipoNombre ?? 'General'),
+                    const Spacer(),
+                    Icon(Icons.access_time_rounded,
+                        size: 14, color: theme.hintColor),
+                    const SizedBox(width: 4),
+                    Text(
+                      noti.fechaRegistro ?? '-',
+                      style: TextStyle(fontSize: 11, color: theme.hintColor),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                Text(
+                  noti.asunto,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2D3436),
                   ),
-                  child: Text(
-                    noti.tipoNombre ?? 'General',
-                    style: TextStyle(
-                        fontSize: 11,
+                ),
+                const SizedBox(height: 6),
+
+                Text(
+                  _stripHtml(noti.mensaje),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      fontSize: 13, color: Colors.grey.shade600, height: 1.4),
+                ),
+
+                const SizedBox(height: 12),
+                const Divider(height: 1),
+                const SizedBox(height: 10),
+
+                Row(
+                  children: [
+                    Icon(Icons.people_alt_outlined,
+                        size: 16, color: colors.primary),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${noti.usuarioIds.length} destinatarios',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: colors.primary),
+                    ),
+                    const Spacer(),
+                    Text(
+                      "Ver detalle",
+                      style: TextStyle(
+                        fontSize: 12,
                         color: colors.primary,
-                        fontWeight: FontWeight.w600),
-                  ),
-                ),
-                const Spacer(),
-                Icon(Icons.schedule, size: 13, color: colors.outline),
-                const SizedBox(width: 4),
-                Text(
-                  noti.fechaRegistro ?? '-',
-                  style: TextStyle(fontSize: 11, color: colors.outline),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Icon(Icons.chevron_right_rounded,
+                        size: 18, color: colors.primary),
+                  ],
                 ),
               ],
             ),
-            const SizedBox(height: 10),
-
-            // Asunto
-            Text(
-              noti.asunto,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 6),
-
-            // Preview del mensaje (máx 2 líneas)
-            Text(
-              _stripHtml(noti.mensaje),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
-            ),
-            const SizedBox(height: 12),
-
-            // Footer: destinatarios + botón ver más
-            Row(
-              children: [
-                Icon(Icons.people_outline, size: 15, color: colors.outline),
-                const SizedBox(width: 4),
-                Text(
-                  '${noti.usuarioIds.length} destinatario(s)',
-                  style: TextStyle(fontSize: 12, color: colors.outline),
-                ),
-                const Spacer(),
-                TextButton.icon(
-                  icon: const Icon(Icons.visibility_outlined, size: 16),
-                  label: const Text('Ver detalle'),
-                  style: TextButton.styleFrom(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    visualDensity: VisualDensity.compact,
-                  ),
-                  onPressed: () => _showDetalle(context, noti),
-                ),
-              ],
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -173,97 +198,137 @@ class _NotificacionCard extends StatelessWidget {
   }
 
   void _showDetalle(BuildContext context, Notificacion noti) {
-    final colors = Theme.of(context).colorScheme;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      backgroundColor: Colors.transparent,
+      builder: (_) => _NotificacionDetalleSheet(noti: noti),
+    );
+  }
+}
+
+class _TypeBadge extends StatelessWidget {
+  final String label;
+  const _TypeBadge({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).primaryColor;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: primaryColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
       ),
-      builder: (_) => DraggableScrollableSheet(
-        expand: false,
-        initialChildSize: 0.75,
-        maxChildSize: 0.95,
-        minChildSize: 0.4,
-        builder: (_, controller) => Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-          child: ListView(
-            controller: controller,
-            children: [
-              // Handle
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Tipo badge
-              Row(
-                children: [
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: colors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      noti.tipoNombre ?? 'General',
-                      style: TextStyle(
-                          color: colors.primary, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                  const Spacer(),
-                  Icon(Icons.schedule, size: 14, color: colors.outline),
-                  const SizedBox(width: 4),
-                  Text(
-                    noti.fechaRegistro ?? '-',
-                    style: TextStyle(fontSize: 12, color: colors.outline),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Asunto
-              Text(
-                noti.asunto,
-                style:
-                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const Divider(height: 28),
-
-              // Mensaje completo
-              Text(
-                'Mensaje',
-                style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: colors.outline),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: colors.surfaceVariant.withOpacity(0.4),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  _stripHtml(noti.mensaje),
-                  style: const TextStyle(fontSize: 14, height: 1.5),
-                ),
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          color: primaryColor,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.5,
         ),
       ),
     );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState();
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        children: [
+          const SizedBox(height: 100),
+          Icon(Icons.notifications_none_rounded,
+              size: 80, color: Colors.grey.shade300),
+          const SizedBox(height: 16),
+          Text(
+            "Buzón vacío",
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade400),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  final VoidCallback onRetry;
+  const _ErrorState({required this.onRetry});
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        children: [
+          const SizedBox(height: 100),
+          const Icon(Icons.error_outline_rounded,
+              size: 60, color: Colors.redAccent),
+          const SizedBox(height: 16),
+          const Text("No pudimos cargar las notificaciones"),
+          TextButton(onPressed: onRetry, child: const Text("Reintentar")),
+        ],
+      ),
+    );
+  }
+}
+
+class _NotificacionDetalleSheet extends StatelessWidget {
+  final Notificacion noti;
+  const _NotificacionDetalleSheet({required this.noti});
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.7,
+      maxChildSize: 0.95,
+      builder: (_, controller) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+        child: ListView(
+          controller: controller,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            const SizedBox(height: 24),
+            _TypeBadge(label: noti.tipoNombre ?? 'General'),
+            const SizedBox(height: 16),
+            Text(noti.asunto,
+                style:
+                    const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text(noti.fechaRegistro ?? '',
+                style: TextStyle(color: Colors.grey.shade500)),
+            const Divider(height: 40),
+            Text(
+              _stripHtml(noti.mensaje),
+              style: const TextStyle(
+                  fontSize: 15, height: 1.6, color: Color(0xFF444444)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _stripHtml(String html) {
+    return html
+        .replaceAll(RegExp(r'<[^>]*>'), '')
+        .replaceAll('&nbsp;', ' ')
+        .trim();
   }
 }

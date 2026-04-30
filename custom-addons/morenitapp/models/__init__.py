@@ -18,7 +18,5 @@ from . import grupoproveedor
 from . import codigopostal
 from . import libro
 from . import libroanunciante
-from . import grupos_permisos
-from . import grupoUsuarios
 from . import notificacion
 from . import tipoNotificacion

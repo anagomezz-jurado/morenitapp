@@ -65,16 +65,8 @@
         <field name="view_mode">tree,form</field>
     </record>
 
-    <menuitem id="menu_morenitapp_usuario_item" 
-              name="Usuarios de la App" 
-              parent="menu_seguridad_root" 
-              action="action_morenitapp_usuario" 
-              sequence="10"/>
+  
 
-    <menuitem id="menu_morenitapp_rol_item" 
-              name="Roles de Usuario" 
-              parent="menu_seguridad_root" 
-              action="action_morenitapp_rol" 
-              sequence="20"/>
+    
 
 </odoo>

@@ -29,12 +29,20 @@
                     <group>
                         <field name="cifCofradia"/>
                         <field name="nombreCofradia"/>
+                        <field name="nombreResponsable"/>
                     </group>
 
-                    <group string="Dirección">
-                        <field name="direccionCofradia"/>
-                        <field name="puerta"/>
+                   <group string="Dirección">
+                        <field name="calle_id"/>
+                        <field name="localidad_id" readonly="1"/>
+                        <field name="codPostal_id" readonly="1"/>   
+                        <field name="provincia_id" readonly="1"/>
+                        <field name="numero"/>
                         <field name="piso"/>
+                        <field name="bloque"/>
+                        <field name="escalera"/>
+                        <field name="portal"/>
+                        <field name="puerta"/>
                     </group>
 
                     <group string="Contacto">

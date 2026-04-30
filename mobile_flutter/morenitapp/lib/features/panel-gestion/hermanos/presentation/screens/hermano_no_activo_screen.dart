@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Añadido para rootBundle
+import 'package:flutter/services.dart'; 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:morenitapp/features/panel-gestion/hermanos/domain/entities/hermano.dart';
 import 'package:morenitapp/features/panel-gestion/hermanos/presentation/providers/hermanos_provider.dart';
 import 'package:morenitapp/shared/excel/excel_Service.dart';
 import 'package:morenitapp/shared/widgets/plantilla_ventanas.dart';
-import 'package:morenitapp/shared/widgets/disenio_informes.dart'; // Importante para PDF
+import 'package:morenitapp/shared/widgets/disenio_informes.dart'; 
 
 class HermanoNoActivoListadoScreen extends ConsumerWidget {
   const HermanoNoActivoListadoScreen({super.key});
@@ -16,7 +16,6 @@ class HermanoNoActivoListadoScreen extends ConsumerWidget {
     final hermanosAsync = ref.watch(hermanosListadoProvider);
     final primaryColor = Theme.of(context).primaryColor;
 
-    // --- FUNCIÓN AUXILIAR PARA FILTRAR Y PREPARAR DATOS (EXCEL/PDF) ---
     List<List<String>> prepararDatosExportacion(List<Hermano> listaCompleta) {
       final query = ref.read(hermanosFiltersProvider).query.toLowerCase();
       

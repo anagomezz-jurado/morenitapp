@@ -7,11 +7,15 @@ class Cofradia {
   final String telefono;
   final String web;
   final String observaciones;
-  final int? direccionId;
-  final String? direccionName;
-  final String puerta;
+
+  final int? calleId;
+  final String calleNombre;
+  final String numero;
   final String piso;
-  final int? localidadId;
+  final String puerta;
+  final String bloque;
+  final String escalera;
+  final String portal;
 
   Cofradia({
     required this.id,
@@ -22,28 +26,59 @@ class Cofradia {
     required this.telefono,
     required this.web,
     required this.observaciones,
-    this.direccionId,
-    this.direccionName,
-    required this.puerta,
+    required this.calleId,
+    required this.calleNombre,
+    required this.numero,
     required this.piso,
-    this.localidadId,
+    required this.puerta,
+    required this.bloque,
+    required this.escalera,
+    required this.portal,
   });
 
+  static String clean(v) => (v == null || v == "" || v == false) ? "" : v.toString();
+
   factory Cofradia.fromJson(Map<String, dynamic> json) {
+    final dir = json["direccion"] ?? {};
+
     return Cofradia(
-      id: json['id']?.toString() ?? '',
-      cif: json['cifCofradia']?.toString() ?? '',
-      nombre: json['nombreCofradia']?.toString() ?? '',
-      fundacion: json['antiguedadCofradia'] is int ? json['antiguedadCofradia'] : 0,
-      email: json['emailCofradia']?.toString() ?? '',
-      telefono: json['telefonoCofradia']?.toString() ?? '',
-      web: json['paginaWeb']?.toString() ?? '',
-      observaciones: json['observaciones']?.toString() ?? '',
-      direccionId: json['direccion_id'] is int ? json['direccion_id'] : null,
-      direccionName: json['direccion_name']?.toString() ?? '',
-      puerta: json['puerta']?.toString() ?? '',
-      piso: json['piso']?.toString() ?? '',
-      localidadId: json['localidad_id'] is int ? json['localidad_id'] : null,
+      id: clean(json["id"]),
+      cif: clean(json["cifCofradia"]),
+      nombre: clean(json["nombreCofradia"]),
+      fundacion: json["antiguedadCofradia"] is int ? json["antiguedadCofradia"] : 0,
+      email: clean(json["emailCofradia"]),
+      telefono: clean(json["telefonoCofradia"]),
+      web: clean(json["paginaWeb"]),
+      observaciones: clean(json["observaciones"]),
+
+      calleId: dir["calle_id"],
+      calleNombre: clean(dir["calle_name"]),
+      numero: clean(dir["numero"]),
+      piso: clean(dir["piso"]),
+      puerta: clean(dir["puerta"]),
+      bloque: clean(dir["bloque"]),
+      escalera: clean(dir["escalera"]),
+      portal: clean(dir["portal"]),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "cifCofradia": cif,
+      "nombreCofradia": nombre,
+      "antiguedadCofradia": fundacion,
+      "emailCofradia": email,
+      "telefonoCofradia": telefono,
+      "paginaWeb": web,
+      "observaciones": observaciones,
+
+      "calle_id": calleId,
+      "numero": numero,
+      "piso": piso,
+      "puerta": puerta,
+      "bloque": bloque,
+      "escalera": escalera,
+      "portal": portal,
+    };
   }
 }

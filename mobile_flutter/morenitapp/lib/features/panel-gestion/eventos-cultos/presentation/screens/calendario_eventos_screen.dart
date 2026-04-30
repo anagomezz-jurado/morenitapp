@@ -25,7 +25,6 @@ class _CalendarioEventosScreenState
     final primary = colorScheme.primary;
     final secondary = colorScheme.secondary;
     final onPrimary = colorScheme.onPrimary;
-    final surface = colorScheme.surface;
 
     final eventosAsync = ref.watch(eventosProvider);
 
@@ -34,24 +33,33 @@ class _CalendarioEventosScreenState
       appBar: AppBar(
         title: const Text('Calendario de Cultos'),
         backgroundColor: primary,
-        foregroundColor: secondary,
+        titleTextStyle: const TextStyle(
+            color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
         elevation: 0,
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            onPressed: () => ref.invalidate(eventosProvider),
+          ),
+        ],
       ),
       body: eventosAsync.when(
         data: (eventos) {
           List<Evento> getEventosForDay(DateTime day) =>
               eventos.where((e) => isSameDay(e.fechaInicio, day)).toList();
 
-          final eventosDelDia =
-              getEventosForDay(_selectedDay ?? _focusedDay);
+          final eventosDelDia = getEventosForDay(_selectedDay ?? _focusedDay);
 
           return Column(
             children: [
-              // ── Cabecera verde ──────────────────────────────────────
               Container(
                 decoration: BoxDecoration(
-                  color: primary.withOpacity(0.9),
+                  color: primary,
                   borderRadius: const BorderRadius.only(
                     bottomLeft: Radius.circular(24),
                     bottomRight: Radius.circular(24),
@@ -59,18 +67,15 @@ class _CalendarioEventosScreenState
                 ),
                 padding: const EdgeInsets.only(bottom: 16),
                 child: _buildCalendar(
-                  eventos: eventos,
-                  primary: primary,
-                  secondary: secondary,
                   onPrimary: onPrimary,
-                  surface: surface,
+                  primary: primary,
                   getEventosForDay: getEventosForDay,
                 ),
               ),
 
               const SizedBox(height: 12),
 
-              // ── Contador del día seleccionado ───────────────────────
+              // Contador y Fecha
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
@@ -88,8 +93,7 @@ class _CalendarioEventosScreenState
                     ),
                     const Spacer(),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 3),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                       decoration: BoxDecoration(
                         color: secondary.withOpacity(0.12),
                         borderRadius: BorderRadius.circular(12),
@@ -108,42 +112,21 @@ class _CalendarioEventosScreenState
 
               const SizedBox(height: 8),
 
-              // ── Lista de eventos ────────────────────────────────────
               Expanded(
-                child: _buildEventList(
-                  eventosDelDia,
-                  primary: primary,
-                  secondary: secondary,
-                ),
+                child: _buildEventList(eventosDelDia, primary, secondary),
               ),
             ],
           );
         },
-        loading: () => Center(
-          child: CircularProgressIndicator(color: primary),
-        ),
-        error: (err, _) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.error_outline, color: colorScheme.error, size: 40),
-              const SizedBox(height: 8),
-              Text('Error al cargar eventos',
-                  style: TextStyle(color: colorScheme.error)),
-            ],
-          ),
-        ),
+        loading: () => Center(child: CircularProgressIndicator(color: primary)),
+        error: (err, _) => Center(child: Text('Error al cargar eventos: $err')),
       ),
     );
   }
 
-  // ── Calendario ────────────────────────────────────────────────────────────
   Widget _buildCalendar({
-    required List<Evento> eventos,
-    required Color primary,
-    required Color secondary,
     required Color onPrimary,
-    required Color surface,
+    required Color primary,
     required List<Evento> Function(DateTime) getEventosForDay,
   }) {
     return TableCalendar(
@@ -161,76 +144,46 @@ class _CalendarioEventosScreenState
         });
       },
       onFormatChanged: (format) => setState(() => _calendarFormat = format),
-
-      // ── Estilo del calendario ─────────────────────────────────────
       headerStyle: HeaderStyle(
         formatButtonDecoration: BoxDecoration(
           border: Border.all(color: onPrimary.withOpacity(0.5)),
           borderRadius: BorderRadius.circular(12),
         ),
         formatButtonTextStyle: TextStyle(color: onPrimary, fontSize: 12),
-        titleTextStyle:
-            TextStyle(color: onPrimary, fontWeight: FontWeight.bold, fontSize: 16),
+        titleTextStyle: TextStyle(color: onPrimary, fontWeight: FontWeight.bold, fontSize: 16),
         leftChevronIcon: Icon(Icons.chevron_left, color: onPrimary),
         rightChevronIcon: Icon(Icons.chevron_right, color: onPrimary),
       ),
-
       daysOfWeekStyle: DaysOfWeekStyle(
-        weekdayStyle: TextStyle(
-            color: onPrimary.withOpacity(0.8),
-            fontSize: 12,
-            fontWeight: FontWeight.w600),
-        weekendStyle: TextStyle(
-            color: onPrimary.withOpacity(0.5),
-            fontSize: 12,
-            fontWeight: FontWeight.w600),
+        weekdayStyle: TextStyle(color: onPrimary.withOpacity(0.8), fontSize: 12, fontWeight: FontWeight.w600),
+        weekendStyle: TextStyle(color: onPrimary.withOpacity(0.5), fontSize: 12, fontWeight: FontWeight.w600),
       ),
-
       calendarStyle: CalendarStyle(
-        // Día de hoy
-        todayDecoration: BoxDecoration(
-          color: onPrimary.withOpacity(0.25),
-          shape: BoxShape.circle,
-        ),
-        todayTextStyle: TextStyle(
-            color: onPrimary, fontWeight: FontWeight.bold),
-
-        // Día seleccionado
-        selectedDecoration: BoxDecoration(
-          color: onPrimary,
-          shape: BoxShape.circle,
-        ),
-        selectedTextStyle: TextStyle(
-            color: primary, fontWeight: FontWeight.bold),
-
-        // Días normales
+        todayDecoration: BoxDecoration(color: onPrimary.withOpacity(0.25), shape: BoxShape.circle),
+        todayTextStyle: TextStyle(color: onPrimary, fontWeight: FontWeight.bold),
+        selectedDecoration: BoxDecoration(color: onPrimary, shape: BoxShape.circle),
+        selectedTextStyle: TextStyle(color: primary, fontWeight: FontWeight.bold),
         defaultTextStyle: TextStyle(color: onPrimary.withOpacity(0.9)),
-        weekendTextStyle:
-            TextStyle(color: onPrimary.withOpacity(0.55)),
-
-        // Días fuera del mes
+        weekendTextStyle: TextStyle(color: onPrimary.withOpacity(0.55)),
         outsideDaysVisible: false,
       ),
-
-      // ── Marcadores de color por evento ───────────────────────────
       calendarBuilders: CalendarBuilders(
         markerBuilder: (context, date, events) {
           if (events.isEmpty) return const SizedBox();
-          // Máximo 3 puntos visibles
-          final visible = events.take(3).toList();
+          // 🔥 CORRECCIÓN: Usamos cast a <Evento> y accedemos a .colorVisual
+          final visible = events.take(3).cast<Evento>().toList();
+
           return Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: visible.map((event) {
-              final e = event as Evento;
+            children: visible.map((e) {
               return Container(
                 margin: const EdgeInsets.symmetric(horizontal: 1),
-                width: 6,
-                height: 6,
+                width: 7,
+                height: 7,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: _colorFromHex(e.color),
-                  border: Border.all(
-                      color: onPrimary.withOpacity(0.4), width: 0.5),
+                  color: e.colorVisual, // Directo desde el modelo
+                  border: Border.all(color: onPrimary.withOpacity(0.4), width: 0.5),
                 ),
               );
             }).toList(),
@@ -240,27 +193,10 @@ class _CalendarioEventosScreenState
     );
   }
 
-  // ── Lista de eventos del día ──────────────────────────────────────────────
-  Widget _buildEventList(
-    List<Evento> events, {
-    required Color primary,
-    required Color secondary,
-  }) {
+  Widget _buildEventList(List<Evento> events, Color primary, Color secondary) {
     if (events.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.calendar_today_outlined,
-                size: 40, color: secondary.withOpacity(0.3)),
-            const SizedBox(height: 8),
-            Text(
-              'Sin eventos este día',
-              style: TextStyle(
-                  color: secondary.withOpacity(0.5), fontSize: 14),
-            ),
-          ],
-        ),
+        child: Text('Sin eventos este día', style: TextStyle(color: secondary.withOpacity(0.5))),
       );
     }
 
@@ -269,16 +205,15 @@ class _CalendarioEventosScreenState
       itemCount: events.length,
       itemBuilder: (context, i) {
         final e = events[i];
-        final eventoColor = _colorFromHex(e.color);
+        // 🔥 CORRECCIÓN: Usamos e.colorVisual
+        final colorTipo = e.colorVisual;
 
         return Container(
           margin: const EdgeInsets.only(bottom: 10),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border(
-              left: BorderSide(color: eventoColor, width: 4),
-            ),
+            border: Border(left: BorderSide(color: colorTipo, width: 4)),
             boxShadow: [
               BoxShadow(
                 color: primary.withOpacity(0.06),
@@ -288,19 +223,14 @@ class _CalendarioEventosScreenState
             ],
           ),
           child: ListTile(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             leading: CircleAvatar(
-              backgroundColor: eventoColor.withOpacity(0.15),
-              child: Icon(Icons.church, color: eventoColor, size: 20),
+              backgroundColor: colorTipo.withOpacity(0.15),
+              child: Icon(Icons.church, color: colorTipo, size: 20),
             ),
             title: Text(
               e.nombre,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-                color: primary,
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: primary),
             ),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -308,26 +238,18 @@ class _CalendarioEventosScreenState
                 const SizedBox(height: 2),
                 Row(
                   children: [
-                    Icon(Icons.category_outlined,
-                        size: 12, color: secondary.withOpacity(0.7)),
+                    Icon(Icons.category_outlined, size: 12, color: secondary.withOpacity(0.7)),
                     const SizedBox(width: 4),
-                    Text(e.tipoNombre,
-                        style: TextStyle(
-                            fontSize: 12,
-                            color: secondary.withOpacity(0.8))),
+                    Text(e.tipoNombre, style: TextStyle(fontSize: 12, color: secondary.withOpacity(0.8))),
                   ],
                 ),
                 if (e.lugar != null && e.lugar!.isNotEmpty) ...[
                   const SizedBox(height: 2),
                   Row(
                     children: [
-                      Icon(Icons.location_on_outlined,
-                          size: 12, color: secondary.withOpacity(0.7)),
+                      Icon(Icons.location_on_outlined, size: 12, color: secondary.withOpacity(0.7)),
                       const SizedBox(width: 4),
-                      Text(e.lugar!,
-                          style: TextStyle(
-                              fontSize: 12,
-                              color: secondary.withOpacity(0.7))),
+                      Text(e.lugar!, style: TextStyle(fontSize: 12, color: secondary.withOpacity(0.7))),
                     ],
                   ),
                 ],
@@ -339,15 +261,11 @@ class _CalendarioEventosScreenState
               children: [
                 Text(
                   DateFormat('HH:mm').format(e.fechaInicio),
-                  style: TextStyle(
-                      color: eventoColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15),
+                  style: TextStyle(color: colorTipo, fontWeight: FontWeight.bold, fontSize: 15),
                 ),
                 Text(
                   DateFormat('HH:mm').format(e.fechaFin),
-                  style: TextStyle(
-                      color: secondary.withOpacity(0.5), fontSize: 11),
+                  style: TextStyle(color: secondary.withOpacity(0.5), fontSize: 11),
                 ),
               ],
             ),
@@ -355,11 +273,5 @@ class _CalendarioEventosScreenState
         );
       },
     );
-  }
-
-  Color _colorFromHex(String hex) {
-    hex = hex.replaceAll('#', '');
-    if (hex.length == 6) hex = 'FF$hex';
-    return Color(int.parse(hex, radix: 16));
   }
 }

@@ -35,7 +35,18 @@
                         <field name="contacto"/>
                         <field name="telefono"/>
                         <field name="email"/>
-                        <field name="direccion"/>
+                    </group>
+                     <group string="Dirección">
+                        <field name="calle_id"/>
+                        <field name="localidad_id" readonly="1"/>
+                        <field name="codPostal_id" readonly="1"/>   
+                        <field name="provincia_id" readonly="1"/>
+                        <field name="numero"/>
+                        <field name="piso"/>
+                        <field name="bloque"/>
+                        <field name="escalera"/>
+                        <field name="portal"/>
+                        <field name="puerta"/>
                     </group>
                     <group string="Observaciones">
                         <field name="observaciones"/>

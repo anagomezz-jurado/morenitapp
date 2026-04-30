@@ -178,6 +178,7 @@ class PlantillaVentanas extends StatelessWidget {
   }
 }
 // --- COMPONENTE DE FILTRADO AVANZADO (ESTILO ODOO) ---
+// --- COMPONENTE DE FILTRADO AVANZADO (CORREGIDO) ---
 class AdvancedFilterBar extends StatefulWidget {
   final List<Map<String, String>> fields;
   final Function(List<FilterCriterion>) onFiltersChanged;
@@ -198,7 +199,6 @@ class _AdvancedFilterBarState extends State<AdvancedFilterBar> {
       runSpacing: 8,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        // Botón principal "Añadir Filtro"
         PopupMenuButton(
           offset: const Offset(0, 45),
           child: Container(
@@ -225,7 +225,6 @@ class _AdvancedFilterBarState extends State<AdvancedFilterBar> {
             ),
           ],
         ),
-        // Chips de filtros activos
         ...activeFilters.asMap().entries.map((entry) {
           int idx = entry.key;
           FilterCriterion filter = entry.value;
@@ -246,7 +245,7 @@ class _AdvancedFilterBarState extends State<AdvancedFilterBar> {
   }
 
   void _showFilterDialog(BuildContext context) {
-    // Inicialización segura para evitar el error visual
+    // Valores iniciales
     String selectedFieldId = widget.fields.first['id']!;
     FilterOperator selectedOp = _getOperatorsForType(widget.fields.first['type']!).first;
     final valueController = TextEditingController();
@@ -256,82 +255,109 @@ class _AdvancedFilterBarState extends State<AdvancedFilterBar> {
       builder: (ctx) => StatefulBuilder(
         builder: (context, setDialogState) {
           final currentField = widget.fields.firstWhere((f) => f['id'] == selectedFieldId);
-          final isDate = currentField['type'] == 'date';
+          final String fieldType = currentField['type'] ?? 'string';
+          final bool isDate = fieldType == 'date';
+          final bool isNumber = fieldType == 'number';
 
           return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: const Text("Filtro personalizado"),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // 1. Selector de Campo
                 DropdownButtonFormField<String>(
                   value: selectedFieldId,
-                  decoration: const InputDecoration(labelText: 'Campo'),
+                  decoration: const InputDecoration(labelText: 'Campo', border: OutlineInputBorder()),
                   items: widget.fields.map((f) => DropdownMenuItem(value: f['id'], child: Text(f['name']!))).toList(),
                   onChanged: (val) {
                     setDialogState(() {
                       selectedFieldId = val!;
-                      // Forzamos un operador válido para el nuevo tipo de campo
-                      selectedOp = _getOperatorsForType(widget.fields.firstWhere((f)=>f['id']==val)['type']!).first;
+                      final newField = widget.fields.firstWhere((f) => f['id'] == val);
+                      // Resetear operador y valor al cambiar de campo
+                      selectedOp = _getOperatorsForType(newField['type']!).first;
+                      valueController.clear(); 
                     });
                   },
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
+                
+                // 2. Selector de Operación
                 DropdownButtonFormField<FilterOperator>(
                   value: selectedOp,
-                  decoration: const InputDecoration(labelText: 'Operación'),
-                  items: _getOperatorsForType(currentField['type']!).map((op) => 
+                  decoration: const InputDecoration(labelText: 'Operación', border: OutlineInputBorder()),
+                  items: _getOperatorsForType(fieldType).map((op) => 
                     DropdownMenuItem(value: op, child: Text(_opLabel(op)))).toList(),
                   onChanged: (val) => setDialogState(() => selectedOp = val!),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
+
+                // 3. Input de Valor (Adaptativo)
                 TextField(
                   controller: valueController,
+                  readOnly: isDate, // Si es fecha, no dejamos escribir manual para evitar errores de formato
+                  keyboardType: isNumber ? TextInputType.number : TextInputType.text,
                   decoration: InputDecoration(
                     labelText: 'Valor',
-                    suffixIcon: isDate ? IconButton(
-                      icon: const Icon(Icons.calendar_today),
-                      onPressed: () async {
-                        final date = await showDatePicker(
-                          context: context, 
-                          initialDate: DateTime.now(),
-                          firstDate: DateTime(1900), 
-                          lastDate: DateTime(2100)
-                        );
-                        if (date != null) valueController.text = date.toString().split(' ')[0];
-                      },
-                    ) : null,
+                    hintText: isDate ? 'Seleccione una fecha' : 'Escriba aquí...',
+                    border: const OutlineInputBorder(),
+                    prefixIcon: isDate ? const Icon(Icons.calendar_month) : (isNumber ? const Icon(Icons.numbers) : null),
                   ),
+                  onTap: isDate ? () async {
+                    final date = await showDatePicker(
+                      context: context, 
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime(1900), 
+                      lastDate: DateTime(2100)
+                    );
+                    if (date != null) {
+                      // Formato YYYY-MM-DD estándar para bases de datos
+                      setDialogState(() {
+                        valueController.text = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+                      });
+                    }
+                  } : null,
                 ),
               ],
             ),
             actions: [
               TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("CANCELAR")),
               ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF714B67)), // Color Odoo
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromARGB(255, 2, 85, 42),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
                 onPressed: () {
+                  if (valueController.text.isEmpty) return; // Evitar filtros vacíos
+
                   final newFilter = FilterCriterion(
                     field: selectedFieldId,
                     label: currentField['name']!,
                     operator: selectedOp,
                     value: valueController.text,
-                    type: currentField['type']!,
+                    type: fieldType,
                   );
                   setState(() => activeFilters.add(newFilter));
                   widget.onFiltersChanged(activeFilters);
                   Navigator.pop(ctx);
                 },
-                child: const Text("APLICAR", style: TextStyle(color: Colors.white)),
+                child: const Text("APLICAR"),
               )
             ],
           );
-        }
+        },
       ),
     );
   }
 
   List<FilterOperator> _getOperatorsForType(String type) {
     if (type == 'date' || type == 'number') {
-      return [FilterOperator.equals, FilterOperator.greaterThan, FilterOperator.lessThan];
+      return [
+        FilterOperator.equals, 
+        FilterOperator.greaterThan, 
+        FilterOperator.lessThan
+      ];
     }
     return [FilterOperator.contains, FilterOperator.equals];
   }
@@ -340,8 +366,8 @@ class _AdvancedFilterBarState extends State<AdvancedFilterBar> {
     switch (op) {
       case FilterOperator.contains: return "contiene";
       case FilterOperator.equals: return "es igual a";
-      case FilterOperator.greaterThan: return "es mayor que";
-      case FilterOperator.lessThan: return "es menor que";
+      case FilterOperator.greaterThan: return "es posterior/mayor que";
+      case FilterOperator.lessThan: return "es anterior/menor que";
     }
   }
 }

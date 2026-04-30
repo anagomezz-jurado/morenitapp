@@ -6,7 +6,6 @@ enum EmailError { empty, format, alreadyInUse }
 class Email extends FormzInput<String, EmailError> {
   static final RegExp emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
   
-  // Esta variable es vital para capturar el error del servidor
   final bool alreadyExists;
 
   const Email.pure() : alreadyExists = false, super.pure('');
@@ -14,7 +13,7 @@ class Email extends FormzInput<String, EmailError> {
 
   String? get errorMessage {
     if (isPure) return null;
-    if (alreadyExists) return 'Este correo ya está registrado'; // Prioridad 1
+    if (alreadyExists) return 'Este correo ya está registrado'; 
     if (displayError == EmailError.empty) return 'El correo es requerido';
     if (displayError == EmailError.format) return 'Formato de correo no válido';
     return null;

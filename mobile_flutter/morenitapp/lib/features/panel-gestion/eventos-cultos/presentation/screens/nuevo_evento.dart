@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:morenitapp/features/panel-gestion/configuracion/presentation/providers/configuracion_provider.dart';
 import 'package:morenitapp/shared/widgets/plantilla_formularios.dart';
 import 'package:morenitapp/features/panel-gestion/eventos-cultos/domain/entities/evento.dart';
 import 'package:morenitapp/features/panel-gestion/eventos-cultos/presentation/providers/evento_culto_provider.dart';
@@ -44,11 +45,25 @@ class _NuevoEventoState extends ConsumerState<NuevoEvento> {
     }
   }
 
+  @override
+  void dispose() {
+    codCtrl.dispose();
+    nombreCtrl.dispose();
+    lugarCtrl.dispose();
+    descripcionCtrl.dispose();
+    super.dispose();
+  }
+
   void _onSave() async {
     if (!_formKey.currentState!.validate()) return;
 
     if (_fechaFin.isBefore(_fechaInicio)) {
       _showErrorDialog("La fecha fin no puede ser anterior al inicio");
+      return;
+    }
+
+    if (_tipoEventoId == null) {
+      _showErrorDialog("Debes seleccionar un tipo de evento");
       return;
     }
 
@@ -60,11 +75,8 @@ class _NuevoEventoState extends ConsumerState<NuevoEvento> {
         "nombre": nombreCtrl.text.trim(),
         "lugar": lugarCtrl.text.trim(),
         "descripcion": descripcionCtrl.text.trim(),
-
-        // Odoo prefiere formato YYYY-MM-DD HH:MM:SS
         "fecha_inicio": DateFormat('yyyy-MM-dd HH:mm:ss').format(_fechaInicio),
         "fecha_fin": DateFormat('yyyy-MM-dd HH:mm:ss').format(_fechaFin),
-
         "organizador_id": _organizadorId,
         "tipoevento_id": _tipoEventoId,
       };
@@ -96,7 +108,7 @@ class _NuevoEventoState extends ConsumerState<NuevoEvento> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Error'),
+        title: const Text('Atención'),
         content: Text(error),
         actions: [
           TextButton(
@@ -109,7 +121,10 @@ class _NuevoEventoState extends ConsumerState<NuevoEvento> {
   @override
   Widget build(BuildContext context) {
     final Color primary = Theme.of(context).primaryColor;
+    
+    // Observamos los providers de datos dinámicos
     final organizadoresAsync = ref.watch(organizadoresProvider);
+    final tiposEventoAsync = ref.watch(tiposEventoProvider);
 
     return PlantillaWrapper(
       isLoading: _isLoading,
@@ -124,54 +139,47 @@ class _NuevoEventoState extends ConsumerState<NuevoEvento> {
               _buildRow('Código', _textFormField(codCtrl, required: true)),
               _buildRow('Nombre', _textFormField(nombreCtrl, required: true)),
               _buildRow('Lugar', _textFormField(lugarCtrl)),
+              
+              // ORGANIZADOR DINÁMICO
               _buildRow(
                 'Organizador',
                 organizadoresAsync.when(
                   data: (lista) {
-                    // VALIDACIÓN CRÍTICA:
-                    // Si el ID seleccionado no existe en la lista que llegó, lo ponemos en null
-                    // para evitar que la app explote.
-                    final bool existeId =
-                        lista.any((o) => o.id == _organizadorId);
-                    final int? valorSeguro = existeId ? _organizadorId : null;
-
+                    final existeId = lista.any((o) => o.id == _organizadorId);
                     return DropdownButtonFormField<int>(
-                      value: valorSeguro, // Usamos el valor validado
+                      value: existeId ? _organizadorId : null,
                       isExpanded: true,
-                      items: lista
-                          .map((o) => DropdownMenuItem(
-                              value: o.id, child: Text(o.nombre)))
-                          .toList(),
+                      hint: const Text("Seleccionar...", style: TextStyle(fontSize: 13)),
+                      items: lista.map((o) => DropdownMenuItem(
+                          value: o.id, child: Text(o.nombre, style: const TextStyle(fontSize: 13)))).toList(),
                       onChanged: (v) => setState(() => _organizadorId = v),
-                      decoration: InputDecoration(
-                          isDense: true,
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8))),
+                      decoration: _inputDecoration(),
                     );
                   },
                   loading: () => const LinearProgressIndicator(),
-                  error: (_, __) => const Text("Error al cargar"),
+                  error: (_, __) => const Text("Error carga"),
                 ),
               ),
+
+              // TIPO DE EVENTO DINÁMICO (CORREGIDO)
               _buildRow(
                 'Tipo Evento',
-                DropdownButtonFormField<int>(
-                  // VALIDACIÓN: Si _tipoEventoId es 3 y no está en la lista de abajo, fallará.
-                  // Aquí agregamos el 3 o validamos que sea null si no es 1 o 2.
-                  value: (_tipoEventoId == 1 || _tipoEventoId == 2)
-                      ? _tipoEventoId
-                      : null,
-                  items: const [
-                    DropdownMenuItem(value: 1, child: Text("Culto")),
-                    DropdownMenuItem(value: 2, child: Text("Procesión")),
-                    // Si en tu base de datos existe el ID 3, deberías agregarlo aquí:
-                    // DropdownMenuItem(value: 3, child: Text("Otro")),
-                  ],
-                  onChanged: (v) => setState(() => _tipoEventoId = v),
-                  decoration: InputDecoration(
-                      isDense: true,
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8))),
+                tiposEventoAsync.when(
+                  data: (lista) {
+                    final existeId = lista.any((t) => t.id == _tipoEventoId);
+                    return DropdownButtonFormField<int>(
+                      value: existeId ? _tipoEventoId : null,
+                      isExpanded: true,
+                      hint: const Text("Seleccionar...", style: TextStyle(fontSize: 13)),
+                      items: lista.map((t) => DropdownMenuItem(
+                          value: t.id, child: Text(t.nombre, style: const TextStyle(fontSize: 13)))).toList(),
+                      onChanged: (v) => setState(() => _tipoEventoId = v),
+                      decoration: _inputDecoration(),
+                      validator: (v) => v == null ? "Requerido" : null,
+                    );
+                  },
+                  loading: () => const LinearProgressIndicator(),
+                  error: (_, __) => const Text("Error carga"),
                 ),
               ),
             ]),
@@ -198,7 +206,15 @@ class _NuevoEventoState extends ConsumerState<NuevoEvento> {
     );
   }
 
-  // --- COMPONENTES VISUALES ADAPTADOS ---
+  // --- COMPONENTES AUXILIARES ---
+
+  InputDecoration _inputDecoration() {
+    return InputDecoration(
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+    );
+  }
 
   Widget _buildCard({required String title, required List<Widget> children}) {
     return Card(
@@ -244,13 +260,10 @@ class _NuevoEventoState extends ConsumerState<NuevoEvento> {
     return TextFormField(
       controller: ctrl,
       maxLines: maxLines,
+      style: const TextStyle(fontSize: 13),
       validator: (v) =>
-          required && (v == null || v.isEmpty) ? "Obligatorio" : null,
-      decoration: InputDecoration(
-        hintText: hint,
-        isDense: true,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-      ),
+          required && (v == null || v.trim().isEmpty) ? "Obligatorio" : null,
+      decoration: _inputDecoration().copyWith(hintText: hint),
     );
   }
 
@@ -277,13 +290,16 @@ class _NuevoEventoState extends ConsumerState<NuevoEvento> {
               DateTime(date.year, date.month, date.day, time.hour, time.minute);
           if (inicio) {
             _fechaInicio = nueva;
+            if (_fechaFin.isBefore(_fechaInicio)) {
+              _fechaFin = _fechaInicio.add(const Duration(hours: 1));
+            }
           } else {
             _fechaFin = nueva;
           }
         });
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
         decoration: BoxDecoration(
             border: Border.all(color: Colors.grey.shade300),
             borderRadius: BorderRadius.circular(8)),
@@ -291,8 +307,8 @@ class _NuevoEventoState extends ConsumerState<NuevoEvento> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(DateFormat('dd/MM/yyyy HH:mm').format(fecha),
-                style: const TextStyle(fontSize: 14)),
-            const Icon(Icons.calendar_today, size: 18, color: Colors.grey),
+                style: const TextStyle(fontSize: 13)),
+            const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
           ],
         ),
       ),

@@ -6,7 +6,6 @@ import 'package:morenitapp/config/theme/app_theme.dart';
 import 'package:morenitapp/features/auth/presentation/providers/auth_provider.dart';
 import 'package:morenitapp/features/auth/presentation/providers/register_form_provider.dart';
 import 'package:morenitapp/shared/textos_inicio.dart';
-import 'package:morenitapp/shared/widgets/widgets.dart'; // Asegúrate de tener MainBackground aquí
 
 class RegisterScreen extends ConsumerWidget {
   const RegisterScreen({super.key});
@@ -213,8 +212,7 @@ class _RegisterFormCard extends ConsumerWidget {
               style: FilledButton.styleFrom(
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15))),
-              // El botón se habilita solo si acepta términos.
-              // Al pulsar, se validará si el email o teléfono ya existen en el servidor.
+             
               onPressed:
                   (registerForm.isPosting || !registerForm.aceptaTerminos)
                       ? null
