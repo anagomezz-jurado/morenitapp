@@ -83,7 +83,6 @@ class OrganizadoresScreen extends ConsumerWidget {
         DataColumn(label: Text('CIF')),
         DataColumn(label: Text('NOMBRE / ENTIDAD')),
         DataColumn(label: Text('CONTACTO')),
-        DataColumn(label: Text('UBICACIÓN')),
         DataColumn(label: Text('ACCIONES')),
       ],
 
@@ -100,10 +99,7 @@ class OrganizadoresScreen extends ConsumerWidget {
             ],
           )),
           // Mejorado el display de la dirección
-          DataCell(Text(
-            '${o.piso ?? ''} ${o.puerta ?? ''}'.trim().isEmpty ? 'Pral.' : '${o.piso} ${o.puerta}',
-            style: const TextStyle(fontSize: 12),
-          )),
+          
           DataCell(Row(
             children: [
               IconButton(

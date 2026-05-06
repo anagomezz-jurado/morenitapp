@@ -228,7 +228,7 @@ class SideMenuState extends ConsumerState<SideMenu> {
                   onTap: () => _navigate('/panel-usuario')),
               const SizedBox(height: 12),
               _LogoutButton(
-                  onTap: () => ref.read(authProvider.notifier).logout()),
+                  onTap: () => ref.read(authProvider.notifier).logout(  'Usuario cerró sesión')),
             ],
           ),
         ),

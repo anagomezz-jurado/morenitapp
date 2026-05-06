@@ -17,7 +17,6 @@ class UbicacionDataSourceImpl extends UbicacionDatasource {
     },
   ));
 
-
   Future<List<T>> _getList<T>(
       String path, T Function(Map<String, dynamic>) fromJson) async {
     try {
@@ -65,7 +64,16 @@ class UbicacionDataSourceImpl extends UbicacionDatasource {
 
   Future<bool> _update(String path, Map<String, dynamic> data) async {
     try {
+      // Log para ver qué envías exactamente
+      print("Enviando a $path: $data"); 
+      
       final response = await dio.put(path, data: data);
+      
+      if (response.data is Map && response.data['error'] != null) {
+        print("Error de Odoo en PUT: ${response.data['error']}");
+        return false;
+      }
+      
       return response.statusCode == 200;
     } catch (e) {
       print("Error en PUT $path: $e");
@@ -110,14 +118,21 @@ class UbicacionDataSourceImpl extends UbicacionDatasource {
   }
 
   @override
-  Future<Localidad> crearLocalidad(Localidad localidad) async => _create(
-      '/ubicacion/localidades',
-      localidad.toJson(),
-      (json) => Localidad.fromJson(json));
+  Future<Localidad> crearLocalidad(Localidad localidad) async {
+    final data = {
+      'nombreLocalidad': localidad.nombreLocalidad,
+      'codProvincia_id': localidad.codProvinciaId,
+    };
+
+    return _create(
+        '/ubicacion/localidades', data, (json) => Localidad.fromJson(json));
+  }
 
   @override
-  Future<bool> editarLocalidad(int id, Map<String, dynamic> datos) async =>
-      _update('/ubicacion/localidades/$id', datos);
+  Future<bool> editarLocalidad(int id, Map<String, dynamic> datos) async {
+    // Odoo a veces es estricto con los tipos.
+    return _update('/ubicacion/localidades/$id', datos);
+  }
 
   @override
   Future<bool> eliminarLocalidad(int id) async =>

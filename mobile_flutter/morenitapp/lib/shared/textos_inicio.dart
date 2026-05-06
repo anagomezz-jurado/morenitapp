@@ -12,7 +12,7 @@ Dirección:
 C/ El Santo, 38, 14620, El Carpio (Córdoba)
 
 Correo electrónico:
-archivosmorenita@gmail.com
+soportemorenitapp@gmail.com
 
 Teléfono:
 605354983
@@ -35,7 +35,7 @@ La relación entre el titular y el usuario se regirá por la normativa española
 
 Responsable del tratamiento:
 Real Cofradía de Ntra. Sra. la Virgen de la Cabeza Coronada de El Carpio
-Email: archivosmorenita@gmail.com
+Email: soportemorenitapp@gmail.com
 
 Datos que se recogen:
 A través de MorenitApp se pueden recoger los siguientes datos personales:
@@ -77,7 +77,7 @@ El usuario puede ejercer sus derechos de:
 - Oposición
 
 Para ello puede enviar un correo a:
-archivosmorenita@gmail.com
+soportemorenitapp@gmail.com
 
 Seguridad:
 Se adoptan las medidas necesarias para garantizar la seguridad de los datos personales.

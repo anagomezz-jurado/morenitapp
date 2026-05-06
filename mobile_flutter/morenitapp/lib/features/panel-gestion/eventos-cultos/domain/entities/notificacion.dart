@@ -2,15 +2,22 @@ class DestinatarioInfo {
   final int id;
   final String nombre;
   final String email;
+  final bool recibirEmail; // <--- Agrega este campo
 
-  DestinatarioInfo(
-      {required this.id, required this.nombre, required this.email});
+  DestinatarioInfo({
+    required this.id, 
+    required this.nombre, 
+    required this.email,
+    this.recibirEmail = false, // <--- Por defecto false
+  });
 
   factory DestinatarioInfo.fromJson(Map<String, dynamic> json) {
     return DestinatarioInfo(
       id: json['id'],
       nombre: json['nombre'] ?? '',
       email: json['email'] ?? '',
+      // Ajusta 'recibir_email' al nombre exacto que venga de tu base de datos
+      recibirEmail: json['recibir_email'] == true || json['recibir_email'] == 1,
     );
   }
 }

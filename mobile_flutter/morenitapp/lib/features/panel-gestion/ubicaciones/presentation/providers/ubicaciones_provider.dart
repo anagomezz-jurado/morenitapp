@@ -165,12 +165,12 @@ class LocalidadesNotifier extends StateNotifier<AsyncValue<List<Localidad>>> {
   }
 
   Future<void> agregarLocalidad(
-      String nombre, int provinciaId, String capital) async {
+      String nombre, int provinciaId) async {
     final nueva = Localidad(
         id: 0,
         nombreLocalidad: nombre,
         codProvinciaId: provinciaId,
-        nombreCapital: capital);
+);
     try {
       final creada = await repository.crearLocalidad(nueva);
       state.whenData((lista) => state = AsyncValue.data([...lista, creada]));
@@ -180,12 +180,11 @@ class LocalidadesNotifier extends StateNotifier<AsyncValue<List<Localidad>>> {
   }
 
   Future<void> editarLocalidad(
-      int id, String nombre, int provinciaId, String capital) async {
+      int id, String nombre, int provinciaId) async {
     try {
       final success = await repository.editarLocalidad(id, {
         'nombreLocalidad': nombre,
         'codProvincia_id': provinciaId,
-        'nombreCapital': capital
       });
       if (success) {
         state.whenData((lista) {
@@ -194,8 +193,7 @@ class LocalidadesNotifier extends StateNotifier<AsyncValue<List<Localidad>>> {
               if (loc.id == id)
                 loc.copyWith(
                     nombreLocalidad: nombre,
-                    codProvinciaId: provinciaId,
-                    nombreCapital: capital)
+                    codProvinciaId: provinciaId,)
               else
                 loc
           ]);

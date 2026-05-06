@@ -95,7 +95,7 @@ class MenuUsuarioState extends ConsumerState<MenuUsuario> {
         Padding(
           padding: const EdgeInsets.all(16),
           child: _LogoutButton(
-              onTap: () => ref.read(authProvider.notifier).logout()),
+              onTap: () => ref.read(authProvider.notifier).logout('Usuario cerró sesión')),
               
         ),
       ],

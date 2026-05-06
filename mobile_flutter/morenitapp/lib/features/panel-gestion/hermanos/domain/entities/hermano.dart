@@ -64,7 +64,10 @@ class Hermano {
     this.fechaBaja,
     this.motivoBaja,
     this.fechaReactivacion,
-  });
+  }):assert(iban.length <= 4, 'El IBAN (prefijo) no puede exceder 4 caracteres'),
+       assert(banco.length <= 4, 'El código de banco debe ser de 4 caracteres'),
+       assert(sucursal.length <= 4, 'El código de sucursal debe ser de 4 caracteres'),
+       assert(numeroCuenta.length <= 10, 'El número de cuenta debe ser de 10 caracteres');
 
   factory Hermano.fromJson(Map<String, dynamic> json) {
     String clean(dynamic val) {

@@ -110,14 +110,7 @@ class CargosScreen extends ConsumerWidget {
               ],
             )),
             DataCell(Text("${c.calleNombre} ${c.numero}")),
-            DataCell(Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (c.telefono.isNotEmpty) Text("Tel: ${c.telefono}"),
-                if (c.motivo.isNotEmpty) Text("Motivo: ${c.motivo}"),
-                if (c.textoSaludo.isNotEmpty) Text(c.textoSaludo),
-              ],
-            )),
+            DataCell(Text("Tel: ${c.telefono}")),
             DataCell(Row(
               children: [
                 IconButton(

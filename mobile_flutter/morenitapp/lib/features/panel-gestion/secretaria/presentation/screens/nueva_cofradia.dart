@@ -114,11 +114,14 @@ class _CofradiaFormScreenState extends ConsumerState<CofradiaFormScreen> {
   void _onSave() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
-
+ String capitalize(String text) {
+      if (text.isEmpty) return text;
+      return text[0].toUpperCase() + text.substring(1).toLowerCase();
+    }
     try {
       final data = {
         "cifCofradia": cifCtrl.text.trim(),
-        "nombreCofradia": nombreCtrl.text.trim(),
+        "nombreCofradia": capitalize(nombreCtrl.text.trim()),
         "antiguedadCofradia": int.tryParse(fundacionCtrl.text.trim()) ?? 0,
         "emailCofradia": emailCtrl.text.trim(),
         "telefonoCofradia": telefonoCtrl.text.trim(),
@@ -211,8 +214,17 @@ class _CofradiaFormScreenState extends ConsumerState<CofradiaFormScreen> {
                 ])),
           ]),
           _buildCard(title: 'CONTACTO', children: [
-            _buildRow('Teléfono', _textFormField(telefonoCtrl, isNumber: true)),
-            _buildRow('Email', _textFormField(emailCtrl, isEmail: true)),
+            _buildRow(
+                  'Email',
+                  _textFormField(emailCtrl,
+                      isEmail:
+                          true, 
+                      hint: 'ejemplo@correo.com')),
+              _buildRow(
+                  'Teléfono',
+                  _textFormField(telefonoCtrl,
+                      isPhone: true, 
+                      hint: '600000000')),
             _buildRow('Web', _textFormField(webCtrl)),
           ]),
           _buildCard(title: 'OBSERVACIONES', children: [
@@ -272,6 +284,7 @@ class _CofradiaFormScreenState extends ConsumerState<CofradiaFormScreen> {
   Widget _textFormField(TextEditingController c,
       {bool required = false,
       bool isEmail = false,
+       bool isPhone = false,
       bool isNumber = false,
       String? hint}) {
     return TextFormField(
@@ -286,8 +299,26 @@ class _CofradiaFormScreenState extends ConsumerState<CofradiaFormScreen> {
         isDense: true,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
       ),
-      validator: (v) =>
-          (required && (v == null || v.isEmpty)) ? 'Obligatorio' : null,
+      validator: (v) {
+        if (required && (v == null || v.trim().isEmpty)) return 'Obligatorio';
+        if (v == null || v.isEmpty)
+          return null; // Si no es requerido y está vacío, es válido
+
+
+        // Validación de Email (usando tu RegExp de la clase Email)
+        if (isEmail) {
+          final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+          if (!emailRegExp.hasMatch(v)) return 'Formato de correo no válido';
+        }
+
+        // Validación de Teléfono (mínimo 9 caracteres)
+        if (isPhone && v.trim().length < 9) {
+          return 'Mínimo 9 dígitos';
+        }
+
+
+        return null;
+      },
     );
   }
 

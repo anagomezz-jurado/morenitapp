@@ -57,7 +57,7 @@ class PanelUsuarioScreen extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const _SectionHeader(title: 'Avisos del Cabildo'),
+                    const _SectionHeader(title: 'Avisos '),
                     TextButton(
                       onPressed: () => context.push('/notificaciones-usuario'),
                       child: const Text('Ver todos'),
@@ -263,13 +263,13 @@ class _MembershipBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(isLinked ? Icons.verified_user : Icons.help_outline,
+          Icon(isLinked ? Icons.verified_user : Icons.error_outline,
               color: colors.onPrimary, size: 18),
           const SizedBox(width: 10),
           Text(
             isLinked
                 ? 'Hermano Nº ${user!.numeroHermano}'
-                : 'Vincular mi perfil',
+                : 'Perfil no vinculado',
             style: TextStyle(
                 color: colors.onPrimary,
                 fontWeight: FontWeight.bold,

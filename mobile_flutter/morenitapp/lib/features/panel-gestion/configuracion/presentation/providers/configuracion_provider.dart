@@ -72,7 +72,7 @@ class TiposEventoNotifier extends AsyncNotifier<List<TipoEvento>> {
 class TiposCargoNotifier extends AsyncNotifier<List<TipoCargo>> {
   @override
   Future<List<TipoCargo>> build() async {
-    return ref.watch(configuracionRepositoryProvider).getTiposCargo();
+   return ref.read(configuracionRepositoryProvider).getTiposCargo();
   }
 
   Future<void> crear(String codigo, String nombre, String observaciones) async {

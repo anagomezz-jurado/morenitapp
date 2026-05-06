@@ -175,8 +175,13 @@ class _GrupoFormContentState extends ConsumerState<_GrupoFormContent> {
   @override
   void initState() {
     super.initState();
-    codCtrl = TextEditingController(text: widget.grupo?.codigo ?? '');
-    nomCtrl = TextEditingController(text: widget.grupo?.nombre ?? '');
+
+     String capitalize(String text) {
+      if (text.isEmpty) return text;
+      return text[0].toUpperCase() + text.substring(1).toLowerCase();
+    }
+    codCtrl = TextEditingController(text: capitalize(widget.grupo?.codigo ?? ''));
+    nomCtrl = TextEditingController(text: capitalize(widget.grupo?.nombre ?? ''));
   }
 
   @override

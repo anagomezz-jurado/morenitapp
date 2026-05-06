@@ -95,14 +95,7 @@ class CofradiasScreen extends ConsumerWidget {
                 style: const TextStyle(fontWeight: FontWeight.bold))),
             DataCell(Text(c.fundacion.toString())),
             DataCell(Text("${c.calleNombre} ${c.numero}")),
-            DataCell(Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (c.telefono.isNotEmpty) Text("Tel: ${c.telefono}"),
-                if (c.email.isNotEmpty) Text(c.email),
-                if (c.web.isNotEmpty) Text(c.web),
-              ],
-            )),
+            DataCell(Text("Tel: ${c.telefono}")),
             DataCell(Row(
               children: [
                 IconButton(

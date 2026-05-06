@@ -133,8 +133,9 @@ class EventoCultoController(http.Controller):
             _logger.error(f"Error en Eventos: {str(e)}")
             return self._json_response({"error": str(e)}, status=500)
 
-    # --- NOTIFICACIONES ---
-    # --- NOTIFICACIONES ---
+        # --- EN ODOO (Controller) ---
+
+     # --- NOTIFICACIONES ---
     @http.route(['/api/notificaciones', '/api/notificaciones/<int:id>'],
                 type='http', auth='public',
                 methods=['GET', 'POST', 'DELETE', 'OPTIONS'], csrf=False)

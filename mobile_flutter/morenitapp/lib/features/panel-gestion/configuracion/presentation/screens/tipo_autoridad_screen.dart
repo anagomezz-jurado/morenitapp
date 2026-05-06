@@ -154,8 +154,13 @@ class _AutoridadFormContentState extends ConsumerState<_AutoridadFormContent> {
   @override
   void initState() {
     super.initState();
-    codCtrl = TextEditingController(text: widget.autoridad?.codigo ?? '');
-    nomCtrl = TextEditingController(text: widget.autoridad?.nombre ?? '');
+
+     String capitalize(String text) {
+      if (text.isEmpty) return text;
+      return text[0].toUpperCase() + text.substring(1).toLowerCase();
+    }
+    codCtrl = TextEditingController(text: capitalize(widget.autoridad?.codigo ?? ''));
+    nomCtrl = TextEditingController(text: capitalize(widget.autoridad?.nombre ?? ''));
   }
 
   @override

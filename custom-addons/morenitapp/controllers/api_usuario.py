@@ -7,6 +7,12 @@ _logger = logging.getLogger(__name__)
 class UsuarioAPI(http.Controller):
 
     def _get_user_dict(self, u):
+    # Extraer rol_id como entero puro
+        try:
+            rol_id = int(u.rol_id.id) if u.rol_id else 2
+        except Exception:
+            rol_id = 2
+
         return {
             'id': u.id,
             'nombre': u.nombre or '',
@@ -14,21 +20,21 @@ class UsuarioAPI(http.Controller):
             'apellido2': u.apellido2 or '',
             'email': u.email or '',
             'telefono': u.telefono or '',
-            'rol_id': u.rol_id.id if u.rol_id else 2,
+            'rol_id': rol_id,
             'rol_name': u.rol_id.name if u.rol_id else 'Usuario',
             'recibirNotiEmail': u.recibirNotiEmail,
             'token': str(u.id),
             'hermano_id': u.hermano_id.id if u.hermano_id else None,
-            # ↓ CORRECCIÓN: 'numero_hermano' (snake_case) para que coincida con el mapper Flutter
             'numero_hermano': u.hermano_id.codigo_hermano if u.hermano_id else None,
         }
 
     @http.route('/api/usuarios', auth='public', type='json', methods=['POST'], csrf=False, cors='*')
     def listar_usuarios(self, **kwargs):
         try:
-            usuarios = request.env['morenitapp.usuario'].sudo().search([])
+            domain = kwargs.get('domain', [])
+            usuarios = request.env['morenitapp.usuario'].sudo().search(domain)
             return {
-                "success": True, 
+                "success": True,
                 "usuarios": [self._get_user_dict(u) for u in usuarios]
             }
         except Exception as e:
@@ -36,22 +42,20 @@ class UsuarioAPI(http.Controller):
 
     @http.route('/api/usuarios/create', auth='public', type='json', methods=['POST'], csrf=False, cors='*')
     def crear_usuario_admin(self, **kwargs):
-        """Creación desde el panel de gestión (usa 'password' de Flutter)"""
-        data = request.params
         try:
-            email = (data.get('email') or '').strip()
+            email = (kwargs.get('email') or '').strip()
             if request.env['morenitapp.usuario'].sudo().search([('email', '=ilike', email)], limit=1):
                 return {"success": False, "error": "El correo ya está registrado"}
 
             vals = {
-                'nombre': data.get('nombre'),
-                'apellido1': data.get('apellido1', ''),
-                'apellido2': data.get('apellido2', ''),
+                'nombre': kwargs.get('nombre'),
+                'apellido1': kwargs.get('apellido1', ''),
+                'apellido2': kwargs.get('apellido2', ''),
                 'email': email,
-                'contrasena': data.get('password'), 
-                'rol_id': data.get('rol_id', 2),
-                'telefono': data.get('telefono', ''),
-                'recibirNotiEmail': data.get('recibirNotiEmail', True),
+                'contrasena': kwargs.get('password'),
+                'rol_id': int(kwargs.get('rol_id', 2)),  # ← entero
+                'telefono': kwargs.get('telefono', ''),
+                'recibirNotiEmail': kwargs.get('recibirNotiEmail', True),
             }
             nuevo = request.env['morenitapp.usuario'].sudo().create(vals)
             return {"success": True, "user": self._get_user_dict(nuevo)}
@@ -61,25 +65,26 @@ class UsuarioAPI(http.Controller):
 
     @http.route('/api/usuarios/update', auth='public', type='json', methods=['POST'], csrf=False, cors='*')
     def actualizar_usuario(self, **kwargs):
-        data = request.params
         try:
-            usuario = request.env['morenitapp.usuario'].sudo().browse(int(data.get('id')))
+            usuario = request.env['morenitapp.usuario'].sudo().browse(int(kwargs.get('id')))
             if not usuario.exists():
                 return {"success": False, "error": "Usuario no encontrado"}
 
-            # Mapeamos dinámicamente lo que venga de Flutter
             vals = {}
-            campos_permitidos = [
-                'nombre', 'email', 'rol_id', 'telefono', 
-                'recibirNotiEmail', 'apellido1', 'apellido2','hermano_id'
-            ]
+            campos_texto = ['nombre', 'email', 'telefono', 'recibirNotiEmail', 'apellido1', 'apellido2']
+            for campo in campos_texto:
+                if campo in kwargs:
+                    vals[campo] = kwargs[campo]
 
-            for campo in campos_permitidos:
-                if campo in data:
-                    vals[campo] = data[campo]
+            # rol_id siempre como entero
+            if 'rol_id' in kwargs:
+                vals['rol_id'] = int(kwargs['rol_id'])
 
-            # Manejo de contraseña (si viene)
-            password = data.get('password') or data.get('contrasena')
+            # hermano_id como entero
+            if 'hermano_id' in kwargs and kwargs['hermano_id'] is not None:
+                vals['hermano_id'] = int(kwargs['hermano_id'])
+
+            password = kwargs.get('password') or kwargs.get('contrasena')
             if password:
                 vals['contrasena'] = password
 

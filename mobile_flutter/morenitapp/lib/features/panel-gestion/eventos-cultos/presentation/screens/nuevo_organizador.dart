@@ -146,11 +146,14 @@ class _NuevoOrganizadorState extends ConsumerState<NuevoOrganizador> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
-
+ String capitalize(String text) {
+      if (text.isEmpty) return text;
+      return text[0].toUpperCase() + text.substring(1).toLowerCase();
+    }
     try {
       final data = {
         "cif": cifCtrl.text.trim(),
-        "nombre": nombreCtrl.text.trim(),
+        "nombre": capitalize(nombreCtrl.text.trim()),
         "telefono": telefonoCtrl.text.trim(),
         "email": emailCtrl.text.trim(),
 
@@ -222,10 +225,19 @@ class _NuevoOrganizadorState extends ConsumerState<NuevoOrganizador> {
         child: Column(children: [
           _buildCard(title: "IDENTIFICACIÓN", children: [
             _buildRow("Logo", _imagePickerBox(logoB64, () => _pickImage('logo'), circle: true)),
-            _buildRow("CIF *", _tf(cifCtrl, required: true)),
-            _buildRow("Nombre *", _tf(nombreCtrl, required: true)),
-            _buildRow("Teléfono", _tf(telefonoCtrl, isNumber: true)),
-            _buildRow("Email", _tf(emailCtrl, isEmail: true)),
+            _buildRow("CIF *", _textFormField(cifCtrl, required: true)),
+            _buildRow("Nombre *", _textFormField(nombreCtrl, required: true)),
+           _buildRow(
+                  'Email',
+                  _textFormField(emailCtrl,
+                      isEmail:
+                          true, 
+                      hint: 'ejemplo@correo.com')),
+              _buildRow(
+                  'Teléfono',
+                  _textFormField(telefonoCtrl,
+                      isPhone: true, 
+                      hint: '600000000')),
           ]),
 
           _buildCard(title: "UBICACIÓN", children: [
@@ -237,12 +249,12 @@ class _NuevoOrganizadorState extends ConsumerState<NuevoOrganizador> {
             if (provinciaId != null) _buildRow("Localidad", _localidadDD()),
             if (localidadId != null) _buildRow("C.P.", _cpDD()),
 
-            _buildRow("Número", _tf(numeroCtrl)),
-            _buildRow("Piso", _tf(pisoCtrl)),
-            _buildRow("Puerta", _tf(puertaCtrl)),
-            _buildRow("Escalera", _tf(escaleraCtrl)),
-            _buildRow("Bloque", _tf(bloqueCtrl)),
-            _buildRow("Portal", _tf(portalCtrl)),
+            _buildRow("Número", _textFormField(numeroCtrl)),
+            _buildRow("Piso", _textFormField(pisoCtrl)),
+            _buildRow("Puerta", _textFormField(puertaCtrl)),
+            _buildRow("Escalera", _textFormField(escaleraCtrl)),
+            _buildRow("Bloque", _textFormField(bloqueCtrl)),
+            _buildRow("Portal", _textFormField(portalCtrl)),
           ]),
 
           _buildCard(title: "FIRMAS", children: [
@@ -299,66 +311,165 @@ class _NuevoOrganizadorState extends ConsumerState<NuevoOrganizador> {
       ]),
     );
   }
-  Widget _tf(TextEditingController c,
-      {bool required = false, bool isNumber = false, bool isEmail = false}) {
+  Widget _textFormField(TextEditingController c,
+      {bool required = false,
+      bool isEmail = false,
+       bool isPhone = false,
+      bool isNumber = false,
+      String? hint}) {
     return TextFormField(
       controller: c,
-      validator: (v) => required && (v == null || v.isEmpty) ? "Obligatorio" : null,
-      keyboardType: isEmail
-          ? TextInputType.emailAddress
-          : (isNumber ? TextInputType.number : TextInputType.text),
-      decoration: const InputDecoration(
+      keyboardType: isNumber
+          ? TextInputType.number
+          : isEmail
+              ? TextInputType.emailAddress
+              : TextInputType.text,
+      decoration: InputDecoration(
+        hintText: hint,
         isDense: true,
-        border: OutlineInputBorder(),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
       ),
+      validator: (v) {
+        if (required && (v == null || v.trim().isEmpty)) return 'Obligatorio';
+        if (v == null || v.isEmpty)
+          return null; // Si no es requerido y está vacío, es válido
+
+
+        // Validación de Email (usando tu RegExp de la clase Email)
+        if (isEmail) {
+          final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+          if (!emailRegExp.hasMatch(v)) return 'Formato de correo no válido';
+        }
+
+        // Validación de Teléfono (mínimo 9 caracteres)
+        if (isPhone && v.trim().length < 9) {
+          return 'Mínimo 9 dígitos';
+        }
+
+
+        return null;
+      },
     );
   }
 
   Widget _imagePickerBox(String? b64, VoidCallback onTap, {bool circle = false}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 80,
-        height: 80,
-        decoration: BoxDecoration(
-          color: Colors.grey[200],
-          borderRadius: BorderRadius.circular(circle ? 100 : 8),
-          border: Border.all(color: Colors.grey.shade300),
-        ),
-        child: b64 != null
-            ? ClipRRect(
+    return Stack(
+      children: [
+        GestureDetector(
+          onTap: onTap,
+          child: Hero(
+            tag: b64 ?? 'logo_placeholder',
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
                 borderRadius: BorderRadius.circular(circle ? 100 : 8),
-                child: Image.memory(base64Decode(b64), fit: BoxFit.cover),
-              )
-            : const Icon(Icons.add_a_photo_outlined),
-      ),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: b64 != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(circle ? 100 : 8),
+                      child: Image.memory(base64Decode(b64), fit: BoxFit.cover),
+                    )
+                  : const Icon(Icons.add_a_photo_outlined),
+            ),
+          ),
+        ),
+        if (b64 != null)
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: GestureDetector(
+              onTap: () => _showFullImage(context, b64, "Logo"),
+              child: CircleAvatar(
+                radius: 14,
+                backgroundColor: Colors.blue.withOpacity(0.8),
+                child: const Icon(Icons.fullscreen, size: 16, color: Colors.white),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
   Widget _signature(String label, String? b64, VoidCallback onTap) {
     return Column(
       children: [
-        Text(label),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(label),
+            if (b64 != null)
+              IconButton(
+                icon: const Icon(Icons.zoom_in, size: 18),
+                onPressed: () => _showFullImage(context, b64, "Firma $label"),
+              )
+          ],
+        ),
         const SizedBox(height: 4),
         GestureDetector(
           onTap: onTap,
-          child: Container(
-            width: 140,
-            height: 90,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(8),
-              color: Colors.grey[100],
+          child: Hero(
+            tag: b64 ?? 'firma_$label',
+            child: Container(
+              width: 140,
+              height: 90,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(8),
+                color: Colors.grey[100],
+              ),
+              child: b64 == null
+                  ? const Icon(Icons.border_color)
+                  : Image.memory(base64Decode(b64), fit: BoxFit.contain),
             ),
-            child: b64 == null
-                ? const Icon(Icons.border_color)
-                : Image.memory(base64Decode(b64), fit: BoxFit.contain),
           ),
         ),
       ],
     );
   }
 
+  void _showFullImage(BuildContext context, String b64, String title) {
+    showDialog(
+      context: context,
+      builder: (context) => Scaffold(
+        backgroundColor: Colors.black.withOpacity(0.9),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          title: Text(title, style: const TextStyle(color: Colors.white)),
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.close, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.download, color: Colors.white),
+              onPressed: () {
+                // Aquí podrías usar paquetes como 'image_gallery_saver' o 'path_provider'
+                // Por ahora simulamos la acción:
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Preparando descarga de imagen..."))
+                );
+              },
+            ),
+          ],
+        ),
+        body: Center(
+          child: Hero(
+            tag: b64,
+            child: InteractiveViewer(
+              panEnabled: true,
+              minScale: 0.5,
+              maxScale: 5.0,
+              child: Image.memory(base64Decode(b64)),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
   Widget _calleSelectorField() {
     return TextFormField(
       controller: calleCtrl,

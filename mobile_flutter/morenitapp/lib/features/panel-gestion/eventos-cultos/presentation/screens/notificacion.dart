@@ -18,27 +18,49 @@ class NotificacionesScreen extends ConsumerWidget {
       onRefresh: () => ref.refresh(notificacionesProvider),
       onNuevo: () => _showEnvioForm(context, ref),
       columns: const [
-        DataColumn(label: Text('ASUNTO', style: TextStyle(fontWeight: FontWeight.bold))),
-        DataColumn(label: Text('TIPO', style: TextStyle(fontWeight: FontWeight.bold))),
-        DataColumn(label: Text('FECHA', style: TextStyle(fontWeight: FontWeight.bold))),
-        DataColumn(label: Text('ACCIONES', style: TextStyle(fontWeight: FontWeight.bold))),
+        DataColumn(
+            label:
+                Text('ASUNTO', style: TextStyle(fontWeight: FontWeight.bold))),
+         DataColumn(
+            label:
+                Text('MENSAJE', style: TextStyle(fontWeight: FontWeight.bold))),
+        DataColumn(
+            label: Text('TIPO', style: TextStyle(fontWeight: FontWeight.bold))),
+        DataColumn(
+            label:
+                Text('FECHA', style: TextStyle(fontWeight: FontWeight.bold))),
+        DataColumn(
+            label: Text('ACCIONES',
+                style: TextStyle(fontWeight: FontWeight.bold))),
       ],
       rows: notisAsync.when(
-        data: (notis) => notis.map((n) => DataRow(cells: [
-          DataCell(Text(n.asunto)),
-          DataCell(Text(n.tipoNombre ?? 'General')),
-          DataCell(Text(n.fechaRegistro ?? '-')),
-          DataCell(IconButton(
-            icon: const Icon(Icons.delete_sweep_outlined, color: Colors.redAccent),
-            tooltip: 'Eliminar notificación',
-            onPressed: () async {
-              final confirm = await _confirmarEliminacion(context);
-              if (confirm && context.mounted) {
-                ref.read(notificacionesProvider.notifier).eliminar(n.id!);
-              }
-            },
-          )),
-        ])).toList(),
+        data: (notis) => notis
+            .map((n) => DataRow(cells: [
+                  DataCell(Text(n.asunto)),
+                  DataCell(
+            Text(
+              removeHtmlTags(n.mensaje), 
+              maxLines: 1, 
+              overflow: TextOverflow.ellipsis
+            )
+          ),
+                  DataCell(Text(n.tipoNombre ?? 'General')),
+                  DataCell(Text(n.fechaRegistro ?? '-')),
+                  DataCell(IconButton(
+                    icon: const Icon(Icons.delete_sweep_outlined,
+                        color: Colors.redAccent),
+                    tooltip: 'Eliminar notificación',
+                    onPressed: () async {
+                      final confirm = await _confirmarEliminacion(context);
+                      if (confirm && context.mounted) {
+                        ref
+                            .read(notificacionesProvider.notifier)
+                            .eliminar(n.id!);
+                      }
+                    },
+                  )),
+                ]))
+            .toList(),
         error: (e, _) => [
           const DataRow(cells: [
             DataCell(Text('Error al cargar notificaciones')),
@@ -57,7 +79,8 @@ class NotificacionesScreen extends ConsumerWidget {
           context: context,
           builder: (ctx) => AlertDialog(
             title: const Text('Confirmar eliminación'),
-            content: const Text('¿Estás seguro de que quieres eliminar esta notificación?'),
+            content: const Text(
+                '¿Estás seguro de que quieres eliminar esta notificación?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
@@ -65,7 +88,8 @@ class NotificacionesScreen extends ConsumerWidget {
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(ctx, true),
-                style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+                style:
+                    FilledButton.styleFrom(backgroundColor: Colors.redAccent),
                 child: const Text('Eliminar'),
               ),
             ],
@@ -98,13 +122,23 @@ class NotificacionesScreen extends ConsumerWidget {
               bottomLeft: Radius.circular(30),
             ),
           ),
-          child: const Material(color: Colors.transparent, child: _NotificacionForm()),
+          child: const Material(
+              color: Colors.transparent, child: _NotificacionForm()),
         ),
       ),
     );
   }
 }
-
+String removeHtmlTags(String htmlText) {
+  // Reemplaza etiquetas HTML por un espacio vacío
+  final RegExp exp = RegExp(r"<[^>]*>", multiLine: true, caseSensitive: true);
+  String cleanText = htmlText.replaceAll(exp, '');
+  
+  // Opcional: Limpiar entidades comunes como &nbsp;
+  cleanText = cleanText.replaceAll('&nbsp;', ' ');
+  
+  return cleanText.trim();
+}
 // ─────────────────────────────────────────────
 // FORMULARIO
 // ─────────────────────────────────────────────
@@ -127,13 +161,19 @@ class _NotificacionFormState extends ConsumerState<_NotificacionForm>
   @override
   void initState() {
     super.initState();
+
     _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
   void dispose() {
-    _asuntoCtrl.dispose();
-    _mensajeCtrl.dispose();
+    String capitalize(String text) {
+      if (text.isEmpty) return text;
+      return text[0].toUpperCase() + text.substring(1).toLowerCase();
+    }
+    
+    capitalize(_asuntoCtrl.text).trim();
+    capitalize(_mensajeCtrl.text).trim();
     _tabController.dispose();
     super.dispose();
   }
@@ -142,9 +182,13 @@ class _NotificacionFormState extends ConsumerState<_NotificacionForm>
   Widget build(BuildContext context) {
     final tiposAsync = ref.watch(notificacionTiposProvider);
     final colors = Theme.of(context).colorScheme;
-
+String capitalize(String text) {
+      if (text.isEmpty) return text;
+      return text[0].toUpperCase() + text.substring(1).toLowerCase();
+    }
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+      
       child: Form(
         key: _formKey,
         child: Column(
@@ -156,7 +200,10 @@ class _NotificacionFormState extends ConsumerState<_NotificacionForm>
                 Icon(Icons.notifications_outlined, color: colors.primary),
                 const SizedBox(width: 10),
                 Text('NUEVO ENVÍO',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: colors.primary)),
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: colors.primary)),
                 const Spacer(),
                 IconButton(
                   icon: const Icon(Icons.close),
@@ -175,22 +222,28 @@ class _NotificacionFormState extends ConsumerState<_NotificacionForm>
                 border: UnderlineInputBorder(),
                 prefixIcon: Icon(Icons.subject),
               ),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'El asunto es obligatorio' : null,
+              validator: (v) => (v == null || v.trim().isEmpty)
+                  ? 'El asunto es obligatorio'
+                  : null,
             ),
             const SizedBox(height: 16),
 
             // Tipo de Aviso
             tiposAsync.when(
+              
               data: (tipos) => DropdownButtonFormField<int>(
+                
                 decoration: const InputDecoration(
                   labelText: 'Tipo de Aviso',
                   border: UnderlineInputBorder(),
                   prefixIcon: Icon(Icons.category_outlined),
                 ),
+                
                 value: _selectedTipoId,
+                
                 items: tipos
-                    .map((t) => DropdownMenuItem(value: t.id, child: Text(t.name)))
+                    .map((t) =>
+                        DropdownMenuItem(value: t.id, child: Text(t.name)))
                     .toList(),
                 onChanged: (val) => setState(() => _selectedTipoId = val),
               ),
@@ -228,8 +281,10 @@ class _NotificacionFormState extends ConsumerState<_NotificacionForm>
               child: FilledButton.icon(
                 icon: _enviando
                     ? const SizedBox(
-                        width: 18, height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white),
                       )
                     : const Icon(Icons.email_outlined),
                 label: Text(_enviando ? 'Enviando...' : 'ENVIAR POR EMAIL'),
@@ -255,8 +310,9 @@ class _NotificacionFormState extends ConsumerState<_NotificacionForm>
           border: OutlineInputBorder(),
           alignLabelWithHint: true,
         ),
-        validator: (v) =>
-            (v == null || v.trim().isEmpty) ? 'El mensaje es obligatorio' : null,
+        validator: (v) => (v == null || v.trim().isEmpty)
+            ? 'El mensaje es obligatorio'
+            : null,
       ),
     );
   }
@@ -270,172 +326,222 @@ class _NotificacionFormState extends ConsumerState<_NotificacionForm>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Cabecera tabla
+          // 1. Banner Informativo (Ayuda a entender por qué aparecen estos usuarios)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: colors.primary.withOpacity(0.08),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(8),
-                topRight: Radius.circular(8),
-              ),
+              color: colors.primaryContainer.withOpacity(0.4),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               children: [
+                Icon(Icons.info_outline,
+                    size: 18, color: colors.onPrimaryContainer),
+                const SizedBox(width: 8),
                 Expanded(
-                  flex: 3,
-                  child: Text('NOMBRE',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                          color: colors.primary)),
+                  child: Text(
+                    'Solo se listan usuarios con la opción "Recibir correos" habilitada.',
+                    style: TextStyle(
+                        fontSize: 11, color: colors.onPrimaryContainer),
+                  ),
                 ),
-                Expanded(
-                  flex: 4,
-                  child: Text('EMAIL',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                          color: colors.primary)),
-                ),
-                Icon(Icons.mark_email_read_outlined, size: 16, color: colors.primary),
               ],
             ),
           ),
 
-          // Lista
+          // 2. Cabecera de la tabla
+          _buildTableHeader(colors),
+
+          // 3. Lista con manejo de estados
           Expanded(
-            child: usuariosAsync.when(
-              data: (usuarios) {
-                if (usuarios.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.inbox_outlined, size: 40, color: colors.outline),
-                        const SizedBox(height: 8),
-                        Text('No hay usuarios con Email OK activado',
-                            style: TextStyle(color: colors.outline, fontSize: 13)),
-                      ],
-                    ),
-                  );
-                }
-                return Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade200),
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(8),
-                      bottomRight: Radius.circular(8),
-                    ),
-                  ),
-                  child: ListView.separated(
-                    itemCount: usuarios.length,
-                    separatorBuilder: (_, __) =>
-                        Divider(height: 1, color: Colors.grey.shade200),
-                    itemBuilder: (_, i) {
-                      final u = usuarios[i];
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 3,
-                              child: Row(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 14,
-                                    backgroundColor:
-                                        colors.primary.withOpacity(0.1),
-                                    child: Text(
-                                      u.nombre.isNotEmpty
-                                          ? u.nombre[0].toUpperCase()
-                                          : '?',
-                                      style: TextStyle(
-                                          fontSize: 12,
-                                          color: colors.primary,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Flexible(
-                                    child: Text(u.nombre,
-                                        style: const TextStyle(fontSize: 13),
-                                        overflow: TextOverflow.ellipsis),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Expanded(
-                              flex: 4,
-                              child: Text(u.email,
-                                  style: TextStyle(
-                                      fontSize: 12, color: colors.outline),
-                                  overflow: TextOverflow.ellipsis),
-                            ),
-                            const Icon(Icons.check_circle_outline,
-                                size: 16, color: Colors.green),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(
-                child: Text('Error cargando destinatarios: $e',
-                    style: const TextStyle(color: Colors.redAccent)),
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: colors.outlineVariant),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(8),
+                  bottomRight: Radius.circular(8),
+                ),
               ),
+              child: usuariosAsync.isEmpty
+                  ? _buildEmptyState(colors)
+                  : ListView.separated(
+                      physics: const BouncingScrollPhysics(),
+                      itemCount: usuariosAsync.length,
+                      separatorBuilder: (_, __) =>
+                          Divider(height: 1, color: colors.outlineVariant),
+                      itemBuilder: (_, i) {
+                        final u = usuariosAsync[i];
+                        return _buildUsuarioRow(u, colors);
+                      },
+                    ),
             ),
           ),
 
-          // Contador
-          usuariosAsync.maybeWhen(
-            data: (usuarios) => Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Text(
-                '${usuarios.length} destinatario(s) recibirán este email',
-                style: TextStyle(fontSize: 11, color: colors.outline),
-              ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+            child: Row(
+              children: [
+                Icon(Icons.people_alt_outlined,
+                    size: 14, color: colors.outline),
+                const SizedBox(width: 6),
+                Text(
+                  '${usuariosAsync.length} destinatarios seleccionados', // Acceso directo a .length
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: colors.outline),
+                ),
+              ],
             ),
-            orElse: () => const SizedBox.shrink(),
           ),
         ],
       ),
     );
   }
 
-  Future<void> _enviar() async {
-    if (!_formKey.currentState!.validate()) return;
-    setState(() => _enviando = true);
-    try {
-      final noti = Notificacion(
-        asunto: _asuntoCtrl.text.trim(),
-        mensaje: _mensajeCtrl.text.trim(),
-        tipoId: _selectedTipoId,
-        usuarioIds: [],
-      );
-      final success =
-          await ref.read(notificacionesProvider.notifier).enviar(noti);
-      if (mounted) {
-        if (success) {
-          Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('✅ Notificación enviada correctamente'),
-                backgroundColor: Colors.green),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('❌ Error al enviar la notificación'),
-                backgroundColor: Colors.redAccent),
-          );
-        }
-      }
-    } finally {
-      if (mounted) setState(() => _enviando = false);
-    }
+// --- Widgets de soporte para limpieza de código ---
+
+  Widget _buildTableHeader(ColorScheme colors) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: colors.primary,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(8),
+          topRight: Radius.circular(8),
+        ),
+      ),
+      child: const Row(
+        children: [
+          Expanded(
+              flex: 3,
+              child: Text('NOMBRE',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11))),
+          Expanded(
+              flex: 4,
+              child: Text('EMAIL',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11))),
+          Icon(Icons.check_circle, size: 16, color: Colors.white70),
+        ],
+      ),
+    );
   }
+
+  Widget _buildUsuarioRow(dynamic u, ColorScheme colors) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 14,
+                  backgroundColor: colors.primary.withOpacity(0.1),
+                  child: Text(
+                    u.nombre.isNotEmpty ? u.nombre[0].toUpperCase() : '?',
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: colors.primary,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                    child: Text(u.nombre,
+                        style: const TextStyle(
+                            fontSize: 13, fontWeight: FontWeight.w500),
+                        overflow: TextOverflow.ellipsis)),
+              ],
+            ),
+          ),
+          Expanded(
+            flex: 4,
+            child: Text(u.email,
+                style: TextStyle(fontSize: 12, color: colors.outline),
+                overflow: TextOverflow.ellipsis),
+          ),
+          const Icon(Icons.check_circle, size: 18, color: Colors.green),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(ColorScheme colors) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.person_search_outlined, size: 40, color: colors.outline),
+          const SizedBox(height: 8),
+          Text('No hay suscriptores activos',
+              style: TextStyle(color: colors.outline, fontSize: 13)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String error) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Text('Error: $error',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.redAccent, fontSize: 12)),
+      ),
+    );
+  }
+Future<void> _enviar() async {
+  if (!_formKey.currentState!.validate()) return;
+
+  String capitalize(String text) {
+    if (text.isEmpty) return text;
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return trimmed;
+    return trimmed[0].toUpperCase() + trimmed.substring(1).toLowerCase();
+  }
+
+  // 1. Obtenemos los destinatarios que ya están en la pantalla (usuariosAsync)
+  final destinatarios = ref.read(usuariosConEmailProvider);
+  
+  // 2. Extraemos SOLO los IDs
+  final List<int> idsParaEnviar = destinatarios.map((u) => u.id).toList();
+
+  if (idsParaEnviar.isEmpty) {
+    // Error de seguridad: no hay a quién enviar
+    return;
+  }
+
+  setState(() => _enviando = true);
+
+  try {
+    final nuevaNoti = Notificacion(
+      asunto: capitalize(_asuntoCtrl.text),  // <--- Aplicado
+      mensaje: capitalize(_mensajeCtrl.text), // <--- Aplicado
+      tipoId: _selectedTipoId,
+      usuarioIds: idsParaEnviar, // ¡Vital que esto no vaya vacío!
+    );
+
+    // 3. Llamamos al notifier
+    final success = await ref.read(notificacionesProvider.notifier).enviar(nuevaNoti);
+
+    if (success && mounted) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Notificación enviada correctamente')),
+      );
+    }
+  } catch (e) {
+    // Manejo de errores
+  } finally {
+    if (mounted) setState(() => _enviando = false);
+  }
+}
 }

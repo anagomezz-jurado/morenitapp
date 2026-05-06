@@ -132,19 +132,22 @@ final hermanosActivosFiltradosProvider =
     }).toList();
   });
 });
-
 dynamic _obtenerValorCampo(Hermano h, String field) {
   switch (field) {
     case 'nombre':
       return h.nombre;
     case 'apellido1':
       return h.apellido1;
+    case 'apellido2':
+      return h.apellido2;
     case 'dni':
       return h.dni;
-    case 'codigo_hermano':
+    case 'codigoHermano':
       return h.codigoHermano;
-    case 'fecha_alta':
+    case 'fechaAlta':
       return h.fechaAlta;
+    case 'fechaNacimiento':
+      return h.fechaNacimiento;
     case 'bautizado':
       return h.bautizado;
     default:
@@ -153,22 +156,63 @@ dynamic _obtenerValorCampo(Hermano h, String field) {
 }
 
 bool _cumpleFiltro(dynamic valor, FilterCriterion f) {
-  if (valor == null) return false;
+  if (valor == null || valor.toString().isEmpty) return false;
+
+  // Intentar comparación como fecha
+  final fechaValor = DateTime.tryParse(valor.toString());
+  final fechaFiltro = DateTime.tryParse(f.value.toString());
+
+  if (fechaValor != null && fechaFiltro != null) {
+    final v = DateTime(fechaValor.year, fechaValor.month, fechaValor.day);
+    final fi = DateTime(fechaFiltro.year, fechaFiltro.month, fechaFiltro.day);
+    switch (f.operator) {
+      case FilterOperator.equals:
+        return v == fi;
+      case FilterOperator.greaterThan:
+        return v.isAfter(fi);
+      case FilterOperator.lessThan:
+        return v.isBefore(fi);
+      default:
+        return false;
+    }
+  }
+
+  // Comparación booleana
+  if (valor is bool) {
+    final filtroBool = f.value.toString().toLowerCase() == 'true';
+    return valor == filtroBool;
+  }
+
+  // Comparación numérica
+  final numValor = num.tryParse(valor.toString());
+  final numFiltro = num.tryParse(f.value.toString());
+  if (numValor != null && numFiltro != null) {
+    switch (f.operator) {
+      case FilterOperator.equals:
+        return numValor == numFiltro;
+      case FilterOperator.greaterThan:
+        return numValor > numFiltro;
+      case FilterOperator.lessThan:
+        return numValor < numFiltro;
+      default:
+        return false;
+    }
+  }
+
+  // Comparación de texto
   final valorStr = valor.toString().toLowerCase();
   final filtroStr = f.value.toString().toLowerCase();
-
   switch (f.operator) {
     case FilterOperator.contains:
       return valorStr.contains(filtroStr);
     case FilterOperator.equals:
       return valorStr == filtroStr;
     case FilterOperator.greaterThan:
-      if (valor is num) return valor > (num.tryParse(f.value.toString()) ?? 0);
       return valorStr.compareTo(filtroStr) > 0;
     case FilterOperator.lessThan:
-      if (valor is num) return valor < (num.tryParse(f.value.toString()) ?? 0);
       return valorStr.compareTo(filtroStr) < 0;
     default:
       return false;
   }
+
 }

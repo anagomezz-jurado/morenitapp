@@ -43,7 +43,7 @@ class Notificacion(models.Model):
                         'subject': rec.asunto,
                         'body_html': rec.mensaje,
                         'email_to': user.email,
-                        'email_from': 'archivosmorenita@gmail.com',
+                        'email_from': 'soportemorenitapp@gmail.com',
                     }
                     mail = self.env['mail.mail'].create(mail_values)
                     mail.send()

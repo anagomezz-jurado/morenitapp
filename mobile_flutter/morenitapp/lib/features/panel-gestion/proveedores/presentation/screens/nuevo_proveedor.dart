@@ -128,12 +128,16 @@ class _ProveedorFormScreenState extends ConsumerState<ProveedorFormScreen> {
   void _onSave() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
+     String capitalize(String text) {
+      if (text.isEmpty) return text;
+      return text[0].toUpperCase() + text.substring(1).toLowerCase();
+    }
 
     final datos = {
       if (widget.proveedorAEditar != null) "id": widget.proveedorAEditar!.id,
       "cod_proveedor": codCtrl.text.trim(),
-      "nombre": nomCtrl.text.trim(),
-      "contacto": contCtrl.text.trim(),
+      "nombre": capitalize(nomCtrl.text.trim()),
+      "contacto": capitalize(contCtrl.text.trim()),
       "telefono": telCtrl.text.trim(),
       "email": emaCtrl.text.trim(),
       "anunciante": esAnunciante,
@@ -186,8 +190,17 @@ class _ProveedorFormScreenState extends ConsumerState<ProveedorFormScreen> {
             // SECCIÓN: CONTACTO
             _buildCard(title: 'DATOS DE CONTACTO', children: [
               _buildRow('Contacto', _textFormField(contCtrl)),
-              _buildRow('Teléfono', _textFormField(telCtrl, isNumber: true)),
-              _buildRow('Email', _textFormField(emaCtrl, isEmail: true)),
+              _buildRow(
+                  'Email',
+                  _textFormField(emaCtrl,
+                      isEmail:
+                          true, // <--- Ya lo tenías, ahora usa el validador mejorado
+                      hint: 'ejemplo@correo.com')),
+              _buildRow(
+                  'Teléfono',
+                  _textFormField(telCtrl,
+                      isPhone: true, // <--- Nueva propiedad
+                      hint: '600000000')),
             ]),
 
             // SECCIÓN: UBICACIÓN (Fondo blanco, estilo Hermanos)
@@ -277,6 +290,7 @@ class _ProveedorFormScreenState extends ConsumerState<ProveedorFormScreen> {
       bool isNumber = false,
       bool isEmail = false,
       int maxLines = 1,
+      bool isPhone = false,
       String? hint}) {
     return TextFormField(
       controller: ctrl,
@@ -299,8 +313,26 @@ class _ProveedorFormScreenState extends ConsumerState<ProveedorFormScreen> {
             borderRadius: BorderRadius.circular(8),
             borderSide: BorderSide(color: Colors.grey.shade100)),
       ),
-      validator: (v) =>
-          (required && (v == null || v.isEmpty)) ? 'Requerido' : null,
+      validator: (v) {
+        if (required && (v == null || v.trim().isEmpty)) return 'Obligatorio';
+        if (v == null || v.isEmpty)
+          return null; // Si no es requerido y está vacío, es válido
+
+
+
+        // Validación de Email (usando tu RegExp de la clase Email)
+        if (isEmail) {
+          final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+          if (!emailRegExp.hasMatch(v)) return 'Formato de correo no válido';
+        }
+
+        // Validación de Teléfono (mínimo 9 caracteres)
+        if (isPhone && v.trim().length < 9) {
+          return 'Mínimo 9 dígitos';
+        }
+
+        return null;
+      },
     );
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:morenitapp/shared/widgets/calle_search_delegate.dart';
@@ -95,13 +96,15 @@ class _NuevoHermanoState extends ConsumerState<NuevoHermano> {
           bautizado = h.bautizado;
           calleSeleccionadaId = h.calleId;
 
-          if (h.fechaAlta.isNotEmpty) {
-            fechaAltaDate = DateTime.tryParse(h.fechaAlta) ?? DateTime.now();
-          }
-          if (h.fechaNacimiento.isNotEmpty) {
-            fechaNacimientoDate =
-                DateTime.tryParse(h.fechaNacimiento) ?? DateTime.now();
-          }
+          fechaAltaDate = (h.fechaAlta.isNotEmpty && h.fechaAlta != 'false')
+              ? (DateTime.tryParse(h.fechaAlta) ?? DateTime.now())
+              : DateTime.now();
+
+          fechaNacimientoDate =
+              (h.fechaNacimiento.isNotEmpty && h.fechaNacimiento != 'false')
+                  ? (DateTime.tryParse(h.fechaNacimiento) ??
+                      DateTime(DateTime.now().year - 18))
+                  : DateTime(DateTime.now().year - 18);
         });
         _inicializarUbicacionEdicion(h);
       } else {
@@ -221,12 +224,17 @@ class _NuevoHermanoState extends ConsumerState<NuevoHermano> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
 
+    String capitalize(String text) {
+      if (text.isEmpty) return text;
+      return text[0].toUpperCase() + text.substring(1).toLowerCase();
+    }
+
     try {
       final Map<String, dynamic> datosOdoo = {
         "numero_hermano": int.tryParse(numeroCtrl.text) ?? 0,
-        "nombre": nombreCtrl.text.trim(),
-        "apellido1": apellido1Ctrl.text.trim(),
-        "apellido2": apellido2Ctrl.text.trim(),
+        "nombre": capitalize(nombreCtrl.text.trim()),
+        "apellido1": capitalize(apellido1Ctrl.text.trim()),
+        "apellido2": capitalize(apellido2Ctrl.text.trim()),
         "dni": dniCtrl.text.trim().toUpperCase(),
         "sexo": sexo,
         "fecha_alta": formatDate(fechaAltaDate),
@@ -251,7 +259,7 @@ class _NuevoHermanoState extends ConsumerState<NuevoHermano> {
             (metodoPago == 'Domiciliado') ? sucursalCtrl.text.trim() : "",
         "numero_cuenta":
             (metodoPago == 'Domiciliado') ? numeroCuentaCtrl.text.trim() : "",
-        "email": emailCtrl.text.trim(),
+        "email": emailCtrl.text.trim().toLowerCase(),
         "telefono": telefonoCtrl.text.trim(),
         "estado": widget.hermanoAEditar?.estado ?? "activo",
       };
@@ -273,8 +281,13 @@ class _NuevoHermanoState extends ConsumerState<NuevoHermano> {
     }
   }
 
-  String formatDate(DateTime d) =>
-      "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
+  // Busca tu función formatDate y cámbiala por esta:
+  String formatDate(DateTime d) {
+    final year = d.year.toString();
+    final month = d.month.toString().padLeft(2, '0');
+    final day = d.day.toString().padLeft(2, '0');
+    return "$year-$month-$day";
+  }
 
   void _showErrorDialog(String error) {
     showDialog(
@@ -302,14 +315,24 @@ class _NuevoHermanoState extends ConsumerState<NuevoHermano> {
         child: Column(
           children: [
             _buildCard(title: 'DATOS DE REGISTRO', children: [
-              _buildRow('Número',
-                  _textFormField(numeroCtrl, isNumber: true, required: true)),
+              _buildRow(
+                  'Número',
+                  _textFormField(numeroCtrl,
+                      isNumber: true,
+                      required: true,
+                      readOnly: widget.hermanoAEditar != null)),
               _buildRow(
                   'Sexo',
-                  _dropdownField(sexo, ['Hombre', 'Mujer'], (v) {
-                    setState(() => sexo = v!);
-                    _updateCodigoHermano();
-                  })),
+                  widget.hermanoAEditar != null
+                      ? _textFormField(
+                          // ← en edición, muestra texto fijo
+                          TextEditingController(text: sexo),
+                          readOnly: true,
+                        )
+                      : _dropdownField(sexo, ['Hombre', 'Mujer'], (v) {
+                          setState(() => sexo = v!);
+                          _updateCodigoHermano();
+                        })),
               _buildRow(
                   'Código', _textFormField(codigoHermanoCtrl, readOnly: true)),
               _buildRow(
@@ -328,31 +351,56 @@ class _NuevoHermanoState extends ConsumerState<NuevoHermano> {
               if (metodoPago == 'Domiciliado') ...[
                 const Divider(),
                 _buildRow(
-                    'IBAN / Banco',
-                    Row(children: [
-                      Expanded(
-                          flex: 2,
-                          child: _textFormField(ibanCtrl,
-                              hint: 'IBAN', required: true)),
-                      const SizedBox(width: 8),
-                      Expanded(
-                          flex: 3,
-                          child: _textFormField(bancoCtrl,
-                              hint: 'Banco', required: true)),
-                    ])),
+                  'IBAN / Banco',
+                  Row(children: [
+                    Expanded(
+                      flex: 2,
+                      child: _textFormField(
+                        ibanCtrl,
+                        hint: 'ESxx',
+                        required: true,
+                        exactLength: 4, // Límite físico
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      flex: 3,
+                      child: _textFormField(
+                        bancoCtrl,
+                        hint: 'Banco (4)',
+                        required: true,
+                        isNumber: true,
+                        exactLength: 4, // Límite físico
+                      ),
+                    ),
+                  ]),
+                ),
                 _buildRow(
-                    'Sucursal / Cuenta',
-                    Row(children: [
-                      Expanded(
-                          flex: 2,
-                          child: _textFormField(sucursalCtrl,
-                              hint: 'Sucursal', required: true)),
-                      const SizedBox(width: 8),
-                      Expanded(
-                          flex: 5,
-                          child: _textFormField(numeroCuentaCtrl,
-                              hint: 'Nº Cuenta', required: true)),
-                    ])),
+                  'Sucursal / Cuenta',
+                  Row(children: [
+                    Expanded(
+                      flex: 2,
+                      child: _textFormField(
+                        sucursalCtrl,
+                        hint: 'Suc. (4)',
+                        required: true,
+                        isNumber: true,
+                        exactLength: 4, // Límite físico
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      flex: 5,
+                      child: _textFormField(
+                        numeroCuentaCtrl,
+                        hint: 'Nº Cuenta (10)',
+                        required: true,
+                        isNumber: true,
+                        exactLength: 10, // Límite físico
+                      ),
+                    ),
+                  ]),
+                ),
               ]
             ]),
             _buildCard(title: 'DATOS PERSONALES', children: [
@@ -364,10 +412,23 @@ class _NuevoHermanoState extends ConsumerState<NuevoHermano> {
                   'Fecha Nac.',
                   _datePickerField(fechaNacimientoDate,
                       (d) => setState(() => fechaNacimientoDate = d))),
-              _buildRow('DNI', _textFormField(dniCtrl, required: true)),
-              _buildRow('Email', _textFormField(emailCtrl, isEmail: true)),
               _buildRow(
-                  'Teléfono', _textFormField(telefonoCtrl, isNumber: true)),
+                  'DNI',
+                  _textFormField(dniCtrl,
+                      required: true,
+                      isDni: true, // <--- Nueva propiedad
+                      hint: '12345678X')),
+              _buildRow(
+                  'Email',
+                  _textFormField(emailCtrl,
+                      isEmail:
+                          true, // <--- Ya lo tenías, ahora usa el validador mejorado
+                      hint: 'ejemplo@correo.com')),
+              _buildRow(
+                  'Teléfono',
+                  _textFormField(telefonoCtrl,
+                      isPhone: true, // <--- Nueva propiedad
+                      hint: '600000000')),
             ]),
             _buildCard(title: 'UBICACIÓN PRINCIPAL', children: [
               _buildRow('Calle', _calleSelectorField()),
@@ -460,26 +521,68 @@ class _NuevoHermanoState extends ConsumerState<NuevoHermano> {
     );
   }
 
-  Widget _textFormField(TextEditingController ctrl,
-      {bool required = false,
-      bool isNumber = false,
-      bool isEmail = false,
-      String? hint,
-      bool readOnly = false}) {
+  Widget _textFormField(
+    TextEditingController ctrl, {
+    bool required = false,
+    bool isNumber = false,
+    bool isEmail = false,
+    bool isPhone = false,
+    bool isDni = false,
+    String? hint,
+    bool readOnly = false,
+    int? exactLength,
+  }) {
     return TextFormField(
       controller: ctrl,
       readOnly: readOnly,
-      keyboardType: isNumber
-          ? TextInputType.number
-          : (isEmail ? TextInputType.emailAddress : TextInputType.text),
+      maxLength: exactLength,
+      buildCounter: (context,
+              {required currentLength, required isFocused, maxLength}) =>
+          null,
+      keyboardType: isEmail
+          ? TextInputType.emailAddress
+          : (isNumber || isPhone ? TextInputType.number : TextInputType.text),
+      inputFormatters: [
+        if (isNumber || isPhone) FilteringTextInputFormatter.digitsOnly,
+        if (exactLength != null) LengthLimitingTextInputFormatter(exactLength),
+        if (isDni) LengthLimitingTextInputFormatter(9), // Forzamos 9 para DNI
+      ],
       decoration: InputDecoration(
-          hintText: hint,
-          isDense: true,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          fillColor: readOnly ? Colors.grey[100] : null,
-          filled: readOnly),
-      validator: (v) =>
-          (required && (v == null || v.isEmpty)) ? 'Obligatorio' : null,
+        hintText: hint,
+        isDense: true,
+        counterText: '',
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        fillColor: readOnly ? Colors.grey[100] : null,
+        filled: readOnly,
+      ),
+      validator: (v) {
+        if (required && (v == null || v.trim().isEmpty)) return 'Obligatorio';
+        if (v == null || v.isEmpty)
+          return null; // Si no es requerido y está vacío, es válido
+
+        // Validación de DNI (9 caracteres)
+        if (isDni && v.trim().length != 9) {
+          return 'El DNI debe tener 9 caracteres';
+        }
+
+        // Validación de Email (usando tu RegExp de la clase Email)
+        if (isEmail) {
+          final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+          if (!emailRegExp.hasMatch(v)) return 'Formato de correo no válido';
+        }
+
+        // Validación de Teléfono (mínimo 9 caracteres)
+        if (isPhone && v.trim().length < 9) {
+          return 'Mínimo 9 dígitos';
+        }
+
+        // Validación de longitud exacta (Banco, Cuenta, etc.)
+        if (exactLength != null && v.length != exactLength) {
+          return 'Debe tener $exactLength caracteres';
+        }
+
+        return null;
+      },
     );
   }
 
@@ -497,6 +600,10 @@ class _NuevoHermanoState extends ConsumerState<NuevoHermano> {
   }
 
   Widget _datePickerField(DateTime date, Function(DateTime) onPicked) {
+    final String formatted = "${date.day.toString().padLeft(2, '0')}/"
+        "${date.month.toString().padLeft(2, '0')}/"
+        "${date.year}";
+
     return InkWell(
       onTap: () async {
         final d = await showDatePicker(
@@ -511,7 +618,7 @@ class _NuevoHermanoState extends ConsumerState<NuevoHermano> {
             isDense: true,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             suffixIcon: const Icon(Icons.calendar_today, size: 18)),
-        child: Text("${date.day}/${date.month}/${date.year}"),
+        child: Text(formatted),
       ),
     );
   }
@@ -559,17 +666,24 @@ class _NuevoHermanoState extends ConsumerState<NuevoHermano> {
   Widget _localidadDropdown({Function(int?)? onChanged}) =>
       ref.watch(localidadesProvider).when(
             data: (list) {
-              final filtradas =
-                  list.where((l) => l.codProvinciaId == provinciaId).toList();
+              // Aseguramos que solo filtramos si hay provinciaId
+              final filtradas = provinciaId == null
+                  ? <dynamic>[]
+                  : list.where((l) => l.codProvinciaId == provinciaId).toList();
+
               return DropdownButtonFormField<int>(
-                value: filtradas.any((l) => l.id == localidadId)
+                // CRÍTICO: Validamos que el ID actual exista en la lista filtrada para evitar crash
+                value: (localidadId != null &&
+                        filtradas.any((l) => l.id == localidadId))
                     ? localidadId
                     : null,
+                isExpanded: true, // Evita errores de layout
                 items: filtradas
                     .map((l) => DropdownMenuItem(
-                        value: l.id,
-                        child: Text(l.nombreLocalidad,
-                            overflow: TextOverflow.ellipsis)))
+                          value: l.id as int,
+                          child: Text(l.nombreLocalidad,
+                              overflow: TextOverflow.ellipsis),
+                        ))
                     .toList(),
                 onChanged: (v) {
                   setState(() {
@@ -582,10 +696,11 @@ class _NuevoHermanoState extends ConsumerState<NuevoHermano> {
                     labelText: 'Localidad',
                     isDense: true,
                     border: OutlineInputBorder()),
+                validator: (v) => (v == null) ? 'Seleccione localidad' : null,
               );
             },
             loading: () => const LinearProgressIndicator(),
-            error: (_, __) => const Text('Error'),
+            error: (_, __) => const Text('Error al cargar localidades'),
           );
 
   Widget _cpDropdown({Function(int?)? onChanged}) => ref

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:morenitapp/features/panel-gestion/configuracion/presentation/providers/configuracion_provider.dart';
@@ -168,12 +169,15 @@ class _AutoridadFormScreenState extends ConsumerState<AutoridadFormScreen> {
   void _onSave() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
-
+ String capitalize(String text) {
+      if (text.isEmpty) return text;
+      return text[0].toUpperCase() + text.substring(1).toLowerCase();
+    }
     try {
       final Map<String, dynamic> data = {
         "codAutoridad": codCtrl.text.trim(),
-        "nombreAutoridad": nomCtrl.text.trim(),
-        "nombreSaluda": saludaCtrl.text.trim(),
+        "nombreAutoridad": capitalize(nomCtrl.text.trim()),
+        "nombreSaluda": capitalize(saludaCtrl.text.trim()),
         "cargo": cargoCtrl.text.trim(),
         "telefono": telCtrl.text.trim(),
         "correoElectronico": emailCtrl.text.trim(),
@@ -238,8 +242,17 @@ class _AutoridadFormScreenState extends ConsumerState<AutoridadFormScreen> {
             ]),
             _buildCard(title: 'CARGO Y CONTACTO', children: [
               _buildRow('Cargo *', _textFormField(cargoCtrl, required: true)),
-              _buildRow('Teléfono', _textFormField(telCtrl, isNumber: true)),
-              _buildRow('Email', _textFormField(emailCtrl, isEmail: true)),
+               _buildRow(
+                  'Email',
+                  _textFormField(emailCtrl,
+                      isEmail:
+                          true, 
+                      hint: 'ejemplo@correo.com')),
+              _buildRow(
+                  'Teléfono',
+                  _textFormField(telCtrl,
+                      isPhone: true, 
+                      hint: '600000000')),
             ]),
             _buildCard(title: 'UBICACIÓN', children: [
               _buildRow('Calle *', _calleSelectorField()),
@@ -332,26 +345,68 @@ class _AutoridadFormScreenState extends ConsumerState<AutoridadFormScreen> {
     );
   }
 
-  Widget _textFormField(TextEditingController ctrl,
-      {bool required = false,
-      bool isNumber = false,
-      bool isEmail = false,
-      String? hint,
-      bool readOnly = false}) {
+  Widget _textFormField(
+    TextEditingController ctrl, {
+    bool required = false,
+    bool isNumber = false,
+    bool isEmail = false,
+    bool isPhone = false,
+    bool isDni = false,
+    String? hint,
+    bool readOnly = false,
+    int? exactLength,
+  }) {
     return TextFormField(
       controller: ctrl,
       readOnly: readOnly,
-      keyboardType: isNumber
-          ? TextInputType.number
-          : (isEmail ? TextInputType.emailAddress : TextInputType.text),
+      maxLength: exactLength,
+      buildCounter: (context,
+              {required currentLength, required isFocused, maxLength}) =>
+          null,
+      keyboardType: isEmail
+          ? TextInputType.emailAddress
+          : (isNumber || isPhone ? TextInputType.number : TextInputType.text),
+      inputFormatters: [
+        if (isNumber || isPhone) FilteringTextInputFormatter.digitsOnly,
+        if (exactLength != null) LengthLimitingTextInputFormatter(exactLength),
+        if (isDni) LengthLimitingTextInputFormatter(9), // Forzamos 9 para DNI
+      ],
       decoration: InputDecoration(
-          hintText: hint,
-          isDense: true,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          fillColor: readOnly ? Colors.grey[100] : null,
-          filled: readOnly),
-      validator: (v) =>
-          (required && (v == null || v.isEmpty)) ? 'Obligatorio' : null,
+        hintText: hint,
+        isDense: true,
+        counterText: '',
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        fillColor: readOnly ? Colors.grey[100] : null,
+        filled: readOnly,
+      ),
+      validator: (v) {
+        if (required && (v == null || v.trim().isEmpty)) return 'Obligatorio';
+        if (v == null || v.isEmpty)
+          return null; // Si no es requerido y está vacío, es válido
+
+        // Validación de DNI (9 caracteres)
+        if (isDni && v.trim().length != 9) {
+          return 'El DNI debe tener 9 caracteres';
+        }
+
+        // Validación de Email (usando tu RegExp de la clase Email)
+        if (isEmail) {
+          final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+          if (!emailRegExp.hasMatch(v)) return 'Formato de correo no válido';
+        }
+
+        // Validación de Teléfono (mínimo 9 caracteres)
+        if (isPhone && v.trim().length < 9) {
+          return 'Mínimo 9 dígitos';
+        }
+
+        // Validación de longitud exacta (Banco, Cuenta, etc.)
+        if (exactLength != null && v.length != exactLength) {
+          return 'Debe tener $exactLength caracteres';
+        }
+
+        return null;
+      },
     );
   }
 

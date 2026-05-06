@@ -223,7 +223,6 @@ class UsuariosScreen extends ConsumerWidget {
     );
   }
 }
-
 class _UserForm extends ConsumerStatefulWidget {
   final User? user;
   const _UserForm({this.user});
@@ -234,7 +233,12 @@ class _UserForm extends ConsumerStatefulWidget {
 
 class _UserFormState extends ConsumerState<_UserForm> {
   final formKey = GlobalKey<FormState>();
+  
+  // Nuevos controladores
   late TextEditingController nombre;
+  late TextEditingController apellido1;
+  late TextEditingController apellido2;
+  
   late TextEditingController email;
   late TextEditingController pass;
   int rol = 2;
@@ -242,7 +246,14 @@ class _UserFormState extends ConsumerState<_UserForm> {
   @override
   void initState() {
     super.initState();
-    nombre = TextEditingController(text: widget.user?.fullName ?? '');
+    
+    // Lógica para intentar separar el nombre al editar (asumiendo formato: Nombre Apellido1 Apellido2)
+    final partes = widget.user?.fullName.split(' ') ?? [];
+    
+    nombre = TextEditingController(text: partes.isNotEmpty ? partes[0] : '');
+    apellido1 = TextEditingController(text: partes.length > 1 ? partes[1] : '');
+    apellido2 = TextEditingController(text: partes.length > 2 ? partes.sublist(2).join(' ') : '');
+    
     email = TextEditingController(text: widget.user?.email ?? '');
     pass = TextEditingController();
     rol = widget.user?.rolId ?? 2;
@@ -251,6 +262,8 @@ class _UserFormState extends ConsumerState<_UserForm> {
   @override
   void dispose() {
     nombre.dispose();
+    apellido1.dispose();
+    apellido2.dispose();
     email.dispose();
     pass.dispose();
     super.dispose();
@@ -258,9 +271,13 @@ class _UserFormState extends ConsumerState<_UserForm> {
 
   void _guardar() {
     if (!formKey.currentState!.validate()) return;
+
+    // Concatenamos para el campo que espera el backend
+    final nombreCompleto = '${nombre.text.trim()} ${apellido1.text.trim()} ${apellido2.text.trim()}'.trim();
+
     final data = {
-      'nombre': nombre.text,
-      'email': email.text,
+      'nombre': nombreCompleto, // Se envía el string unido
+      'email': email.text.trim(),
       'rol_id': rol,
       if (pass.text.isNotEmpty) 'password': pass.text,
     };
@@ -297,14 +314,42 @@ class _UserFormState extends ConsumerState<_UserForm> {
             ),
             const Divider(),
             const SizedBox(height: 10),
+
+            // CAMPO: NOMBRE
             TextFormField(
               controller: nombre,
               decoration: const InputDecoration(
-                  labelText: 'Nombre Completo',
+                  labelText: 'Nombre',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person)),
+                  prefixIcon: Icon(Icons.person_outline)),
               validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
             ),
+            const SizedBox(height: 15),
+
+            // FILA PARA APELLIDOS
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: apellido1,
+                    decoration: const InputDecoration(
+                        labelText: 'Primer Apellido',
+                        border: OutlineInputBorder()),
+                    validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextFormField(
+                    controller: apellido2,
+                    decoration: const InputDecoration(
+                        labelText: 'Segundo Apellido',
+                        border: OutlineInputBorder()),
+                  ),
+                ),
+              ],
+            ),
+            
             const SizedBox(height: 15),
             TextFormField(
               controller: email,

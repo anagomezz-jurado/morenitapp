@@ -191,8 +191,13 @@ class _EventoFormContentState extends ConsumerState<_EventoFormContent> {
   @override
   void initState() {
     super.initState();
-    codCtrl = TextEditingController(text: widget.evento?.codigo ?? '');
-    nomCtrl = TextEditingController(text: widget.evento?.nombre ?? '');
+
+     String capitalize(String text) {
+      if (text.isEmpty) return text;
+      return text[0].toUpperCase() + text.substring(1).toLowerCase();
+    }
+    codCtrl = TextEditingController(text: capitalize(widget.evento?.codigo ?? ''));
+    nomCtrl = TextEditingController(text: capitalize(widget.evento?.nombre ?? ''));
     _colorSeleccionado = widget.evento?.color ?? '#3498DB';
   }
 

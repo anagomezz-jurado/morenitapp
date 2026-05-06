@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:morenitapp/features/panel-gestion/eventos-cultos/domain/entities/notificacion.dart';
+import 'package:morenitapp/features/panel-gestion/usuarios/presentation/providers/usuarios_provider.dart';
 import '../../domain/entities/evento.dart';
 import '../../domain/entities/organizador.dart';
 import '../../infrastructure/datasources/evento_culto_datasource_impl.dart';
@@ -140,9 +141,25 @@ final listaEventosRecientes = Provider<List<Evento>>((ref) {
   );
 });
 
+final usuariosConEmailProvider = Provider<List<DestinatarioInfo>>((ref) {
+  // 1. Observamos el provider que ya tiene a todos los usuarios
+  final usuariosAsync = ref.watch(usuariosListadoProvider);
 
-final usuariosConEmailProvider =
-    FutureProvider<List<DestinatarioInfo>>((ref) async {
-  final datasource = EventoCultoDatasourceImpl();
-  return datasource.getUsuariosConEmail();
+  // 2. Extraemos los datos de forma segura cuando estén listos
+  return usuariosAsync.maybeWhen(
+    data: (usuarios) {
+      // 3. Filtramos por 'recibirNotiEmail' que es el campo de tu entidad User
+      return usuarios
+          .where((u) => u.recibirNotiEmail == true) 
+          .map((u) => DestinatarioInfo(
+                // Convertimos el String id a int, si falla usamos 0
+                id: int.tryParse(u.id) ?? 0, 
+                nombre: u.fullName, 
+                email: u.email,
+              ))
+          .toList();
+    },
+    // Si todavía está cargando o hay error, devolvemos lista vacía
+    orElse: () => [], 
+  );
 });

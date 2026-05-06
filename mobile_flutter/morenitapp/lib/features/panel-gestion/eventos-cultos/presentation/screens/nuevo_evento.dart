@@ -68,13 +68,16 @@ class _NuevoEventoState extends ConsumerState<NuevoEvento> {
     }
 
     setState(() => _isLoading = true);
-
+ String capitalize(String text) {
+      if (text.isEmpty) return text;
+      return text[0].toUpperCase() + text.substring(1).toLowerCase();
+    }
     try {
       final datos = {
         "cod_evento": codCtrl.text.trim(),
-        "nombre": nombreCtrl.text.trim(),
-        "lugar": lugarCtrl.text.trim(),
-        "descripcion": descripcionCtrl.text.trim(),
+        "nombre": capitalize(nombreCtrl.text.trim()),
+        "lugar": capitalize(lugarCtrl.text.trim()),
+        "descripcion": capitalize(descripcionCtrl.text.trim()),
         "fecha_inicio": DateFormat('yyyy-MM-dd HH:mm:ss').format(_fechaInicio),
         "fecha_fin": DateFormat('yyyy-MM-dd HH:mm:ss').format(_fechaFin),
         "organizador_id": _organizadorId,

@@ -16,7 +16,6 @@ class PerfilScreen extends ConsumerStatefulWidget {
 class _PerfilScreenState extends ConsumerState<PerfilScreen> {
   bool _isProcessing = false;
 
-
   Future<void> _refreshData() async {
     setState(() => _isProcessing = true);
     try {
@@ -41,22 +40,23 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
     setState(() => _isProcessing = true);
 
     try {
-      final success =
-          await ref.read(usuariosListadoProvider.notifier).editar(userId, data);
+    final success = await ref.read(authProvider.notifier).updatePerfil(data);
 
-      if (success) {
-        await Future.delayed(const Duration(milliseconds: 500));
-        await ref.read(authProvider.notifier).checkAuthStatus();
+    if (success) {
+      // USAR EL NUEVO MÉTODO SILENCIOSO
+      await ref.read(authProvider.notifier).refreshUser(); 
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text('¡Datos sincronizados con éxito!'),
-              backgroundColor: Colors.green));
-        }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('¡Datos actualizados!'),
+            backgroundColor: Colors.green
+          )
+        );
       }
-    } catch (e) {
-      debugPrint("Error: $e");
-    } finally {
+    }
+  } catch (e) {}
+  finally {
       if (mounted) setState(() => _isProcessing = false);
     }
   }
@@ -205,7 +205,7 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
                           final userId = int.tryParse(currentUser.id) ?? 0;
                           if (userId == 0) return;
 
-                          Navigator.pop(context);
+                          Navigator.pop(context); // Cierra el diálogo
                           setState(() => _isProcessing = true);
 
                           try {
@@ -215,10 +215,12 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
                                     {'hermano_id': hermanoIdEncontrado});
 
                             if (exito) {
-                              await Future.delayed(const Duration(seconds: 1));
+                              // En lugar de checkAuthStatus() que puede disparar el router,
+                              // llama a una función que solo refresque el usuario actual
+                              // o actualiza el estado localmente si es posible.
                               await ref
                                   .read(authProvider.notifier)
-                                  .checkAuthStatus();
+                                  .refreshUser();
                             }
 
                             if (mounted) {

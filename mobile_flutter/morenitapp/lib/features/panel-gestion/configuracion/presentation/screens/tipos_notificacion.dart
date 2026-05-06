@@ -138,7 +138,12 @@ class _TipoFormState extends ConsumerState<_TipoForm> {
   @override
   void initState() {
     super.initState();
-    nombreCtrl = TextEditingController(text: widget.tipo?.name ?? '');
+
+    String capitalize(String text) {
+      if (text.isEmpty) return text;
+      return text[0].toUpperCase() + text.substring(1).toLowerCase();
+    }
+    nombreCtrl = TextEditingController(text: capitalize(widget.tipo?.name ?? ''));
   }
 
   void _save() async {

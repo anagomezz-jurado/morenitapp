@@ -108,9 +108,16 @@ class ProvinciaScreen extends ConsumerWidget {
               backgroundColor: isEdit ? Colors.blue : Colors.green,
               foregroundColor: Colors.white,
             ),
+            
             onPressed: () async {
-              final codigo = codigoController.text.trim();
-              final nombre = nombreController.text.trim();
+
+               String capitalize(String text) {
+      if (text.isEmpty) return text;
+      return text[0].toUpperCase() + text.substring(1).toLowerCase();
+    }
+
+              final codigo = capitalize(codigoController.text.trim());
+              final nombre = capitalize(nombreController.text.trim());
 
               if (codigo.isEmpty || nombre.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(

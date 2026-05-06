@@ -52,9 +52,7 @@ class _LocalidadScreenState extends ConsumerState<LocalidadScreen> {
         DataColumn(
             label: Text('PROVINCIA',
                 style: TextStyle(fontWeight: FontWeight.bold))),
-        DataColumn(
-            label:
-                Text('CAPITAL', style: TextStyle(fontWeight: FontWeight.bold))),
+        
         DataColumn(
             label: Text('ACCIONES',
                 style: TextStyle(fontWeight: FontWeight.bold))),
@@ -71,8 +69,7 @@ class _LocalidadScreenState extends ConsumerState<LocalidadScreen> {
                               .nombreProvincia
                           : '-',
                       style: const TextStyle(fontWeight: FontWeight.w500))),
-                  DataCell(Text(loc.nombreCapital ?? '-',
-                      style: const TextStyle(fontWeight: FontWeight.w500))),
+                
                   DataCell(Row(
                     children: [
                       IconButton(
@@ -163,16 +160,17 @@ class _LocalidadFormContent extends ConsumerStatefulWidget {
 class _LocalidadFormContentState extends ConsumerState<_LocalidadFormContent> {
   final formKey = GlobalKey<FormState>();
   late TextEditingController nameCtrl;
-  late TextEditingController capitalCtrl;
   int? selectedProvincia;
 
   @override
   void initState() {
     super.initState();
+     String capitalize(String text) {
+      if (text.isEmpty) return text;
+      return text[0].toUpperCase() + text.substring(1).toLowerCase();
+    }
     nameCtrl =
-        TextEditingController(text: widget.localidad?.nombreLocalidad ?? '');
-    capitalCtrl =
-        TextEditingController(text: widget.localidad?.nombreCapital ?? '');
+        TextEditingController(text: capitalize(widget.localidad?.nombreLocalidad ?? ''));
     selectedProvincia = widget.localidad?.codProvinciaId;
   }
 
@@ -180,7 +178,10 @@ class _LocalidadFormContentState extends ConsumerState<_LocalidadFormContent> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final provincias = ref.watch(provinciasProvider);
-
+ String capitalize(String text) {
+      if (text.isEmpty) return text;
+      return text[0].toUpperCase() + text.substring(1).toLowerCase();
+    }
     return Column(
       children: [
         _buildHeader(context, colors, widget.localidad == null),
@@ -193,13 +194,14 @@ class _LocalidadFormContentState extends ConsumerState<_LocalidadFormContent> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _label("PROVINCIA"),
+                  
                   provincias.when(
                     data: (lista) => DropdownButtonFormField<int>(
                       value: selectedProvincia,
                       decoration: _inputDecoration(Icons.map_outlined),
                       items: lista
                           .map((p) => DropdownMenuItem(
-                              value: p.id, child: Text(p.nombreProvincia)))
+                              value: p.id, child: Text(capitalize(p.nombreProvincia))))
                           .toList(),
                       onChanged: (val) =>
                           setState(() => selectedProvincia = val),
@@ -213,13 +215,7 @@ class _LocalidadFormContentState extends ConsumerState<_LocalidadFormContent> {
                     controller: nameCtrl,
                     decoration: _inputDecoration(Icons.location_city),
                     validator: (v) => v!.isEmpty ? 'Requerido' : null,
-                  ),
-                  const SizedBox(height: 25),
-                  _label("CAPITAL"),
-                  TextFormField(
-                    controller: capitalCtrl,
-                    decoration: _inputDecoration(Icons.star_outline),
-                  ),
+                  ),                  
                   const SizedBox(height: 50),
                   SizedBox(
                     width: double.infinity,
@@ -242,20 +238,39 @@ class _LocalidadFormContentState extends ConsumerState<_LocalidadFormContent> {
     );
   }
 
-  void _save() async {
-    if (!formKey.currentState!.validate() || selectedProvincia == null) return;
+ void _save() async {
+  if (!formKey.currentState!.validate() || selectedProvincia == null) return;
+   String capitalize(String text) {
+      if (text.isEmpty) return text;
+      return text[0].toUpperCase() + text.substring(1).toLowerCase();
+    }
+  try {
+    
     if (widget.localidad == null) {
       await ref.read(localidadesProvider.notifier).agregarLocalidad(
-          nameCtrl.text, selectedProvincia!, capitalCtrl.text);
+          capitalize(nameCtrl.text), selectedProvincia!);
+      
+      // En lugar de Navigator.pop, hacemos esto:
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Localidad guardada con éxito'))
+      );
+      // Opcional: limpiar campos si es una creación nueva
+      nameCtrl.clear();
     } else {
       await ref.read(localidadesProvider.notifier).editarLocalidad(
           widget.localidad!.id,
           nameCtrl.text,
           selectedProvincia!,
-          capitalCtrl.text);
+          );
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Localidad actualizada'))
+      );
     }
-    if (mounted) Navigator.pop(context);
+  } catch (e) {
+    // Manejar error sin salir de la página
   }
+}
 
   Widget _buildHeader(BuildContext context, ColorScheme colors, bool isNew) {
     return Container(

@@ -121,17 +121,22 @@ class _LibroFormScreenState extends ConsumerState<LibroFormScreen> {
   void _onSave() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
+
+     String capitalize(String text) {
+      if (text.isEmpty) return text;
+      return text[0].toUpperCase() + text.substring(1).toLowerCase();
+    }
     try {
       final datos = {
-        "cod_libro": codCtrl.text.trim(),
-        "nombre": nomCtrl.text.trim(),
+        "cod_libro": capitalize(codCtrl.text.trim()),
+        "nombre": capitalize(nomCtrl.text.trim() ),
         "anio": int.tryParse(anioCtrl.text) ?? 2026,
-        "descripcion": descCtrl.text.trim(),
+        "descripcion": capitalize(descCtrl.text.trim() ),
         "importe": double.tryParse(impTotalCtrl.text) ?? 0.0,
         "fecha_recibo":
             fechaReciboCtrl.text.isEmpty ? null : fechaReciboCtrl.text,
-        "texto_recibo_evento": txtReciboCtrl.text.trim(),
-        "texto_anunciante": txtAnuncianteCtrl.text.trim(),
+        "texto_recibo_evento": capitalize(txtReciboCtrl.text.trim()),
+        "texto_anunciante": capitalize(txtAnuncianteCtrl.text.trim()),
         "tipoevento_id": selectedTipoEventoId,
         "anunciantes": tempAnunciantes,
         "subir_archivos":

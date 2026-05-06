@@ -17,81 +17,80 @@ class TipoCargoScreen extends ConsumerWidget {
         .map((h) => [
               (h.codigo ?? 'S/N').toString(),
               h.nombre,
-              h.observaciones ?? '-',
+              h.observaciones,
             ])
         .toList();
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final cargosAsync = ref.watch(tiposCargoProvider);
+Widget build(BuildContext context, WidgetRef ref) {
+  final cargosAsync = ref.watch(tiposCargoProvider);
 
-    return PlantillaVentanas(
-      title: 'Tipos de Cargo',
-      isLoading: cargosAsync.isLoading,
-      onDownloadExcel: () async {
-        final lista = cargosAsync.value ?? [];
-        if (lista.isEmpty) return;
-        ExcelService.descargarExcel(
-          nombreArchivo: 'Tipos_Cargo',
-          cabeceras: ['Código', 'Nombre', 'OBSERVACIONES'],
-          filas: prepararDatos(lista),
-        );
-      },
-      onDownloadPDF: () async {
-        final lista = cargosAsync.value ?? [];
-        if (lista.isEmpty) return;
+  cargosAsync.whenOrNull(
+    error: (e, s) => debugPrint('Error tiposCargoProvider: $e'),
+  );
 
-        Uint8List? logoBytes;
-        try {
-          final byteData = await rootBundle.load('assets/icono.png');
-          logoBytes = byteData.buffer.asUint8List();
-        } catch (e) {
-          debugPrint('Aviso: No se pudo cargar el logo: $e');
-        }
+  return PlantillaVentanas(
+    title: 'Tipos de Cargo',
+    isLoading: cargosAsync.isLoading,
+    onDownloadExcel: () async {
+      final lista = cargosAsync.value ?? [];
+      if (lista.isEmpty) return;
+      ExcelService.descargarExcel(
+        nombreArchivo: 'Tipos_Cargo',
+        cabeceras: ['Código', 'Nombre', 'OBSERVACIONES'],
+        filas: prepararDatos(lista),
+      );
+    },
+    onDownloadPDF: () async {
+      final lista = cargosAsync.value ?? [];
+      if (lista.isEmpty) return;
 
-        await ReporteGenerator.generarPDFInformativo(
-          titulo: "LISTADO DE TIPOS DE CARGO",
-          headers: ['Código', 'Nombre', 'OBSERVACIONES'],
-          data: prepararDatos(lista),
-          logoBytes: logoBytes,
-        );
-      },
-      onRefresh: () => ref.refresh(tiposCargoProvider),
-      onNuevo: () => _showSideForm(context, ref),
-      columns: const [
-        DataColumn(
-            label:
-                Text('CÓDIGO', style: TextStyle(fontWeight: FontWeight.bold))),
-        DataColumn(
-            label:
-                Text('NOMBRE', style: TextStyle(fontWeight: FontWeight.bold))),
-        DataColumn(
-            label: Text('OBSERVACIONES',
-                style: TextStyle(fontWeight: FontWeight.bold))),
-        DataColumn(
-            label: Text('ACCIONES',
-                style: TextStyle(fontWeight: FontWeight.bold))),
-      ],
-      rows: cargosAsync.maybeWhen(
-        data: (lista) => lista
-            .map((c) => DataRow(cells: [
-                  DataCell(Text(c.codigo)),
-                  DataCell(Text(c.nombre,
-                      style: const TextStyle(fontWeight: FontWeight.w500))),
-                  DataCell(Text(c.observaciones ?? '-',
-                      overflow: TextOverflow.ellipsis)),
-                  DataCell(_buildActionButtons(
-                    context,
-                    onEdit: () => _showSideForm(context, ref, cargo: c),
-                    onDelete: () => _confirmDelete(context, ref, c),
-                  )),
-                ]))
-            .toList(),
-        orElse: () => [],
-      ),
-    );
-  }
+      Uint8List? logoBytes;
+      try {
+        final byteData = await rootBundle.load('assets/icono.png');
+        logoBytes = byteData.buffer.asUint8List();
+      } catch (e) {
+        debugPrint('Aviso: No se pudo cargar el logo: $e');
+      }
+
+      await ReporteGenerator.generarPDFInformativo(
+        titulo: "LISTADO DE TIPOS DE CARGO",
+        headers: ['Código', 'Nombre', 'OBSERVACIONES'],
+        data: prepararDatos(lista),
+        logoBytes: logoBytes,
+      );
+    },
+    onRefresh: () => ref.refresh(tiposCargoProvider),
+    onNuevo: () => _showSideForm(context, ref),
+    columns: const [
+      DataColumn(label: Text('CÓDIGO', style: TextStyle(fontWeight: FontWeight.bold))),
+      DataColumn(label: Text('NOMBRE', style: TextStyle(fontWeight: FontWeight.bold))),
+      DataColumn(label: Text('OBSERVACIONES', style: TextStyle(fontWeight: FontWeight.bold))),
+      DataColumn(label: Text('ACCIONES', style: TextStyle(fontWeight: FontWeight.bold))),
+    ],
+    rows: cargosAsync.maybeWhen(
+      data: (lista) => lista
+          .map((c) => DataRow(cells: [
+                DataCell(Text(c.codigo)),
+                DataCell(Text(c.nombre,
+                    style: const TextStyle(fontWeight: FontWeight.w500))),
+                DataCell(Text(
+                  (c.observaciones.isEmpty) ? '-' : c.observaciones,
+                  overflow: TextOverflow.ellipsis,
+                )),
+                DataCell(_buildActionButtons(
+                  context,
+                  onEdit: () => _showSideForm(context, ref, cargo: c),
+                  onDelete: () => _confirmDelete(context, ref, c),
+                )),
+              ]))
+          .toList(),
+      orElse: () => [],
+    ),
+  );
+}
+
 
   void _showSideForm(BuildContext context, WidgetRef ref, {dynamic cargo}) {
     showGeneralDialog(
@@ -181,9 +180,14 @@ class _CargoFormContentState extends ConsumerState<_CargoFormContent> {
   @override
   void initState() {
     super.initState();
-    codCtrl = TextEditingController(text: widget.cargo?.codigo ?? '');
-    nomCtrl = TextEditingController(text: widget.cargo?.nombre ?? '');
-    obsCtrl = TextEditingController(text: widget.cargo?.observaciones ?? '');
+
+     String capitalize(String text) {
+      if (text.isEmpty) return text;
+      return text[0].toUpperCase() + text.substring(1).toLowerCase();
+    }
+    codCtrl = TextEditingController(text: capitalize(widget.cargo?.codigo ?? ''));
+    nomCtrl = TextEditingController(text: capitalize(widget.cargo?.nombre ?? ''));
+    obsCtrl = TextEditingController(text: capitalize(widget.cargo?.observaciones ?? ''));
   }
 
   @override
@@ -220,7 +224,6 @@ class _CargoFormContentState extends ConsumerState<_CargoFormContent> {
                 onPressed: () => Navigator.pop(context),
                 icon: const Icon(Icons.close)),
           ])),
-
       Expanded(
           child: SingleChildScrollView(
               padding: const EdgeInsets.all(32),
@@ -235,9 +238,14 @@ class _CargoFormContentState extends ConsumerState<_CargoFormContent> {
                         _buildField("NOMBRE DEL CARGO", nomCtrl,
                             "Director, Gerente, etc.", colors),
                         const SizedBox(height: 25),
-                        _buildField("OBSERVACIONES", obsCtrl,
-                            "Notas adicionales sobre este cargo", colors,
-                            maxLines: 4),
+                        _buildField(
+                          "OBSERVACIONES",
+                          obsCtrl,
+                          "Notas adicionales sobre este cargo",
+                          colors,
+                          maxLines: 4,
+                          isRequired: false,
+                        ),
                         const SizedBox(height: 50),
                         _buildSaveButton(colors),
                       ]))))
@@ -246,31 +254,42 @@ class _CargoFormContentState extends ConsumerState<_CargoFormContent> {
 
   Widget _buildField(
       String label, TextEditingController ctrl, String hint, ColorScheme colors,
-      {int maxLines = 1}) {
+      {int maxLines = 1, bool isRequired = true} 
+      ) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label,
-          style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-              color: colors.primary,
-              letterSpacing: 1.1)),
+      Text(
+        isRequired
+            ? label
+            : "$label (OPCIONAL)",
+        style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+            color: colors.primary,
+            letterSpacing: 1.1),
+      ),
       const SizedBox(height: 8),
       TextFormField(
-          controller: ctrl,
-          maxLines: maxLines,
-          decoration: InputDecoration(
-            hintText: hint,
-            filled: true,
-            fillColor: colors.primary.withOpacity(0.02),
-            border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey.shade300)),
-            enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey.shade200)),
-          ),
-          validator: (v) =>
-              v!.trim().isEmpty ? 'Este campo es requerido' : null),
+        controller: ctrl,
+        maxLines: maxLines,
+        decoration: InputDecoration(
+          hintText: hint,
+          filled: true,
+          fillColor: colors.primary.withOpacity(0.02),
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300)),
+          enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade200)),
+        ),
+        // Validación condicional:
+        validator: (v) {
+          if (!isRequired)
+            return null; // Si no es obligatorio, siempre es válido
+          if (v == null || v.trim().isEmpty) return 'Este campo es requerido';
+          return null;
+        },
+      ),
     ]);
   }
 

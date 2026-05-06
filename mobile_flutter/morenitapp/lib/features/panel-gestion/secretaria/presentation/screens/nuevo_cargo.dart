@@ -144,17 +144,20 @@ class _CargoFormScreenState extends ConsumerState<CargoFormScreen> {
   void _guardar() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
-
+ String capitalize(String text) {
+      if (text.isEmpty) return text;
+      return text[0].toUpperCase() + text.substring(1).toLowerCase();
+    }
     final data = {
       "codCargo": codCtrl.text.trim(),
-      "nombreCargo": nomCtrl.text.trim(),
+      "nombreCargo": capitalize(nomCtrl.text.trim()),
       "tipocargo_id": tipoCargoId,
       "fechaInicioCargo": inicioCtrl.text.trim(),
       "fechaFinCargo": finCtrl.text.trim().isEmpty ? null : finCtrl.text.trim(),
       "telefono": telCtrl.text.trim(),
       "observaciones": obsCtrl.text.trim(),
       "motivo": motivoCtrl.text.trim(),
-      "textoSaludo": saludoCtrl.text.trim(),
+      "textoSaludo": capitalize(saludoCtrl.text.trim()),
       "calle_id": calleSeleccionadaId,
       "numero": numeroCtrl.text.trim(),
       "piso": pisoCtrl.text.trim(),
@@ -253,7 +256,11 @@ class _CargoFormScreenState extends ConsumerState<CargoFormScreen> {
                 ])),
           ]),
           _buildCard(title: "CONTACTO", children: [
-            _buildRow("Teléfono", _textFormField(telCtrl, isNumber: true)),
+            _buildRow(
+                  'Teléfono',
+                  _textFormField(telCtrl,
+                      isPhone: true, 
+                      hint: '600000000')),
           ]),
           _buildCard(title: "INFO ADICIONAL", children: [
             _buildRow("Motivo", _textFormField(motivoCtrl)),
@@ -319,6 +326,7 @@ class _CargoFormScreenState extends ConsumerState<CargoFormScreen> {
       {bool required = false,
       bool isNumber = false,
       bool isEmail = false,
+      bool isPhone = false,
       String? hint,
       bool readOnly = false,
       VoidCallback? onTap}) {
@@ -335,8 +343,28 @@ class _CargoFormScreenState extends ConsumerState<CargoFormScreen> {
           hintText: hint,
           isDense: true,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
-      validator: (v) =>
-          (required && (v == null || v.isEmpty)) ? "Obligatorio" : null,
+     validator: (v) {
+        if (required && (v == null || v.trim().isEmpty)) return 'Obligatorio';
+        if (v == null || v.isEmpty)
+          return null; // Si no es requerido y está vacío, es válido
+
+
+
+        // Validación de Email (usando tu RegExp de la clase Email)
+        if (isEmail) {
+          final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+          if (!emailRegExp.hasMatch(v)) return 'Formato de correo no válido';
+        }
+
+        // Validación de Teléfono (mínimo 9 caracteres)
+        if (isPhone && v.trim().length < 9) {
+          return 'Mínimo 9 dígitos';
+        }
+
+      
+
+        return null;
+      },
     );
   }
 
