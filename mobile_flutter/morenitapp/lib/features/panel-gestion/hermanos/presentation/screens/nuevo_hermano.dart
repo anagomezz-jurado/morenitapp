@@ -17,6 +17,17 @@ class NuevoHermano extends ConsumerStatefulWidget {
   ConsumerState<NuevoHermano> createState() => _NuevoHermanoState();
 }
 
+String _capitalize(String text) {
+  if (text.isEmpty) return text;
+  return text
+      .trim()
+      .toLowerCase()
+      .split(' ')
+      .where((word) => word.isNotEmpty)
+      .map((word) => word[0].toUpperCase() + word.substring(1))
+      .join(' ');
+}
+
 class _NuevoHermanoState extends ConsumerState<NuevoHermano> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
@@ -223,18 +234,12 @@ class _NuevoHermanoState extends ConsumerState<NuevoHermano> {
   void _onSave() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
-
-    String capitalize(String text) {
-      if (text.isEmpty) return text;
-      return text[0].toUpperCase() + text.substring(1).toLowerCase();
-    }
-
     try {
       final Map<String, dynamic> datosOdoo = {
         "numero_hermano": int.tryParse(numeroCtrl.text) ?? 0,
-        "nombre": capitalize(nombreCtrl.text.trim()),
-        "apellido1": capitalize(apellido1Ctrl.text.trim()),
-        "apellido2": capitalize(apellido2Ctrl.text.trim()),
+        "nombre": _capitalize(nombreCtrl.text.trim()),
+        "apellido1": _capitalize(apellido1Ctrl.text.trim()),
+        "apellido2": _capitalize(apellido2Ctrl.text.trim()),
         "dni": dniCtrl.text.trim().toUpperCase(),
         "sexo": sexo,
         "fecha_alta": formatDate(fechaAltaDate),

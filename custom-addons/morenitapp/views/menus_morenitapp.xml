@@ -3,174 +3,176 @@
 
 
     <menuitem id="menu_morenitapp_root"
-              name="MorenitApp"
-              sequence="1"
-              web_icon="morenitapp,static/description/icon.png"/>
+        name="MorenitApp"
+        sequence="1"
+        web_icon="morenitapp,static/description/icon.png" />
 
     <menuitem id="menu_dashboard"
-              name="Dashboard"
-              parent="menu_morenitapp_root"
-              action="action_dashboard"
-              sequence="1"/>
+        name="Dashboard"
+        parent="menu_morenitapp_root"
+        action="action_dashboard"
+        sequence="1" />
 
     <menuitem id="menu_hermanos_root"
-              name="Gestión de Hermanos"
-              parent="menu_morenitapp_root"
-              sequence="10"/>
+        name="Gestión de Hermanos"
+        parent="menu_morenitapp_root"
+        sequence="10" />
 
     <menuitem id="menu_hermanos_lista"
-              name="Hermanos"
-              parent="menu_hermanos_root"
-              action="action_hermanos"
-              sequence="10"/>
+        name="Hermanos"
+        parent="menu_hermanos_root"
+        action="action_hermanos"
+        sequence="10" />
 
     <menuitem id="menu_hermanos_baja"
-              name="Hermanos de Baja"
-              parent="menu_hermanos_root"
-              action="action_hermanos_baja"
-              sequence="20"/>
+        name="Hermanos de Baja"
+        parent="menu_hermanos_root"
+        action="action_hermanos_baja"
+        sequence="20" />
 
     <menuitem id="menu_secretaria_root"
-              name="Secretaría"
-              parent="menu_morenitapp_root"
-              sequence="20"/>
+        name="Secretaría"
+        parent="menu_morenitapp_root"
+        sequence="20" />
 
     <menuitem id="menu_autoridades"
-              name="Autoridades"
-              parent="menu_secretaria_root"
-              action="action_autoridades"
-              sequence="10"/>
+        name="Autoridades"
+        parent="menu_secretaria_root"
+        action="action_autoridades"
+        sequence="10" />
 
     <menuitem id="menu_cargos"
-              name="Cargos"
-              parent="menu_secretaria_root"
-              action="action_cargos"
-              sequence="20"/>
+        name="Cargos"
+        parent="menu_secretaria_root"
+        action="action_cargos"
+        sequence="20" />
 
     <menuitem id="menu_cofradias"
-              name="Cofradías"
-              parent="menu_secretaria_root"
-              action="action_cofradias"
-              sequence="30"/>
+        name="Cofradías"
+        parent="menu_secretaria_root"
+        action="action_cofradias"
+        sequence="30" />
 
     <menuitem id="menu_eventos_root"
-              name="Eventos y Cultos"
-              parent="menu_morenitapp_root"
-              sequence="30"/>
+        name="Eventos y Cultos"
+        parent="menu_morenitapp_root"
+        sequence="30" />
 
     <menuitem id="menu_calendario_evento"
-              name="Calendario"
-              parent="menu_eventos_root"
-              action="action_calendario_eventos"
-              sequence="10"/>
+        name="Calendario"
+        parent="menu_eventos_root"
+        action="action_calendario_eventos"
+        sequence="10" />
 
     <menuitem id="menu_gestion_eventos"
-              name="Lista de Eventos"
-              parent="menu_eventos_root"
-              action="action_eventos"
-              sequence="20"/>
+        name="Lista de Eventos"
+        parent="menu_eventos_root"
+        action="action_eventos"
+        sequence="20" />
 
     <menuitem id="menu_organizadores"
-              name="Organizadores"
-              parent="menu_eventos_root"
-              action="action_organizadores"
-              sequence="30"/>
+        name="Organizadores"
+        parent="menu_eventos_root"
+        action="action_organizadores"
+        sequence="30" />
 
     <menuitem id="menu_comunicacion_root"
-              name="Comunicación"
-              parent="menu_morenitapp_root"
-              sequence="35"/>
+        name="Comunicación"
+        parent="menu_morenitapp_root"
+        sequence="35" />
 
     <menuitem id="menu_notificaciones_lista"
-              name="Enviar Notificación"
-              parent="menu_comunicacion_root"
-              action="action_notificaciones"
-              sequence="10"/>
+        name="Enviar Notificación"
+        parent="menu_comunicacion_root"
+        action="action_notificaciones"
+        sequence="10" />
 
     <menuitem id="menu_libros_root"
-              name="Libros y Publicaciones"
-              parent="menu_morenitapp_root"
-              sequence="40"/>
+        name="Libros y Publicaciones"
+        parent="menu_morenitapp_root"
+        sequence="40" />
 
     <menuitem id="menu_libros_lista"
-              name="Libros"
-              parent="menu_libros_root"
-              action="action_libros"
-              sequence="10"/>
+        name="Libros"
+        parent="menu_libros_root"
+        action="action_libros"
+        sequence="10" />
 
     <menuitem id="menu_proveedores_root"
-              name="Proveedores"
-              parent="menu_morenitapp_root"
-              sequence="50"/>
+        name="Proveedores"
+        parent="menu_morenitapp_root"
+        sequence="50" />
 
     <menuitem id="menu_proveedores_anunciantes"
-              name="Proveedores y Anunciantes"
-              parent="menu_proveedores_root"
-              action="action_proveedores"
-              sequence="10"/>
+        name="Proveedores y Anunciantes"
+        parent="menu_proveedores_root"
+        action="action_proveedores"
+        sequence="10" />
 
     <menuitem id="menu_ubicaciones_root"
-              name="Ubicaciones"
-              parent="menu_morenitapp_root"
-              sequence="60"/>
+        name="Ubicaciones"
+        parent="menu_morenitapp_root"
+        sequence="60" />
 
-    <menuitem id="menu_provincias" name="Provincias" parent="menu_ubicaciones_root" action="action_provincias"/>
-    <menuitem id="menu_localidades" name="Localidades" parent="menu_ubicaciones_root" action="action_localidades"/>
-    <menuitem id="menu_codigos_postales" name="Códigos Postales" parent="menu_ubicaciones_root" action="action_codigos_postales"/>
-    <menuitem id="menu_calles" name="Calles" parent="menu_ubicaciones_root" action="action_calles"/>
+    <menuitem id="menu_provincias" name="Provincias" parent="menu_ubicaciones_root"
+        action="action_provincias" />
+    <menuitem id="menu_localidades" name="Localidades" parent="menu_ubicaciones_root"
+        action="action_localidades" />
+    <menuitem id="menu_codigos_postales" name="Códigos Postales" parent="menu_ubicaciones_root"
+        action="action_codigos_postales" />
+    <menuitem id="menu_calles" name="Calles" parent="menu_ubicaciones_root" action="action_calles" />
 
     <menuitem id="menu_configuracion_root"
-              name="Configuración de Tipos"
-              parent="menu_morenitapp_root"
-              sequence="70"/>
+        name="Configuración de Tipos"
+        parent="menu_morenitapp_root"
+        sequence="70" />
 
     <menuitem id="menu_tipo_eventos"
-              name="Tipos de Eventos"
-              parent="menu_configuracion_root"
-              action="action_tipo_evento"
-              sequence="10"/>
+        name="Tipos de Eventos"
+        parent="menu_configuracion_root"
+        action="action_tipo_evento"
+        sequence="10" />
 
-    <menuitem id="menu_tipo_notificacion" 
-              name="Tipos de Notificación" 
-              parent="menu_configuracion_root" 
-              action="action_tipos_notificaciones" 
-              sequence="20"/>
+    <menuitem id="menu_tipo_notificacion"
+        name="Tipos de Notificación"
+        parent="menu_configuracion_root"
+        action="action_tipos_notificaciones"
+        sequence="20" />
 
     <menuitem id="menu_tipo_autoridades"
-              name="Tipos de Autoridades"
-              parent="menu_configuracion_root"
-              action="action_tipos_autoridades"
-              sequence="30"/>
+        name="Tipos de Autoridades"
+        parent="menu_configuracion_root"
+        action="action_tipos_autoridades"
+        sequence="30" />
 
     <menuitem id="menu_tipo_cargos"
-              name="Tipos de Cargos"
-              parent="menu_configuracion_root"
-              action="action_tipos_cargos"
-              sequence="40"/>
+        name="Tipos de Cargos"
+        parent="menu_configuracion_root"
+        action="action_tipos_cargos"
+        sequence="40" />
 
     <menuitem id="menu_grupos_proveedores"
-              name="Grupos de Proveedores"
-              parent="menu_configuracion_root"
-              action="action_grupo_proveedores"
-              sequence="50"/>
+        name="Grupos de Proveedores"
+        parent="menu_configuracion_root"
+        action="action_grupo_proveedores"
+        sequence="50" />
 
     <menuitem id="menu_seguridad_root"
-              name="Gestión de Usuarios"
-              parent="menu_morenitapp_root"
-              sequence="100"/>
+        name="Gestión de Usuarios"
+        parent="menu_morenitapp_root"
+        sequence="100" />
 
-     <menuitem id="menu_morenitapp_usuario_item" 
-          name="Usuarios de la App" 
-          parent="menu_seguridad_root" 
-          action="action_morenitapp_usuario" 
-          sequence="10"/>
+    <menuitem id="menu_morenitapp_usuario_item"
+        name="Usuarios de la App"
+        parent="menu_seguridad_root"
+        action="action_morenitapp_usuario"
+        sequence="10" />
 
-<menuitem id="menu_morenitapp_rol_item"
-          name="Roles de Usuario"
-          parent="menu_seguridad_root"
-          action="action_morenitapp_rol"
-          sequence="11"/>
-
+    <menuitem id="menu_morenitapp_rol_item"
+        name="Roles de Usuario"
+        parent="menu_seguridad_root"
+        action="action_morenitapp_rol"
+        sequence="11" />
 
 
 </odoo>

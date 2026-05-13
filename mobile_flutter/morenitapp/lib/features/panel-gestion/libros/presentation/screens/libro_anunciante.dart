@@ -23,6 +23,18 @@ class LibroFormScreen extends ConsumerStatefulWidget {
   ConsumerState<LibroFormScreen> createState() => _LibroFormScreenState();
 }
 
+
+String _capitalize(String text) {
+  if (text.isEmpty) return text;
+  return text
+      .trim()
+      .toLowerCase()
+      .split(' ')
+      .where((word) => word.isNotEmpty)
+      .map((word) => word[0].toUpperCase() + word.substring(1))
+      .join(' ');
+}
+
 class _LibroFormScreenState extends ConsumerState<LibroFormScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
@@ -122,21 +134,18 @@ class _LibroFormScreenState extends ConsumerState<LibroFormScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
 
-     String capitalize(String text) {
-      if (text.isEmpty) return text;
-      return text[0].toUpperCase() + text.substring(1).toLowerCase();
-    }
+     
     try {
       final datos = {
-        "cod_libro": capitalize(codCtrl.text.trim()),
-        "nombre": capitalize(nomCtrl.text.trim() ),
+        "cod_libro": (codCtrl.text.trim()).toUpperCase(),
+        "nombre": _capitalize(nomCtrl.text.trim() ),
         "anio": int.tryParse(anioCtrl.text) ?? 2026,
-        "descripcion": capitalize(descCtrl.text.trim() ),
+        "descripcion": _capitalize(descCtrl.text.trim() ),
         "importe": double.tryParse(impTotalCtrl.text) ?? 0.0,
         "fecha_recibo":
             fechaReciboCtrl.text.isEmpty ? null : fechaReciboCtrl.text,
-        "texto_recibo_evento": capitalize(txtReciboCtrl.text.trim()),
-        "texto_anunciante": capitalize(txtAnuncianteCtrl.text.trim()),
+        "texto_recibo_evento": _capitalize(txtReciboCtrl.text.trim()),
+        "texto_anunciante": _capitalize(txtAnuncianteCtrl.text.trim()),
         "tipoevento_id": selectedTipoEventoId,
         "anunciantes": tempAnunciantes,
         "subir_archivos":

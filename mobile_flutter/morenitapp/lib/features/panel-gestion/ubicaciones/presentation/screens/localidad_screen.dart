@@ -147,7 +147,16 @@ class _LocalidadScreenState extends ConsumerState<LocalidadScreen> {
     );
   }
 }
-
+String _capitalize(String text) {
+  if (text.isEmpty) return text;
+  return text
+      .trim()
+      .toLowerCase()
+      .split(' ')
+      .where((word) => word.isNotEmpty)
+      .map((word) => word[0].toUpperCase() + word.substring(1))
+      .join(' ');
+}
 class _LocalidadFormContent extends ConsumerStatefulWidget {
   final Localidad? localidad;
   const _LocalidadFormContent({this.localidad});
@@ -165,12 +174,9 @@ class _LocalidadFormContentState extends ConsumerState<_LocalidadFormContent> {
   @override
   void initState() {
     super.initState();
-     String capitalize(String text) {
-      if (text.isEmpty) return text;
-      return text[0].toUpperCase() + text.substring(1).toLowerCase();
-    }
+
     nameCtrl =
-        TextEditingController(text: capitalize(widget.localidad?.nombreLocalidad ?? ''));
+        TextEditingController(text: _capitalize(widget.localidad?.nombreLocalidad ?? ''));
     selectedProvincia = widget.localidad?.codProvinciaId;
   }
 
@@ -178,10 +184,7 @@ class _LocalidadFormContentState extends ConsumerState<_LocalidadFormContent> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final provincias = ref.watch(provinciasProvider);
- String capitalize(String text) {
-      if (text.isEmpty) return text;
-      return text[0].toUpperCase() + text.substring(1).toLowerCase();
-    }
+
     return Column(
       children: [
         _buildHeader(context, colors, widget.localidad == null),
@@ -201,7 +204,7 @@ class _LocalidadFormContentState extends ConsumerState<_LocalidadFormContent> {
                       decoration: _inputDecoration(Icons.map_outlined),
                       items: lista
                           .map((p) => DropdownMenuItem(
-                              value: p.id, child: Text(capitalize(p.nombreProvincia))))
+                              value: p.id, child: Text(_capitalize(p.nombreProvincia))))
                           .toList(),
                       onChanged: (val) =>
                           setState(() => selectedProvincia = val),
@@ -240,15 +243,12 @@ class _LocalidadFormContentState extends ConsumerState<_LocalidadFormContent> {
 
  void _save() async {
   if (!formKey.currentState!.validate() || selectedProvincia == null) return;
-   String capitalize(String text) {
-      if (text.isEmpty) return text;
-      return text[0].toUpperCase() + text.substring(1).toLowerCase();
-    }
+
   try {
     
     if (widget.localidad == null) {
       await ref.read(localidadesProvider.notifier).agregarLocalidad(
-          capitalize(nameCtrl.text), selectedProvincia!);
+          _capitalize(nameCtrl.text), selectedProvincia!);
       
       // En lugar de Navigator.pop, hacemos esto:
       ScaffoldMessenger.of(context).showSnackBar(
@@ -259,7 +259,7 @@ class _LocalidadFormContentState extends ConsumerState<_LocalidadFormContent> {
     } else {
       await ref.read(localidadesProvider.notifier).editarLocalidad(
           widget.localidad!.id,
-          nameCtrl.text,
+          _capitalize(nameCtrl.text),
           selectedProvincia!,
           );
       

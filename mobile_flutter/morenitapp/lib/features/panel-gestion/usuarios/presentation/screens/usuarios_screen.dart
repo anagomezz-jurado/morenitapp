@@ -8,6 +8,21 @@ import 'package:morenitapp/shared/widgets/plantilla_ventanas.dart';
 import 'package:morenitapp/shared/excel/excel_Service.dart';
 import 'package:morenitapp/shared/widgets/disenio_informes.dart';
 
+// ─── FUNCIÓN GLOBAL ──────────────────────────────────────────────────────────
+// Importada desde user.dart vía capText, pero redefinida aquí para no
+// crear dependencia circular. Usa el mismo algoritmo.
+String _cap(String text) {
+  if (text.isEmpty) return text;
+  return text
+      .trim()
+      .toLowerCase()
+      .split(' ')
+      .where((w) => w.isNotEmpty)
+      .map((w) => w[0].toUpperCase() + w.substring(1))
+      .join(' ');
+}
+
+// ─── FILTRO CONTENEDOR ───────────────────────────────────────────────────────
 class FiltroContenedorTemplate extends StatelessWidget {
   final Widget child;
   final String label;
@@ -61,6 +76,7 @@ class FiltroContenedorTemplate extends StatelessWidget {
   }
 }
 
+// ─── PANTALLA PRINCIPAL ──────────────────────────────────────────────────────
 class UsuariosScreen extends ConsumerWidget {
   const UsuariosScreen({super.key});
 
@@ -73,7 +89,9 @@ class UsuariosScreen extends ConsumerWidget {
     List<List<String>> prepararDatosExport(List<User> lista) {
       return lista
           .map((u) => [
-                u.fullName,
+                _cap(u.nombre),
+                _cap(u.apellido1),
+                _cap(u.apellido2),
                 u.email,
                 u.rolId == 1 ? 'Administrador' : 'Estándar',
               ])
@@ -89,7 +107,13 @@ class UsuariosScreen extends ConsumerWidget {
           if (lista.isEmpty) return;
           ExcelService.descargarExcel(
             nombreArchivo: 'Usuarios_Sistema',
-            cabeceras: ['NOMBRE', 'EMAIL', 'ROL'],
+            cabeceras: [
+              'NOMBRE',
+              'PRIMER APELLIDO',
+              'SEGUNDO APELLIDO',
+              'EMAIL',
+              'ROL'
+            ],
             filas: prepararDatosExport(lista),
           );
         });
@@ -105,7 +129,13 @@ class UsuariosScreen extends ConsumerWidget {
 
           await ReporteGenerator.generarPDFInformativo(
             titulo: "LISTADO DE USUARIOS\nACCESO AL SISTEMA",
-            headers: ['NOMBRE', 'EMAIL', 'ROL'],
+            headers: [
+              'NOMBRE',
+              'PRIMER APELLIDO',
+              'SEGUNDO APELLIDO',
+              'EMAIL',
+              'ROL'
+            ],
             data: prepararDatosExport(lista),
             logoBytes: logoBytes,
           );
@@ -135,8 +165,26 @@ class UsuariosScreen extends ConsumerWidget {
         data: (usuarios) => usuarios.map((u) {
           final isMe = currentUser?.id == u.id;
           return DataRow(cells: [
-            DataCell(Text(u.fullName,
-                style: const TextStyle(fontWeight: FontWeight.w500))),
+            // Nombre en negrita + apellidos en gris debajo, todos capitalizados
+            DataCell(
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _cap(u.nombre),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 13),
+                  ),
+                  if (u.apellido1.isNotEmpty || u.apellido2.isNotEmpty)
+                    Text(
+                      '${_cap(u.apellido1)} ${_cap(u.apellido2)}'.trim(),
+                      style: TextStyle(
+                          fontSize: 11, color: Colors.grey.shade600),
+                    ),
+                ],
+              ),
+            ),
             DataCell(Text(u.email)),
             DataCell(_buildRolBadge(u.rolId)),
             DataCell(_buildActions(context, ref, u, currentUser, isMe)),
@@ -158,16 +206,19 @@ class UsuariosScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withOpacity(0.3)),
       ),
-      child: Text(isAdmin ? 'Administrador' : 'Estándar',
-          style: TextStyle(
-              color: color, fontWeight: FontWeight.bold, fontSize: 10)),
+      child: Text(
+        isAdmin ? 'Administrador' : 'Estándar',
+        style: TextStyle(
+            color: color, fontWeight: FontWeight.bold, fontSize: 10),
+      ),
     );
   }
 
   Widget _buildActions(BuildContext context, WidgetRef ref, User user,
       User? currentUser, bool isMe) {
-    if (currentUser?.isAdmin != true)
+    if (currentUser?.isAdmin != true) {
       return const Icon(Icons.lock_outline, color: Colors.grey, size: 18);
+    }
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -177,7 +228,8 @@ class UsuariosScreen extends ConsumerWidget {
         ),
         if (!isMe)
           IconButton(
-            icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+            icon:
+                const Icon(Icons.delete_outline, color: Colors.red, size: 20),
             onPressed: () => _confirmDelete(context, ref, user),
           ),
       ],
@@ -189,7 +241,8 @@ class UsuariosScreen extends ConsumerWidget {
       context: context,
       barrierDismissible: false,
       builder: (_) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 450),
           child: _UserForm(user: user),
@@ -203,7 +256,8 @@ class UsuariosScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Confirmar borrado'),
-        content: Text('¿Deseas eliminar permanentemente a ${user.fullName}?'),
+        content: Text(
+            '¿Deseas eliminar permanentemente a ${_cap(user.nombre)} ${_cap(user.apellido1)}?'),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx),
@@ -212,8 +266,9 @@ class UsuariosScreen extends ConsumerWidget {
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () {
               final id = int.tryParse(user.id);
-              if (id != null)
+              if (id != null) {
                 ref.read(usuariosListadoProvider.notifier).eliminar(id);
+              }
               Navigator.pop(ctx);
             },
             child: const Text('Eliminar'),
@@ -223,6 +278,8 @@ class UsuariosScreen extends ConsumerWidget {
     );
   }
 }
+
+// ─── FORMULARIO CREAR / EDITAR ───────────────────────────────────────────────
 class _UserForm extends ConsumerStatefulWidget {
   final User? user;
   const _UserForm({this.user});
@@ -233,12 +290,9 @@ class _UserForm extends ConsumerStatefulWidget {
 
 class _UserFormState extends ConsumerState<_UserForm> {
   final formKey = GlobalKey<FormState>();
-  
-  // Nuevos controladores
   late TextEditingController nombre;
   late TextEditingController apellido1;
   late TextEditingController apellido2;
-  
   late TextEditingController email;
   late TextEditingController pass;
   int rol = 2;
@@ -246,17 +300,13 @@ class _UserFormState extends ConsumerState<_UserForm> {
   @override
   void initState() {
     super.initState();
-    
-    // Lógica para intentar separar el nombre al editar (asumiendo formato: Nombre Apellido1 Apellido2)
-    final partes = widget.user?.fullName.split(' ') ?? [];
-    
-    nombre = TextEditingController(text: partes.isNotEmpty ? partes[0] : '');
-    apellido1 = TextEditingController(text: partes.length > 1 ? partes[1] : '');
-    apellido2 = TextEditingController(text: partes.length > 2 ? partes.sublist(2).join(' ') : '');
-    
-    email = TextEditingController(text: widget.user?.email ?? '');
-    pass = TextEditingController();
-    rol = widget.user?.rolId ?? 2;
+    // _cap accesible aquí porque es función global del fichero
+    nombre    = TextEditingController(text: _cap(widget.user?.nombre ?? ''));
+    apellido1 = TextEditingController(text: _cap(widget.user?.apellido1 ?? ''));
+    apellido2 = TextEditingController(text: _cap(widget.user?.apellido2 ?? ''));
+    email     = TextEditingController(text: widget.user?.email ?? '');
+    pass      = TextEditingController();
+    rol       = widget.user?.rolId ?? 2;
   }
 
   @override
@@ -272,18 +322,16 @@ class _UserFormState extends ConsumerState<_UserForm> {
   void _guardar() {
     if (!formKey.currentState!.validate()) return;
 
-    // Concatenamos para el campo que espera el backend
-    final nombreCompleto = '${nombre.text.trim()} ${apellido1.text.trim()} ${apellido2.text.trim()}'.trim();
-
     final data = {
-      'nombre': nombreCompleto, // Se envía el string unido
-      'email': email.text.trim(),
-      'rol_id': rol,
+      'nombre':    _cap(nombre.text),
+      'apellido1': _cap(apellido1.text),
+      'apellido2': _cap(apellido2.text),
+      'email':     email.text.trim().toLowerCase(),
+      'rol_id':    rol,
       if (pass.text.isNotEmpty) 'password': pass.text,
     };
 
     final notifier = ref.read(usuariosListadoProvider.notifier);
-
     if (widget.user == null) {
       notifier.crear(data);
     } else {
@@ -305,8 +353,10 @@ class _UserFormState extends ConsumerState<_UserForm> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(widget.user == null ? 'Nuevo Usuario' : 'Editar Usuario',
-                    style: Theme.of(context).textTheme.titleLarge),
+                Text(
+                  widget.user == null ? 'Nuevo Usuario' : 'Editar Usuario',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
                 IconButton(
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.close)),
@@ -315,33 +365,38 @@ class _UserFormState extends ConsumerState<_UserForm> {
             const Divider(),
             const SizedBox(height: 10),
 
-            // CAMPO: NOMBRE
+            // NOMBRE
             TextFormField(
               controller: nombre,
+              textCapitalization: TextCapitalization.words,
               decoration: const InputDecoration(
                   labelText: 'Nombre',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.person_outline)),
-              validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'Requerido' : null,
             ),
             const SizedBox(height: 15),
 
-            // FILA PARA APELLIDOS
+            // APELLIDOS
             Row(
               children: [
                 Expanded(
                   child: TextFormField(
                     controller: apellido1,
+                    textCapitalization: TextCapitalization.words,
                     decoration: const InputDecoration(
                         labelText: 'Primer Apellido',
                         border: OutlineInputBorder()),
-                    validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
+                    validator: (v) =>
+                        (v == null || v.trim().isEmpty) ? 'Requerido' : null,
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: TextFormField(
                     controller: apellido2,
+                    textCapitalization: TextCapitalization.words,
                     decoration: const InputDecoration(
                         labelText: 'Segundo Apellido',
                         border: OutlineInputBorder()),
@@ -349,18 +404,22 @@ class _UserFormState extends ConsumerState<_UserForm> {
                 ),
               ],
             ),
-            
             const SizedBox(height: 15),
+
+            // EMAIL
             TextFormField(
               controller: email,
+              keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(
                   labelText: 'Email',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.email)),
-              validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
-              keyboardType: TextInputType.emailAddress,
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'Requerido' : null,
             ),
             const SizedBox(height: 15),
+
+            // ROL
             DropdownButtonFormField<int>(
               value: rol,
               decoration: const InputDecoration(
@@ -374,6 +433,8 @@ class _UserFormState extends ConsumerState<_UserForm> {
               onChanged: (v) => setState(() => rol = v!),
             ),
             const SizedBox(height: 15),
+
+            // CONTRASEÑA
             TextFormField(
               controller: pass,
               obscureText: true,
@@ -388,11 +449,12 @@ class _UserFormState extends ConsumerState<_UserForm> {
                     : 'Dejar en blanco para no cambiar',
               ),
               validator: (v) =>
-                  (widget.user == null && (v == null || v.isEmpty))
+                  (widget.user == null && (v == null || v.trim().isEmpty))
                       ? 'Requerido'
                       : null,
             ),
             const SizedBox(height: 25),
+
             FilledButton.icon(
               onPressed: _guardar,
               icon: const Icon(Icons.save),

@@ -20,3 +20,4 @@ from . import libro
 from . import libroanunciante
 from . import notificacion
 from . import tipoNotificacion
+from . import activitylog

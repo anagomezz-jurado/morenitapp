@@ -15,7 +15,16 @@ class CargoFormScreen extends ConsumerStatefulWidget {
   @override
   ConsumerState<CargoFormScreen> createState() => _CargoFormScreenState();
 }
-
+String _capitalize(String text) {
+  if (text.isEmpty) return text;
+  return text
+      .trim()
+      .toLowerCase()
+      .split(' ')
+      .where((word) => word.isNotEmpty)
+      .map((word) => word[0].toUpperCase() + word.substring(1))
+      .join(' ');
+}
 class _CargoFormScreenState extends ConsumerState<CargoFormScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
@@ -144,20 +153,17 @@ class _CargoFormScreenState extends ConsumerState<CargoFormScreen> {
   void _guardar() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
- String capitalize(String text) {
-      if (text.isEmpty) return text;
-      return text[0].toUpperCase() + text.substring(1).toLowerCase();
-    }
+
     final data = {
-      "codCargo": codCtrl.text.trim(),
-      "nombreCargo": capitalize(nomCtrl.text.trim()),
+      "codCargo": codCtrl.text.trim().toUpperCase(),
+      "nombreCargo": _capitalize(nomCtrl.text.trim()),
       "tipocargo_id": tipoCargoId,
       "fechaInicioCargo": inicioCtrl.text.trim(),
       "fechaFinCargo": finCtrl.text.trim().isEmpty ? null : finCtrl.text.trim(),
       "telefono": telCtrl.text.trim(),
       "observaciones": obsCtrl.text.trim(),
       "motivo": motivoCtrl.text.trim(),
-      "textoSaludo": capitalize(saludoCtrl.text.trim()),
+      "textoSaludo": _capitalize(saludoCtrl.text.trim()),
       "calle_id": calleSeleccionadaId,
       "numero": numeroCtrl.text.trim(),
       "piso": pisoCtrl.text.trim(),

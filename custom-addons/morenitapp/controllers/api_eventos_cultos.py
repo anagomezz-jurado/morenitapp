@@ -86,6 +86,7 @@ class EventoCultoController(http.Controller):
             
         model = request.env['morenitapp.evento'].sudo()
         try:
+           
             if request.httprequest.method == 'GET':
                 records = model.search([('id', '=', id)] if id else [])
                 data = [{

@@ -34,7 +34,7 @@ class MorenitAppAPI(http.Controller):
             method = request.httprequest.method
             sudo_env = request.env['morenitapp.hermano'].sudo()
 
-            # --- GET: Obtener ---
+             # Recupera datos del hermano y sus cuentas bancarias relacionadas
             if method == 'GET':
                 domain = [('id', '=', id_hermano)] if id_hermano else []
                 hermanos = sudo_env.search(domain)
@@ -96,7 +96,8 @@ class MorenitAppAPI(http.Controller):
                 # 2. LIMPIEZA DE CAMPOS (Solo escribibles)
                 campos_modelo = sudo_env._fields
                 datos_validos = {}
-                # No enviamos campos computados o readonly de dirección
+               # --- PROTECCIÓN DE DATOS ---
+            # Evitamos que se escriban campos prohibidos o automáticos
                 prohibidos = ['id', 'codigo_hermano', 'nombre_completo', 'iban', 'localidad_id', 'codPostal_id', 'provincia_id']
                 
                 for k, v in params.items():

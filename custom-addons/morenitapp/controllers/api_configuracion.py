@@ -5,6 +5,7 @@ from odoo import http
 from odoo.http import request
 _logger = logging.getLogger(__name__)
 class ConfiguracionController(http.Controller):
+    # Diccionario que mapea el parámetro de la URL con el modelo técnico de Odoo
     MODELS = {
         'tipoevento': 'morenitapp.tipoevento',
         'tipocargo': 'morenitapp.tipocargo',
@@ -13,11 +14,13 @@ class ConfiguracionController(http.Controller):
         'grupoproveedor': 'morenitapp.grupoproveedor',
         'tiponotificacion': 'morenitapp.notificacion.tipo'
     }
+
+    # --- MÉTODOS DE APOYO (HELPERS) ---
     def _cors_headers(self):
         return [
-            ('Access-Control-Allow-Origin', '*'),
-            ('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'),
-            ('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With'),
+            ('Access-Control-Allow-Origin', '*'), #Acepta peticioines de cualquier origen
+            ('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'), #Métodos HTTP permitidos
+            ('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With'), #Cabeceras permitidas
             ('Access-Control-Max-Age', '86400'),
         ]
     def _response_cors(self):
@@ -31,6 +34,7 @@ class ConfiguracionController(http.Controller):
         )
     def _error_response(self, message, status=500):
         return self._json_response({'error': message, 'status': status}, status=status)
+    # --- RUTA PRINCIPAL ---
     @http.route([
         '/api/configuracion/<string:tipo>',
         '/api/configuracion/<string:tipo>/<int:id>'

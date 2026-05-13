@@ -64,6 +64,18 @@ class _RegisterFormCard extends ConsumerWidget {
     final notifier = ref.read(registerFormProvider.notifier);
     final primaryColor = Theme.of(context).colorScheme.primary;
 
+    String capitalize(String text) {
+  if (text.isEmpty) return text;
+
+  return text
+      .trim() // Elimina espacios innecesarios al inicio y final
+      .toLowerCase() // Pasamos todo a minúsculas primero
+      .split(' ') // Dividimos el texto por los espacios
+      .where((word) => word.isNotEmpty) // Filtramos espacios dobles
+      .map((word) => word[0].toUpperCase() + word.substring(1)) // Capitalizamos cada palabra
+      .join(' '); // Las volvemos a unir con un espacio
+}
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 25),
       padding: const EdgeInsets.all(24),

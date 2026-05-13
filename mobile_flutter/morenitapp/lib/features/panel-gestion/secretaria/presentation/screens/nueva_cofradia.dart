@@ -16,6 +16,17 @@ class CofradiaFormScreen extends ConsumerStatefulWidget {
   ConsumerState<CofradiaFormScreen> createState() => _CofradiaFormScreenState();
 }
 
+String _capitalize(String text) {
+  if (text.isEmpty) return text;
+  return text
+      .trim()
+      .toLowerCase()
+      .split(' ')
+      .where((word) => word.isNotEmpty)
+      .map((word) => word[0].toUpperCase() + word.substring(1))
+      .join(' ');
+}
+
 class _CofradiaFormScreenState extends ConsumerState<CofradiaFormScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
@@ -114,14 +125,11 @@ class _CofradiaFormScreenState extends ConsumerState<CofradiaFormScreen> {
   void _onSave() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
- String capitalize(String text) {
-      if (text.isEmpty) return text;
-      return text[0].toUpperCase() + text.substring(1).toLowerCase();
-    }
+
     try {
       final data = {
-        "cifCofradia": cifCtrl.text.trim(),
-        "nombreCofradia": capitalize(nombreCtrl.text.trim()),
+        "cifCofradia": cifCtrl.text.trim().toUpperCase(),
+        "nombreCofradia": _capitalize(nombreCtrl.text.trim()),
         "antiguedadCofradia": int.tryParse(fundacionCtrl.text.trim()) ?? 0,
         "emailCofradia": emailCtrl.text.trim(),
         "telefonoCofradia": telefonoCtrl.text.trim(),

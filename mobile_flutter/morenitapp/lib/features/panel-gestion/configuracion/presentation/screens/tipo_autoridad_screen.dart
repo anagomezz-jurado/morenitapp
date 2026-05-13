@@ -146,6 +146,17 @@ class _AutoridadFormContent extends ConsumerStatefulWidget {
       _AutoridadFormContentState();
 }
 
+String _capitalize(String text) {
+  if (text.isEmpty) return text;
+  return text
+      .trim()
+      .toLowerCase()
+      .split(' ')
+      .where((word) => word.isNotEmpty)
+      .map((word) => word[0].toUpperCase() + word.substring(1))
+      .join(' ');
+}
+
 class _AutoridadFormContentState extends ConsumerState<_AutoridadFormContent> {
   final formKey = GlobalKey<FormState>();
   late TextEditingController codCtrl;
@@ -155,12 +166,10 @@ class _AutoridadFormContentState extends ConsumerState<_AutoridadFormContent> {
   void initState() {
     super.initState();
 
-     String capitalize(String text) {
-      if (text.isEmpty) return text;
-      return text[0].toUpperCase() + text.substring(1).toLowerCase();
-    }
-    codCtrl = TextEditingController(text: capitalize(widget.autoridad?.codigo ?? ''));
-    nomCtrl = TextEditingController(text: capitalize(widget.autoridad?.nombre ?? ''));
+    codCtrl =
+        TextEditingController(text: (widget.autoridad?.codigo ?? '').toUpperCase());
+    nomCtrl =
+        TextEditingController(text: _capitalize(widget.autoridad?.nombre ?? ''));
   }
 
   @override
@@ -179,7 +188,7 @@ class _AutoridadFormContentState extends ConsumerState<_AutoridadFormContent> {
                     _buildField(
                         "NOMBRE", nomCtrl, "Nombre de autoridad", colors),
                     const SizedBox(height: 50),
-                    _buildSaveButton(colors),
+                    _save(colors),
                   ]))))
     ]);
   }
@@ -227,29 +236,35 @@ class _AutoridadFormContentState extends ConsumerState<_AutoridadFormContent> {
     ]);
   }
 
-  Widget _buildSaveButton(ColorScheme colors) {
-    return SizedBox(
-        width: double.infinity,
-        height: 50,
-        child: FilledButton(
-            style: FilledButton.styleFrom(
-                backgroundColor: colors.primary,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15))),
-            onPressed: () {
-              if (!formKey.currentState!.validate()) return;
-              if (widget.autoridad == null) {
-                ref
-                    .read(tiposAutoridadProvider.notifier)
-                    .crear(codCtrl.text, nomCtrl.text);
-              } else {
-                ref
-                    .read(tiposAutoridadProvider.notifier)
-                    .editar(widget.autoridad.id, codCtrl.text, nomCtrl.text);
-              }
-              Navigator.pop(context);
-            },
-            child: Text(widget.autoridad == null ? 'GUARDAR' : 'ACTUALIZAR',
-                style: const TextStyle(fontWeight: FontWeight.bold))));
-  }
+ Widget _save(ColorScheme colors) {
+  return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: FilledButton(
+          style: FilledButton.styleFrom(
+              backgroundColor: colors.primary,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15))),
+          onPressed: () {
+            if (!formKey.currentState!.validate()) return;
+
+            // --- PROCESAMIENTO DE DATOS ---
+            // Código a Mayúsculas y sin espacios laterales
+            final codigoLimpio = codCtrl.text.trim().toUpperCase();
+            // Nombre con Capitalización compuesta
+            final nombreLimpio = _capitalize(nomCtrl.text);
+
+            final notifier = ref.read(tiposAutoridadProvider.notifier);
+
+            if (widget.autoridad == null) {
+              notifier.crear(codigoLimpio, nombreLimpio);
+            } else {
+              notifier.editar(widget.autoridad.id, codigoLimpio, nombreLimpio);
+            }
+            
+            Navigator.pop(context);
+          },
+          child: Text(widget.autoridad == null ? 'GUARDAR' : 'ACTUALIZAR',
+              style: const TextStyle(fontWeight: FontWeight.bold))));
+}
 }

@@ -19,8 +19,7 @@ import 'package:morenitapp/shared/widgets/side_menu.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart'; 
-
+import 'package:intl/intl.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -77,7 +76,7 @@ class _MainContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final logs = ref.watch(activityLogProvider);
+    final logsAsync = ref.watch(activityLogProvider);
 
     final statsHermanos = hermanosAsync.when(
       data: (list) {
@@ -103,7 +102,6 @@ class _MainContent extends ConsumerWidget {
               ),
             ),
           ),
-
           Expanded(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -138,37 +136,47 @@ class _MainContent extends ConsumerWidget {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 30),
-
                   _buildStatCards(statsHermanos['activos']!,
                       statsHermanos['bajas']!, totalAnunciantes),
-
                   const SizedBox(height: 25),
                   const _SectionTitle(title: 'Actividad de hermanos'),
-
-                  if (logs.isEmpty)
-                    const _ActivityCard(
-                        description: 'Sin actividad reciente', time: '-')
-                  else
-                    ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: logs.length > 5 ? 5 : logs.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
-                      itemBuilder: (context, index) {
-                        final log = logs[index];
-                        return _ActivityCard(
-                          description:
-                              '${log.userName} ${_actionText(log.action)} ${log.entityName}',
-                          time: _formatTime(log.createdAt),
+                  logsAsync.when(
+                    data: (logs) {
+                      if (logs.isEmpty) {
+                        return const _ActivityCard(
+                          description: 'Sin actividad reciente',
+                          time: '-',
                         );
-                      },
+                      }
+                      return ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: logs.length > 4 ? 4 : logs.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          final log = logs[index];
+                          return _ActivityCard(
+                            description:
+                                '${log.userName} ${_actionText(log.action)} ${log.entityName}',
+                            time: _formatTime(log.createdAt),
+                          );
+                        },
+                      );
+                    },
+                    loading: () => const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(20),
+                        child: CircularProgressIndicator(),
+                      ),
                     ),
-
+                    error: (e, _) => const _ActivityCard(
+                      description: 'Error al cargar actividad',
+                      time: '-',
+                    ),
+                  ),
                   const SizedBox(height: 25),
                   const _SectionTitle(title: 'Próximos eventos'),
-
                   eventosAsync.when(
                     data: (eventos) {
                       final hoy = DateTime.now();
@@ -192,8 +200,7 @@ class _MainContent extends ConsumerWidget {
                       return Column(
                         children: listaReducida.map((evento) {
                           return Padding(
-                            padding: const EdgeInsets.only(
-                                bottom: 12), 
+                            padding: const EdgeInsets.only(bottom: 12),
                             child: _EventTile(
                               title: evento.nombre,
                               date: DateFormat('dd/MM/yyyy HH:mm')
@@ -231,42 +238,42 @@ class _MainContent extends ConsumerWidget {
     }
   }
 
- Widget _buildStatCards(String activos, String bajas, String totalA) {
-  return LayoutBuilder(
-    builder: (context, constraints) {
-      // Determinamos cuántas columnas usar según el ancho
-      // Si el ancho es menor a 350px (móviles pequeños), usamos 2 columnas o aspecto más alto
-      final crossAxisCount = constraints.maxWidth < 600 ? 3 : 4;
-      
-      return GridView.count(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisCount: crossAxisCount,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        // Ajustamos el ratio: si es muy estrecho, necesitamos más altura (ratio menor)
-        childAspectRatio: constraints.maxWidth < 400 ? 0.85 : 1.2,
-        children: [
-          _StatCard(
-              title: 'Activos',
-              value: activos,
-              icon: Icons.person_add,
-              color: Colors.green),
-          _StatCard(
-              title: 'Bajas',
-              value: bajas,
-              icon: Icons.person_off,
-              color: Colors.green), // Cambiado a rojo para diferenciar
-          _StatCard(
-              title: 'Anunciantes',
-              value: totalA,
-              icon: Icons.ads_click,
-              color: Colors.green), // Cambiado a azul para diferenciar
-        ],
-      );
-    },
-  );
-}
+  Widget _buildStatCards(String activos, String bajas, String totalA) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Determinamos cuántas columnas usar según el ancho
+        // Si el ancho es menor a 350px (móviles pequeños), usamos 2 columnas o aspecto más alto
+        final crossAxisCount = constraints.maxWidth < 600 ? 3 : 4;
+
+        return GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: crossAxisCount,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          // Ajustamos el ratio: si es muy estrecho, necesitamos más altura (ratio menor)
+          childAspectRatio: constraints.maxWidth < 400 ? 0.85 : 1.2,
+          children: [
+            _StatCard(
+                title: 'Activos',
+                value: activos,
+                icon: Icons.person_add,
+                color: Colors.green),
+            _StatCard(
+                title: 'Bajas',
+                value: bajas,
+                icon: Icons.person_off,
+                color: Colors.green), // Cambiado a rojo para diferenciar
+            _StatCard(
+                title: 'Anunciantes',
+                value: totalA,
+                icon: Icons.ads_click,
+                color: Colors.green), // Cambiado a azul para diferenciar
+          ],
+        );
+      },
+    );
+  }
 }
 
 class _NoEventsWidget extends StatelessWidget {
@@ -331,14 +338,13 @@ class _StatCard extends StatelessWidget {
               color: color.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon,
-                color: color, size: 20), 
+            child: Icon(icon, color: color, size: 20),
           ),
-          const SizedBox(height: 6), 
+          const SizedBox(height: 6),
           Text(
             value,
             style: TextStyle(
-              fontSize: 22, 
+              fontSize: 22,
               fontWeight: FontWeight.bold,
               color: colors.onSurface,
             ),
@@ -347,11 +353,10 @@ class _StatCard extends StatelessWidget {
           Text(
             title,
             textAlign: TextAlign.center,
-            maxLines:
-                1,
+            maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 11, 
+              fontSize: 11,
               color: colors.onSurface.withOpacity(0.6),
               fontWeight: FontWeight.w500,
             ),

@@ -22,6 +22,17 @@ class NuevoOrganizador extends ConsumerStatefulWidget {
   ConsumerState<NuevoOrganizador> createState() => _NuevoOrganizadorState();
 }
 
+String _capitalize(String text) {
+  if (text.isEmpty) return text;
+  return text
+      .trim()
+      .toLowerCase()
+      .split(' ')
+      .where((word) => word.isNotEmpty)
+      .map((word) => word[0].toUpperCase() + word.substring(1))
+      .join(' ');
+}
+
 class _NuevoOrganizadorState extends ConsumerState<NuevoOrganizador> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
@@ -146,14 +157,11 @@ class _NuevoOrganizadorState extends ConsumerState<NuevoOrganizador> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
- String capitalize(String text) {
-      if (text.isEmpty) return text;
-      return text[0].toUpperCase() + text.substring(1).toLowerCase();
-    }
+
     try {
       final data = {
-        "cif": cifCtrl.text.trim(),
-        "nombre": capitalize(nombreCtrl.text.trim()),
+        "cif": cifCtrl.text.trim().toUpperCase(),
+        "nombre": _capitalize(nombreCtrl.text.trim()),
         "telefono": telefonoCtrl.text.trim(),
         "email": emailCtrl.text.trim(),
 
@@ -182,7 +190,7 @@ class _NuevoOrganizadorState extends ConsumerState<NuevoOrganizador> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("✔ Organizador guardado correctamente"),
+          content: Text(" Organizador guardado correctamente"),
           backgroundColor: Colors.green,
         ),
       );

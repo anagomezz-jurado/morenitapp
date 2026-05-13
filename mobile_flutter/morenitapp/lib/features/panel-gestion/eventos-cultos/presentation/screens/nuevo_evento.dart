@@ -15,6 +15,17 @@ class NuevoEvento extends ConsumerStatefulWidget {
   ConsumerState<NuevoEvento> createState() => _NuevoEventoState();
 }
 
+String _capitalize(String text) {
+  if (text.isEmpty) return text;
+  return text
+      .trim()
+      .toLowerCase()
+      .split(' ')
+      .where((word) => word.isNotEmpty)
+      .map((word) => word[0].toUpperCase() + word.substring(1))
+      .join(' ');
+}
+
 class _NuevoEventoState extends ConsumerState<NuevoEvento> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
@@ -68,16 +79,13 @@ class _NuevoEventoState extends ConsumerState<NuevoEvento> {
     }
 
     setState(() => _isLoading = true);
- String capitalize(String text) {
-      if (text.isEmpty) return text;
-      return text[0].toUpperCase() + text.substring(1).toLowerCase();
-    }
+
     try {
       final datos = {
-        "cod_evento": codCtrl.text.trim(),
-        "nombre": capitalize(nombreCtrl.text.trim()),
-        "lugar": capitalize(lugarCtrl.text.trim()),
-        "descripcion": capitalize(descripcionCtrl.text.trim()),
+        "cod_evento": codCtrl.text.trim().toUpperCase(),
+        "nombre": _capitalize(nombreCtrl.text.trim()),
+        "lugar": _capitalize(lugarCtrl.text.trim()),
+        "descripcion": _capitalize(descripcionCtrl.text.trim()),
         "fecha_inicio": DateFormat('yyyy-MM-dd HH:mm:ss').format(_fechaInicio),
         "fecha_fin": DateFormat('yyyy-MM-dd HH:mm:ss').format(_fechaFin),
         "organizador_id": _organizadorId,
@@ -142,7 +150,7 @@ class _NuevoEventoState extends ConsumerState<NuevoEvento> {
               _buildRow('Código', _textFormField(codCtrl, required: true)),
               _buildRow('Nombre', _textFormField(nombreCtrl, required: true)),
               _buildRow('Lugar', _textFormField(lugarCtrl)),
-              
+              _buildRow('Descripción', _textFormField(descripcionCtrl)),
               // ORGANIZADOR DINÁMICO
               _buildRow(
                 'Organizador',

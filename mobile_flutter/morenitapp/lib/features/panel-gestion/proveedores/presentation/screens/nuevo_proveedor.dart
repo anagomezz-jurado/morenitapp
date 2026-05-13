@@ -28,6 +28,16 @@ class ProveedorFormScreen extends ConsumerStatefulWidget {
   ConsumerState<ProveedorFormScreen> createState() =>
       _ProveedorFormScreenState();
 }
+String _capitalize(String text) {
+  if (text.isEmpty) return text;
+  return text
+      .trim()
+      .toLowerCase()
+      .split(' ')
+      .where((word) => word.isNotEmpty)
+      .map((word) => word[0].toUpperCase() + word.substring(1))
+      .join(' ');
+}
 
 class _ProveedorFormScreenState extends ConsumerState<ProveedorFormScreen> {
   final _formKey = GlobalKey<FormState>();
@@ -128,16 +138,12 @@ class _ProveedorFormScreenState extends ConsumerState<ProveedorFormScreen> {
   void _onSave() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
-     String capitalize(String text) {
-      if (text.isEmpty) return text;
-      return text[0].toUpperCase() + text.substring(1).toLowerCase();
-    }
-
+     
     final datos = {
       if (widget.proveedorAEditar != null) "id": widget.proveedorAEditar!.id,
-      "cod_proveedor": codCtrl.text.trim(),
-      "nombre": capitalize(nomCtrl.text.trim()),
-      "contacto": capitalize(contCtrl.text.trim()),
+      "cod_proveedor": codCtrl.text.trim().toUpperCase(),
+      "nombre": _capitalize(nomCtrl.text.trim()),
+      "contacto": _capitalize(contCtrl.text.trim()),
       "telefono": telCtrl.text.trim(),
       "email": emaCtrl.text.trim(),
       "anunciante": esAnunciante,

@@ -32,6 +32,17 @@ class DireccionScreen extends ConsumerWidget {
     );
   }
 
+
+String _capitalize(String text) {
+  if (text.isEmpty) return text;
+  return text
+      .trim()
+      .toLowerCase()
+      .split(' ')
+      .where((word) => word.isNotEmpty)
+      .map((word) => word[0].toUpperCase() + word.substring(1))
+      .join(' ');
+}
   void _showForm(BuildContext context, WidgetRef ref) {
     final calleCtrl = TextEditingController();
     final numeroCtrl = TextEditingController();

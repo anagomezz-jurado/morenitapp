@@ -167,6 +167,19 @@ class _EventoFormContent extends ConsumerStatefulWidget {
   ConsumerState<_EventoFormContent> createState() => _EventoFormContentState();
 }
 
+
+String _capitalize(String text) {
+  if (text.isEmpty) return text;
+  return text
+      .trim()
+      .toLowerCase()
+      .split(' ')
+      .where((word) => word.isNotEmpty)
+      .map((word) => word[0].toUpperCase() + word.substring(1))
+      .join(' ');
+}
+
+
 class _EventoFormContentState extends ConsumerState<_EventoFormContent> {
   final formKey = GlobalKey<FormState>();
   late TextEditingController codCtrl;
@@ -192,12 +205,9 @@ class _EventoFormContentState extends ConsumerState<_EventoFormContent> {
   void initState() {
     super.initState();
 
-     String capitalize(String text) {
-      if (text.isEmpty) return text;
-      return text[0].toUpperCase() + text.substring(1).toLowerCase();
-    }
-    codCtrl = TextEditingController(text: capitalize(widget.evento?.codigo ?? ''));
-    nomCtrl = TextEditingController(text: capitalize(widget.evento?.nombre ?? ''));
+    
+    codCtrl = TextEditingController(text: _capitalize(widget.evento?.codigo ?? ''));
+    nomCtrl = TextEditingController(text: _capitalize(widget.evento?.nombre ?? ''));
     _colorSeleccionado = widget.evento?.color ?? '#3498DB';
   }
 
@@ -223,7 +233,7 @@ class _EventoFormContentState extends ConsumerState<_EventoFormContent> {
                     const SizedBox(height: 50),
                     _buildColorPicker(colors),
                     const SizedBox(height: 50),
-                    _buildSaveButton(colors),
+                    _save(colors),
                   ]))))
     ]);
   }
@@ -297,7 +307,7 @@ class _EventoFormContentState extends ConsumerState<_EventoFormContent> {
     ]);
   }
 
-  Widget _buildSaveButton(ColorScheme colors) {
+  Widget _save(ColorScheme colors) {
     return SizedBox(
         width: double.infinity,
         height: 50,
@@ -308,11 +318,16 @@ class _EventoFormContentState extends ConsumerState<_EventoFormContent> {
                     borderRadius: BorderRadius.circular(15))),
             onPressed: () {
               if (!formKey.currentState!.validate()) return;
+
+               final codigoLimpio = codCtrl.text.trim().toUpperCase();
+            // Nombre con Capitalización compuesta
+            final nombreLimpio = _capitalize(nomCtrl.text);
+
               final notifier = ref.read(tiposEventoProvider.notifier);
               if (widget.evento == null) {
-                notifier.crear(codCtrl.text, nomCtrl.text, _colorSeleccionado);
+                notifier.crear(codigoLimpio, nombreLimpio, _colorSeleccionado);
               } else {
-                notifier.editar(widget.evento.id, codCtrl.text, nomCtrl.text,
+                notifier.editar(widget.evento.id, codigoLimpio, nombreLimpio,
                     _colorSeleccionado);
               }
               Navigator.pop(context);

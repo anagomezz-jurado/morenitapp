@@ -9,7 +9,6 @@
         <tree string="Localidades">
             <field name="nombreLocalidad"/>
             <field name="codProvincia_id"/>
-            <field name="nombreCapital"/>
         </tree>
     </field>
 </record>
@@ -24,7 +23,6 @@
                 <group>
                     <field name="nombreLocalidad"/>
                     <field name="codProvincia_id"/>
-                    <field name="nombreCapital"/>
                 </group>
             </sheet>
         </form>

@@ -7,3 +7,4 @@ from . import api_ubicaciones
 from . import api_usuario
 from . import api_libros
 from . import cors_middleware
+from .import api_logs

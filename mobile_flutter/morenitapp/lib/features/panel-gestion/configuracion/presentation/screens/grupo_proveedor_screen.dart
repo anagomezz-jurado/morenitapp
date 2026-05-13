@@ -108,8 +108,7 @@ class GrupoProveedorScreen extends ConsumerWidget {
         return Align(
           alignment: Alignment.centerRight,
           child: Container(
-            width:
-                MediaQuery.of(context).size.width * 0.5, 
+            width: MediaQuery.of(context).size.width * 0.5,
             height: double.infinity,
             decoration: BoxDecoration(
               color: Colors.white,
@@ -167,6 +166,17 @@ class _GrupoFormContent extends ConsumerStatefulWidget {
   ConsumerState<_GrupoFormContent> createState() => _GrupoFormContentState();
 }
 
+String _capitalize(String text) {
+  if (text.isEmpty) return text;
+  return text
+      .trim()
+      .toLowerCase()
+      .split(' ')
+      .where((word) => word.isNotEmpty)
+      .map((word) => word[0].toUpperCase() + word.substring(1))
+      .join(' ');
+}
+
 class _GrupoFormContentState extends ConsumerState<_GrupoFormContent> {
   final formKey = GlobalKey<FormState>();
   late TextEditingController codCtrl;
@@ -176,12 +186,10 @@ class _GrupoFormContentState extends ConsumerState<_GrupoFormContent> {
   void initState() {
     super.initState();
 
-     String capitalize(String text) {
-      if (text.isEmpty) return text;
-      return text[0].toUpperCase() + text.substring(1).toLowerCase();
-    }
-    codCtrl = TextEditingController(text: capitalize(widget.grupo?.codigo ?? ''));
-    nomCtrl = TextEditingController(text: capitalize(widget.grupo?.nombre ?? ''));
+    codCtrl =
+        TextEditingController(text: (widget.grupo?.codigo ?? '').toUpperCase());
+    nomCtrl =
+        TextEditingController(text: _capitalize(widget.grupo?.nombre ?? ''));
   }
 
   @override
@@ -207,8 +215,7 @@ class _GrupoFormContentState extends ConsumerState<_GrupoFormContent> {
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: colors.primary,
-                    fontFamily: 'Palatino'
-                    ),
+                    fontFamily: 'Palatino'),
               ),
               const Spacer(),
               IconButton(
@@ -217,7 +224,6 @@ class _GrupoFormContentState extends ConsumerState<_GrupoFormContent> {
             ],
           ),
         ),
-
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(32),
@@ -231,9 +237,7 @@ class _GrupoFormContentState extends ConsumerState<_GrupoFormContent> {
                   const SizedBox(height: 25),
                   _buildField("NOMBRE DEL GRUPO", nomCtrl,
                       "Nombre del sector o tipo", colors),
-
                   const SizedBox(height: 50),
-
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -301,12 +305,23 @@ class _GrupoFormContentState extends ConsumerState<_GrupoFormContent> {
 
   void _save() {
     if (!formKey.currentState!.validate()) return;
+
     final notifier = ref.read(gruposProveedorProvider.notifier);
+
+    // 1. Transformamos los datos antes de enviarlos
+    // Código: Todo a MAYÚSCULAS y sin espacios a los lados
+    final codigoLimpio = codCtrl.text.trim().toUpperCase();
+
+    // Nombre: Capitalizado correctamente
+    final nombreLimpio = _capitalize(nomCtrl.text);
+
     if (widget.grupo == null) {
-      notifier.crear(codCtrl.text, nomCtrl.text);
+      // 2. Enviamos los datos limpios
+      notifier.crear(codigoLimpio, nombreLimpio);
     } else {
-      notifier.editar(widget.grupo!.id!, codCtrl.text, nomCtrl.text);
+      notifier.editar(widget.grupo!.id!, codigoLimpio, nombreLimpio);
     }
+
     Navigator.pop(context);
   }
 }

@@ -3,6 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:morenitapp/features/panel-gestion/ubicaciones/presentation/providers/ubicaciones_provider.dart';
 import 'package:morenitapp/shared/widgets/plantilla_ventanas.dart';
 
+
+String _capitalize(String text) {
+  if (text.isEmpty) return text;
+  return text
+      .trim()
+      .toLowerCase()
+      .split(' ')
+      .where((word) => word.isNotEmpty)
+      .map((word) => word[0].toUpperCase() + word.substring(1))
+      .join(' ');
+}
+
 class ProvinciaScreen extends ConsumerWidget {
   const ProvinciaScreen({super.key});
 
@@ -111,13 +123,10 @@ class ProvinciaScreen extends ConsumerWidget {
             
             onPressed: () async {
 
-               String capitalize(String text) {
-      if (text.isEmpty) return text;
-      return text[0].toUpperCase() + text.substring(1).toLowerCase();
-    }
+              
 
-              final codigo = capitalize(codigoController.text.trim());
-              final nombre = capitalize(nombreController.text.trim());
+              final codigo = _capitalize(codigoController.text.trim());
+              final nombre = _capitalize(nombreController.text.trim());
 
               if (codigo.isEmpty || nombre.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(

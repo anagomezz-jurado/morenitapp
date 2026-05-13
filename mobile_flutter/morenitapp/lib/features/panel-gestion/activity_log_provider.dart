@@ -1,15 +1,28 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:morenitapp/features/panel-gestion/activity_log.dart';
-import 'package:morenitapp/features/panel-gestion/activity_log_repository.dart';
+import 'package:morenitapp/features/panel-gestion/activity_log_datasource.dart';
 
-final activityLogRepositoryProvider = Provider<ActivityLogRepository>((ref) {
-  return ActivityLogRepositoryImpl();
+final activityLogDatasourceProvider = Provider<ActivityLogDatasource>((ref) {
+  return ActivityLogDatasourceImpl();
 });
 
-class ActivityLogNotifier extends StateNotifier<List<ActivityLog>> {
+class ActivityLogNotifier extends StateNotifier<AsyncValue<List<ActivityLog>>> {
   final Ref ref;
-  ActivityLogNotifier(this.ref) : super([]);
+
+  ActivityLogNotifier(this.ref) : super(const AsyncValue.loading()) {
+    loadLogs();
+  }
+
+  Future<void> loadLogs() async {
+    state = const AsyncValue.loading();
+    try {
+      final logs = await ref.read(activityLogDatasourceProvider).getLogs(limit: 20);
+      state = AsyncValue.data(logs);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
 
   Future<void> addLog({
     required String userId,
@@ -19,7 +32,6 @@ class ActivityLogNotifier extends StateNotifier<List<ActivityLog>> {
     String detail = '',
   }) async {
     final newLog = ActivityLog(
-      id: DateTime.now().toString(),
       userId: userId,
       userName: userName,
       action: action,
@@ -28,12 +40,26 @@ class ActivityLogNotifier extends StateNotifier<List<ActivityLog>> {
       createdAt: DateTime.now(),
     );
 
-    state = [newLog, ...state];
-    await ref.read(activityLogRepositoryProvider).saveLog(newLog);
+    try {
+      // Guardar en Odoo
+      await ref.read(activityLogDatasourceProvider).saveLog(newLog);
+
+      // Actualizar estado local
+      state.whenData((logs) {
+        state = AsyncValue.data([newLog, ...logs]);
+      });
+    } catch (e) {
+      // Si falla el guardado remoto, aún actualizamos localmente
+      state.whenData((logs) {
+        state = AsyncValue.data([newLog, ...logs]);
+      });
+    }
   }
+
+  Future<void> refresh() => loadLogs();
 }
 
 final activityLogProvider =
-    StateNotifierProvider<ActivityLogNotifier, List<ActivityLog>>((ref) {
+    StateNotifierProvider<ActivityLogNotifier, AsyncValue<List<ActivityLog>>>((ref) {
   return ActivityLogNotifier(ref);
 });

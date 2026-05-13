@@ -19,6 +19,17 @@ class AutoridadFormScreen extends ConsumerStatefulWidget {
       _AutoridadFormScreenState();
 }
 
+String _capitalize(String text) {
+  if (text.isEmpty) return text;
+  return text
+      .trim()
+      .toLowerCase()
+      .split(' ')
+      .where((word) => word.isNotEmpty)
+      .map((word) => word[0].toUpperCase() + word.substring(1))
+      .join(' ');
+}
+
 class _AutoridadFormScreenState extends ConsumerState<AutoridadFormScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
@@ -169,15 +180,12 @@ class _AutoridadFormScreenState extends ConsumerState<AutoridadFormScreen> {
   void _onSave() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
- String capitalize(String text) {
-      if (text.isEmpty) return text;
-      return text[0].toUpperCase() + text.substring(1).toLowerCase();
-    }
+
     try {
       final Map<String, dynamic> data = {
-        "codAutoridad": codCtrl.text.trim(),
-        "nombreAutoridad": capitalize(nomCtrl.text.trim()),
-        "nombreSaluda": capitalize(saludaCtrl.text.trim()),
+        "codAutoridad": codCtrl.text.trim().toUpperCase(),
+        "nombreAutoridad": _capitalize(nomCtrl.text.trim()),
+        "nombreSaluda": _capitalize(saludaCtrl.text.trim()),
         "cargo": cargoCtrl.text.trim(),
         "telefono": telCtrl.text.trim(),
         "correoElectronico": emailCtrl.text.trim(),

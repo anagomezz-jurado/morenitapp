@@ -21,7 +21,7 @@ class NotificacionesScreen extends ConsumerWidget {
         DataColumn(
             label:
                 Text('ASUNTO', style: TextStyle(fontWeight: FontWeight.bold))),
-         DataColumn(
+        DataColumn(
             label:
                 Text('MENSAJE', style: TextStyle(fontWeight: FontWeight.bold))),
         DataColumn(
@@ -37,13 +37,8 @@ class NotificacionesScreen extends ConsumerWidget {
         data: (notis) => notis
             .map((n) => DataRow(cells: [
                   DataCell(Text(n.asunto)),
-                  DataCell(
-            Text(
-              removeHtmlTags(n.mensaje), 
-              maxLines: 1, 
-              overflow: TextOverflow.ellipsis
-            )
-          ),
+                  DataCell(Text(removeHtmlTags(n.mensaje),
+                      maxLines: 1, overflow: TextOverflow.ellipsis)),
                   DataCell(Text(n.tipoNombre ?? 'General')),
                   DataCell(Text(n.fechaRegistro ?? '-')),
                   DataCell(IconButton(
@@ -129,16 +124,29 @@ class NotificacionesScreen extends ConsumerWidget {
     );
   }
 }
+
 String removeHtmlTags(String htmlText) {
   // Reemplaza etiquetas HTML por un espacio vacío
   final RegExp exp = RegExp(r"<[^>]*>", multiLine: true, caseSensitive: true);
   String cleanText = htmlText.replaceAll(exp, '');
-  
+
   // Opcional: Limpiar entidades comunes como &nbsp;
   cleanText = cleanText.replaceAll('&nbsp;', ' ');
-  
+
   return cleanText.trim();
 }
+
+String _capitalize(String text) {
+  if (text.isEmpty) return text;
+  return text
+      .trim()
+      .toLowerCase()
+      .split(' ')
+      .where((word) => word.isNotEmpty)
+      .map((word) => word[0].toUpperCase() + word.substring(1))
+      .join(' ');
+}
+
 // ─────────────────────────────────────────────
 // FORMULARIO
 // ─────────────────────────────────────────────
@@ -167,13 +175,8 @@ class _NotificacionFormState extends ConsumerState<_NotificacionForm>
 
   @override
   void dispose() {
-    String capitalize(String text) {
-      if (text.isEmpty) return text;
-      return text[0].toUpperCase() + text.substring(1).toLowerCase();
-    }
-    
-    capitalize(_asuntoCtrl.text).trim();
-    capitalize(_mensajeCtrl.text).trim();
+    _capitalize(_asuntoCtrl.text).trim();
+    _capitalize(_mensajeCtrl.text).trim();
     _tabController.dispose();
     super.dispose();
   }
@@ -182,13 +185,9 @@ class _NotificacionFormState extends ConsumerState<_NotificacionForm>
   Widget build(BuildContext context) {
     final tiposAsync = ref.watch(notificacionTiposProvider);
     final colors = Theme.of(context).colorScheme;
-String capitalize(String text) {
-      if (text.isEmpty) return text;
-      return text[0].toUpperCase() + text.substring(1).toLowerCase();
-    }
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-      
       child: Form(
         key: _formKey,
         child: Column(
@@ -230,17 +229,13 @@ String capitalize(String text) {
 
             // Tipo de Aviso
             tiposAsync.when(
-              
               data: (tipos) => DropdownButtonFormField<int>(
-                
                 decoration: const InputDecoration(
                   labelText: 'Tipo de Aviso',
                   border: UnderlineInputBorder(),
                   prefixIcon: Icon(Icons.category_outlined),
                 ),
-                
                 value: _selectedTipoId,
-                
                 items: tipos
                     .map((t) =>
                         DropdownMenuItem(value: t.id, child: Text(t.name)))
@@ -498,50 +493,46 @@ String capitalize(String text) {
       ),
     );
   }
-Future<void> _enviar() async {
-  if (!_formKey.currentState!.validate()) return;
 
-  String capitalize(String text) {
-    if (text.isEmpty) return text;
-    final trimmed = text.trim();
-    if (trimmed.isEmpty) return trimmed;
-    return trimmed[0].toUpperCase() + trimmed.substring(1).toLowerCase();
-  }
+  Future<void> _enviar() async {
+    if (!_formKey.currentState!.validate()) return;
 
-  // 1. Obtenemos los destinatarios que ya están en la pantalla (usuariosAsync)
-  final destinatarios = ref.read(usuariosConEmailProvider);
-  
-  // 2. Extraemos SOLO los IDs
-  final List<int> idsParaEnviar = destinatarios.map((u) => u.id).toList();
 
-  if (idsParaEnviar.isEmpty) {
-    // Error de seguridad: no hay a quién enviar
-    return;
-  }
+    // 1. Obtenemos los destinatarios que ya están en la pantalla (usuariosAsync)
+    final destinatarios = ref.read(usuariosConEmailProvider);
 
-  setState(() => _enviando = true);
+    // 2. Extraemos SOLO los IDs
+    final List<int> idsParaEnviar = destinatarios.map((u) => u.id).toList();
 
-  try {
-    final nuevaNoti = Notificacion(
-      asunto: capitalize(_asuntoCtrl.text),  // <--- Aplicado
-      mensaje: capitalize(_mensajeCtrl.text), // <--- Aplicado
-      tipoId: _selectedTipoId,
-      usuarioIds: idsParaEnviar, // ¡Vital que esto no vaya vacío!
-    );
-
-    // 3. Llamamos al notifier
-    final success = await ref.read(notificacionesProvider.notifier).enviar(nuevaNoti);
-
-    if (success && mounted) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Notificación enviada correctamente')),
-      );
+    if (idsParaEnviar.isEmpty) {
+      // Error de seguridad: no hay a quién enviar
+      return;
     }
-  } catch (e) {
-    // Manejo de errores
-  } finally {
-    if (mounted) setState(() => _enviando = false);
+
+    setState(() => _enviando = true);
+
+    try {
+      final nuevaNoti = Notificacion(
+        asunto: _capitalize(_asuntoCtrl.text), // <--- Aplicado
+        mensaje: _capitalize(_mensajeCtrl.text), // <--- Aplicado
+        tipoId: _selectedTipoId,
+        usuarioIds: idsParaEnviar, // ¡Vital que esto no vaya vacío!
+      );
+
+      // 3. Llamamos al notifier
+      final success =
+          await ref.read(notificacionesProvider.notifier).enviar(nuevaNoti);
+
+      if (success && mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Notificación enviada correctamente')),
+        );
+      }
+    } catch (e) {
+      // Manejo de errores
+    } finally {
+      if (mounted) setState(() => _enviando = false);
+    }
   }
-}
 }

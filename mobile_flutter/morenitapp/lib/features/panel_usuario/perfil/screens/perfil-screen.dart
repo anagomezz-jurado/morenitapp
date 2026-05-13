@@ -6,6 +6,19 @@ import 'package:morenitapp/features/panel-gestion/hermanos/presentation/provider
 import 'package:morenitapp/features/panel-gestion/usuarios/presentation/providers/usuarios_provider.dart';
 import 'package:morenitapp/shared/widgets/plantilla_ventanas.dart';
 
+// ─── FUNCIÓN GLOBAL DE CAPITALIZACIÓN ────────────────────────────────────────
+String _capitalize(String text) {
+  if (text.isEmpty) return text;
+  return text
+      .trim()
+      .toLowerCase()
+      .split(' ')
+      .where((word) => word.isNotEmpty)
+      .map((word) => word[0].toUpperCase() + word.substring(1))
+      .join(' ');
+}
+
+// ─── PANTALLA PERFIL ──────────────────────────────────────────────────────────
 class PerfilScreen extends ConsumerStatefulWidget {
   const PerfilScreen({super.key});
 
@@ -40,52 +53,73 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
     setState(() => _isProcessing = true);
 
     try {
-    final success = await ref.read(authProvider.notifier).updatePerfil(data);
+      final success = await ref.read(authProvider.notifier).updatePerfil(data);
 
-    if (success) {
-      // USAR EL NUEVO MÉTODO SILENCIOSO
-      await ref.read(authProvider.notifier).refreshUser(); 
+      if (success) {
+        await ref.read(authProvider.notifier).refreshUser();
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('¡Datos actualizados!'),
-            backgroundColor: Colors.green
-          )
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('¡Datos actualizados!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
       }
-    }
-  } catch (e) {}
-  finally {
+    } catch (_) {
+    } finally {
       if (mounted) setState(() => _isProcessing = false);
     }
   }
 
   void _showEditDialog(
       BuildContext context, String field, String initialValue, String label) {
-    final controller = TextEditingController(text: initialValue);
+    // Para nombre/apellidos mostramos capitalizado en el campo
+    final displayValue =
+        (field == 'nombre' || field == 'apellido1' || field == 'apellido2')
+            ? _capitalize(initialValue)
+            : initialValue;
+
+    final controller = TextEditingController(text: displayValue);
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         title: Text('Editar $label'),
         content: TextField(
           controller: controller,
           obscureText: field == 'password',
+          textCapitalization:
+              (field == 'nombre' || field == 'apellido1' || field == 'apellido2')
+                  ? TextCapitalization.words
+                  : TextCapitalization.none,
           decoration: InputDecoration(
-              labelText: 'Nuevo $label',
-              border:
-                  OutlineInputBorder(borderRadius: BorderRadius.circular(10))),
+            labelText: 'Nuevo $label',
+            border:
+                OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          ),
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar')),
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
           ElevatedButton(
             onPressed: () {
+              String finalValue = controller.text.trim();
+
+              // Capitalizar solo campos de nombre
+              if (field == 'nombre' ||
+                  field == 'apellido1' ||
+                  field == 'apellido2') {
+                finalValue = _capitalize(finalValue);
+              }
+
               Navigator.pop(context);
-              _updateData({field: controller.text.trim()});
+              _updateData({field: finalValue});
             },
             child: const Text('Guardar'),
           ),
@@ -118,8 +152,8 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
               final hermanosAsync = ref.read(hermanosListadoProvider);
 
               hermanosAsync.whenData((lista) {
-                final encontrados = lista
-                    .where((h) => h.dni.toString().trim().toUpperCase() == dni);
+                final encontrados = lista.where(
+                    (h) => h.dni.toString().trim().toUpperCase() == dni);
 
                 setStateDialog(() {
                   buscando = false;
@@ -163,8 +197,8 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
                       decoration: BoxDecoration(
                         color: Colors.blue.shade50,
                         borderRadius: BorderRadius.circular(12),
-                        border:
-                            Border.all(color: Colors.blue.shade200, width: 1.5),
+                        border: Border.all(
+                            color: Colors.blue.shade200, width: 1.5),
                       ),
                       child: Column(
                         children: [
@@ -176,7 +210,8 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
                           const SizedBox(height: 8),
                           Text(numeroEncontrado!,
                               style: const TextStyle(
-                                  fontSize: 28, fontWeight: FontWeight.bold)),
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ),
@@ -205,7 +240,7 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
                           final userId = int.tryParse(currentUser.id) ?? 0;
                           if (userId == 0) return;
 
-                          Navigator.pop(context); // Cierra el diálogo
+                          Navigator.pop(context);
                           setState(() => _isProcessing = true);
 
                           try {
@@ -215,9 +250,6 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
                                     {'hermano_id': hermanoIdEncontrado});
 
                             if (exito) {
-                              // En lugar de checkAuthStatus() que puede disparar el router,
-                              // llama a una función que solo refresque el usuario actual
-                              // o actualiza el estado localmente si es posible.
                               await ref
                                   .read(authProvider.notifier)
                                   .refreshUser();
@@ -235,7 +267,9 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
                               );
                             }
                           } finally {
-                            if (mounted) setState(() => _isProcessing = false);
+                            if (mounted) {
+                              setState(() => _isProcessing = false);
+                            }
                           }
                         },
                   child: const Text('Vincular'),
@@ -255,20 +289,23 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
     final user = ref.watch(authProvider).user;
 
     if (user == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+          body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
       backgroundColor: primaryColor,
       appBar: AppBar(
         leading: IconButton(
-          icon:
-              const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
-          onPressed: () =>
-              context.canPop() ? context.pop() : context.go('/panel-usuario'),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              color: Colors.white),
+          onPressed: () => context.canPop()
+              ? context.pop()
+              : context.go('/panel-usuario'),
         ),
         title: const Text('Mi Perfil',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+            style: TextStyle(
+                fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
@@ -294,7 +331,8 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
           onRefresh: _refreshData,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             child: Column(
               children: [
                 _ProfileSection(
@@ -303,8 +341,11 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
                     _ProfileTile(
                       icon: Icons.person_outline,
                       label: 'Nombre',
-                      value:
-                          user.nombre.isNotEmpty ? user.nombre : 'No definido',
+                      // _capitalize aquí garantiza que se muestra bien
+                      // aunque el servidor devuelva minúsculas
+                      value: user.nombre.isNotEmpty
+                          ? _capitalize(user.nombre)
+                          : 'No definido',
                       onTap: () => _showEditDialog(
                           context, 'nombre', user.nombre, 'Nombre'),
                     ),
@@ -312,7 +353,7 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
                       icon: Icons.badge_outlined,
                       label: 'Primer Apellido',
                       value: user.apellido1.isNotEmpty
-                          ? user.apellido1
+                          ? _capitalize(user.apellido1)
                           : 'No definido',
                       onTap: () => _showEditDialog(context, 'apellido1',
                           user.apellido1, 'Primer Apellido'),
@@ -321,7 +362,7 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
                       icon: Icons.badge_outlined,
                       label: 'Segundo Apellido',
                       value: user.apellido2.isNotEmpty
-                          ? user.apellido2
+                          ? _capitalize(user.apellido2)
                           : 'No definido',
                       onTap: () => _showEditDialog(context, 'apellido2',
                           user.apellido2, 'Segundo Apellido'),
@@ -362,7 +403,8 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
                   title: 'Preferencias',
                   children: [
                     SwitchListTile(
-                      secondary: Icon(Icons.notifications_active_outlined,
+                      secondary: Icon(
+                          Icons.notifications_active_outlined,
                           color: colors.primary),
                       title: const Text('Notificaciones Email',
                           style: TextStyle(fontSize: 15)),
@@ -370,7 +412,8 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
                       value: user.recibirNotiEmail,
                       onChanged: _isProcessing
                           ? null
-                          : (val) => _updateData({'recibirNotiEmail': val}),
+                          : (val) =>
+                              _updateData({'recibirNotiEmail': val}),
                     ),
                   ],
                 ),
@@ -400,6 +443,7 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
   }
 }
 
+// ─── SECCIÓN ─────────────────────────────────────────────────────────────────
 class _ProfileSection extends StatelessWidget {
   final String title;
   final List<Widget> children;
@@ -412,12 +456,14 @@ class _ProfileSection extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 10, bottom: 10),
-          child: Text(title.toUpperCase(),
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blueGrey,
-                  fontSize: 11,
-                  letterSpacing: 1.1)),
+          child: Text(
+            title.toUpperCase(),
+            style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.blueGrey,
+                fontSize: 11,
+                letterSpacing: 1.1),
+          ),
         ),
         Container(
           clipBehavior: Clip.antiAlias,
@@ -439,16 +485,18 @@ class _ProfileSection extends StatelessWidget {
   }
 }
 
+// ─── TILE ─────────────────────────────────────────────────────────────────────
 class _ProfileTile extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
   final VoidCallback onTap;
-  const _ProfileTile(
-      {required this.icon,
-      required this.label,
-      required this.value,
-      required this.onTap});
+  const _ProfileTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -459,14 +507,15 @@ class _ProfileTile extends StatelessWidget {
         backgroundColor: primaryColor.withOpacity(0.1),
         child: Icon(icon, color: primaryColor, size: 20),
       ),
-      title:
-          Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+      title: Text(label,
+          style: const TextStyle(fontSize: 12, color: Colors.grey)),
       subtitle: Text(value,
           style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.bold,
               color: Colors.black87)),
-      trailing: const Icon(Icons.chevron_right_rounded, color: Colors.grey),
+      trailing:
+          const Icon(Icons.chevron_right_rounded, color: Colors.grey),
     );
   }
 }

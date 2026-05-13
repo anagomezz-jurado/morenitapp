@@ -171,6 +171,17 @@ class _CargoFormContent extends ConsumerStatefulWidget {
   ConsumerState<_CargoFormContent> createState() => _CargoFormContentState();
 }
 
+String _capitalize(String text) {
+  if (text.isEmpty) return text;
+  return text
+      .trim()
+      .toLowerCase()
+      .split(' ')
+      .where((word) => word.isNotEmpty)
+      .map((word) => word[0].toUpperCase() + word.substring(1))
+      .join(' ');
+}
+
 class _CargoFormContentState extends ConsumerState<_CargoFormContent> {
   final formKey = GlobalKey<FormState>();
   late TextEditingController codCtrl;
@@ -181,13 +192,10 @@ class _CargoFormContentState extends ConsumerState<_CargoFormContent> {
   void initState() {
     super.initState();
 
-     String capitalize(String text) {
-      if (text.isEmpty) return text;
-      return text[0].toUpperCase() + text.substring(1).toLowerCase();
-    }
-    codCtrl = TextEditingController(text: capitalize(widget.cargo?.codigo ?? ''));
-    nomCtrl = TextEditingController(text: capitalize(widget.cargo?.nombre ?? ''));
-    obsCtrl = TextEditingController(text: capitalize(widget.cargo?.observaciones ?? ''));
+    codCtrl = TextEditingController(text: (widget.cargo?.codigo ?? '').toUpperCase());
+    nomCtrl = TextEditingController(text: _capitalize(widget.cargo?.nombre ?? ''));
+    obsCtrl = TextEditingController(text: _capitalize(widget.cargo?.observaciones ?? ''));
+
   }
 
   @override
@@ -247,7 +255,7 @@ class _CargoFormContentState extends ConsumerState<_CargoFormContent> {
                           isRequired: false,
                         ),
                         const SizedBox(height: 50),
-                        _buildSaveButton(colors),
+                        _save(colors),
                       ]))))
     ]);
   }
@@ -293,7 +301,7 @@ class _CargoFormContentState extends ConsumerState<_CargoFormContent> {
     ]);
   }
 
-  Widget _buildSaveButton(ColorScheme colors) {
+  Widget _save(ColorScheme colors) {
     return SizedBox(
         width: double.infinity,
         height: 55,
@@ -304,15 +312,16 @@ class _CargoFormContentState extends ConsumerState<_CargoFormContent> {
                     borderRadius: BorderRadius.circular(15))),
             onPressed: () {
               if (!formKey.currentState!.validate()) return;
+            final codigoLimpio = codCtrl.text.trim().toUpperCase();
+            final nombreLimpio = _capitalize(nomCtrl.text);
+            final observacionesLimpia = _capitalize(obsCtrl.text);
 
               final notifier = ref.read(tiposCargoProvider.notifier);
 
               if (widget.cargo == null) {
-                notifier.crear(codCtrl.text.trim(), nomCtrl.text.trim(),
-                    obsCtrl.text.trim());
+                notifier.crear(codigoLimpio, nombreLimpio, observacionesLimpia);
               } else {
-                notifier.editar(widget.cargo.id, codCtrl.text.trim(),
-                    nomCtrl.text.trim(), obsCtrl.text.trim());
+                notifier.editar(widget.cargo.id, codigoLimpio, nombreLimpio, observacionesLimpia);
               }
 
               Navigator.pop(context);

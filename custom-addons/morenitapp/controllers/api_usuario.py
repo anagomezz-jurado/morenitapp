@@ -53,7 +53,7 @@ class UsuarioAPI(http.Controller):
                 'apellido2': kwargs.get('apellido2', ''),
                 'email': email,
                 'contrasena': kwargs.get('password'),
-                'rol_id': int(kwargs.get('rol_id', 2)),  # ← entero
+                'rol_id': int(kwargs.get('rol_id', 2)), 
                 'telefono': kwargs.get('telefono', ''),
                 'recibirNotiEmail': kwargs.get('recibirNotiEmail', True),
             }

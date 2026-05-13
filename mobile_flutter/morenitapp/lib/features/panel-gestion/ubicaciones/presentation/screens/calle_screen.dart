@@ -12,7 +12,16 @@ class CallesGestionScreen extends ConsumerStatefulWidget {
   ConsumerState<CallesGestionScreen> createState() =>
       _CallesGestionScreenState();
 }
-
+String _capitalize(String text) {
+  if (text.isEmpty) return text;
+  return text
+      .trim()
+      .toLowerCase()
+      .split(' ')
+      .where((word) => word.isNotEmpty)
+      .map((word) => word[0].toUpperCase() + word.substring(1))
+      .join(' ');
+}
 class _CallesGestionScreenState extends ConsumerState<CallesGestionScreen> {
   @override
   Widget build(BuildContext context) {
@@ -279,11 +288,6 @@ class _CalleFormContentState extends ConsumerState<_CalleFormContent> {
   }
 
   void _save() async {
-     String capitalize(String text) {
-      if (text.isEmpty) return text;
-      return text[0].toUpperCase() + text.substring(1).toLowerCase();
-    }
-
     if (!formKey.currentState!.validate() ||
         idLocalidad == null ||
         idCP == null) return;
@@ -291,10 +295,10 @@ class _CalleFormContentState extends ConsumerState<_CalleFormContent> {
     if (widget.calleEdit == null) {
       await ref
           .read(callesProvider.notifier)
-          .agregarCalle(capitalize(nombreCalleCtrl.text), idLocalidad!, idCP!);
+          .agregarCalle(_capitalize(nombreCalleCtrl.text), idLocalidad!, idCP!);
     } else {
       await ref.read(callesProvider.notifier).actualizarCalle(
-          widget.calleEdit.id, capitalize(nombreCalleCtrl.text), idLocalidad!, idCP!);
+          widget.calleEdit.id, _capitalize(nombreCalleCtrl.text), idLocalidad!, idCP!);
     }
     if (mounted) Navigator.pop(context);
   }

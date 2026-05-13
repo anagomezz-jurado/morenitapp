@@ -130,6 +130,18 @@ class _TipoForm extends ConsumerStatefulWidget {
   ConsumerState<_TipoForm> createState() => _TipoFormState();
 }
 
+
+String _capitalize(String text) {
+  if (text.isEmpty) return text;
+  return text
+      .trim()
+      .toLowerCase()
+      .split(' ')
+      .where((word) => word.isNotEmpty)
+      .map((word) => word[0].toUpperCase() + word.substring(1))
+      .join(' ');
+}
+
 class _TipoFormState extends ConsumerState<_TipoForm> {
   final formKey = GlobalKey<FormState>();
   late TextEditingController nombreCtrl;
@@ -139,11 +151,8 @@ class _TipoFormState extends ConsumerState<_TipoForm> {
   void initState() {
     super.initState();
 
-    String capitalize(String text) {
-      if (text.isEmpty) return text;
-      return text[0].toUpperCase() + text.substring(1).toLowerCase();
-    }
-    nombreCtrl = TextEditingController(text: capitalize(widget.tipo?.name ?? ''));
+   
+    nombreCtrl = TextEditingController(text: _capitalize(widget.tipo?.name ?? ''));
   }
 
   void _save() async {
@@ -153,10 +162,12 @@ class _TipoFormState extends ConsumerState<_TipoForm> {
     try {
       final notifier = ref.read(notificacionTiposProvider.notifier);
 
+            final nombreLimpio = _capitalize(nombreCtrl.text);
+
       if (widget.tipo == null) {
-        await notifier.crear(nombreCtrl.text);
+        await notifier.crear(nombreLimpio);
       } else {
-        await notifier.editar(widget.tipo!.id, nombreCtrl.text);
+        await notifier.editar(widget.tipo!.id, nombreLimpio);
       }
 
       if (mounted) Navigator.pop(context);

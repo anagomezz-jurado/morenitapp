@@ -1,3 +1,16 @@
+// ─── FUNCIÓN GLOBAL DE CAPITALIZACIÓN ───────────────────────────────────────
+// Definida fuera de la clase para poder usarla en el factory User.fromJson
+String capText(String text) {
+  if (text.isEmpty) return text;
+  return text
+      .trim()
+      .toLowerCase()
+      .split(' ')
+      .where((w) => w.isNotEmpty)
+      .map((w) => w[0].toUpperCase() + w.substring(1))
+      .join(' ');
+}
+
 class User {
   // --- PROPIEDADES ---
   final String id;
@@ -7,20 +20,20 @@ class User {
   final String email;
   final String telefono;
   final String token;
-  
+
   // Roles y Permisos
   final int rolId;
   final String rolName;
   final List<String> roles;
-  
+
   // Grupos y Organización
   final int? grupoId;
   final String grupoName;
-  
+
   // Vinculación (Odoo/Entidad)
   final int? hermanoId;
   final String? numeroHermano;
-  
+
   // Preferencias
   final bool recibirNotiEmail;
 
@@ -44,25 +57,18 @@ class User {
   });
 
   // --- GETTERS DE CONVENIENCIA ---
-  /// Retorna el nombre y apellidos unidos
   String get fullName => '$nombre $apellido1 $apellido2'.trim();
-
-  /// Determina si el usuario es administrador por ID de rol o nombre
   bool get isAdmin => rolId == 1 || rolName.toLowerCase().contains('admin');
-
-  /// Alias de isAdmin para lógica de grupos
   bool get esGrupoAdmin => isAdmin;
 
   // --- MÉTODOS DE MAPEO (JSON) ---
   factory User.fromJson(Map<String, dynamic> json) {
-    // Función auxiliar para limpiar strings y manejar formatos de Odoo [id, name]
     String cleanString(dynamic val) {
       if (val == null || val == false || val.toString() == 'false') return '';
       if (val is List && val.length > 1) return val[1].toString();
       return val.toString();
     }
 
-    // Función auxiliar para extraer IDs de respuestas relacionales
     int? parseOdooId(dynamic value) {
       if (value is List && value.isNotEmpty) return value[0] as int;
       if (value is int) return value;
@@ -72,37 +78,33 @@ class User {
 
     return User(
       id: (json['id'] ?? '').toString(),
-      nombre: cleanString(json['nombre']),
-      apellido1: cleanString(json['apellido1']),
-      apellido2: cleanString(json['apellido2']),
+      // capText se aplica aquí para que SIEMPRE lleguen capitalizados
+      nombre: capText(cleanString(json['nombre'])),
+      apellido1: capText(cleanString(json['apellido1'])),
+      apellido2: capText(cleanString(json['apellido2'])),
       email: cleanString(json['email']),
       telefono: cleanString(json['telefono']),
       token: (json['token'] ?? json['id'] ?? '').toString(),
-      
-      // Manejo de Roles
+
       rolId: json['rol_id'] is int
           ? json['rol_id']
           : int.tryParse(json['rol_id']?.toString() ?? '2') ?? 2,
       rolName: cleanString(json['rol_name'] ?? 'Usuario'),
       roles: json['roles'] != null ? List<String>.from(json['roles']) : [],
-      
-      // Manejo de Grupos
+
       grupoId: parseOdooId(json['grupo_id']),
       grupoName: cleanString(json['grupo_name'] ?? 'Sin grupo'),
-      
-      // Manejo de Vinculación
+
       hermanoId: parseOdooId(json['hermano_id']),
       numeroHermano: cleanString(json['numero_hermano']).isEmpty
           ? 'No vinculado'
           : cleanString(json['numero_hermano']),
-          
-      // Preferencias
+
       recibirNotiEmail: json['recibirNotiEmail'] ?? false,
     );
   }
 
-  // --- INMUTABILIDAD (Para Riverpod / Bloc) ---
-
+  // --- INMUTABILIDAD ---
   User copyWith({
     String? id,
     String? nombre,
