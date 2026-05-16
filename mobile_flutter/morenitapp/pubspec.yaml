@@ -59,21 +59,21 @@ flutter_launcher_icons:
   ios: true
   web:
     generate: true
-    image_path: "assets/icono.png"
+    image_path: "assets/images/icon.png"
   # Elimina o comenta las líneas de windows y macos si solo te interesa el móvil
   # O cámbialas por esto si realmente las necesitas:
   windows:
     generate: true
-    image_path: "assets/icono.png"
+    image_path: "assets/images/icon.png"
   macos:
     generate: true
-    image_path: "assets/icono.png"
-  image_path: "assets/icono.png"
+    image_path: "assets/images/icon.png"
+  image_path: "assets/images/icon.png"
 
 flutter:
   uses-material-design: true
 
   assets:
     - .env
-    - assets/icono.png
+    - assets/images/icon.png
     - google_fonts/montserrat_alternates/
